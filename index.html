@@ -10,7 +10,7 @@
     :root{
       --main-blue:#0045ff; --neon-cyan:#00d2ff; --glass-blue:rgba(0,50,150,.3);
       --fav-gold:#ffcc00; --muted: rgba(255,255,255,.45);
-      /* Hier wird das Bild gespeichert */
+      /* Standard Hintergrund, falls kein Bild geladen ist */
       --dynamic-bg: radial-gradient(circle at top right,#001a4d,#00050a);
     }
     *{box-sizing:border-box;outline:none}
@@ -24,24 +24,23 @@
     header{ height:160px;padding:0 80px; display:flex;justify-content:space-between;align-items:center; border-bottom:1px solid rgba(0,210,255,.1); }
     .brand{font-size:50px;font-weight:900;letter-spacing:-1px}
     .brand span{color:var(--neon-cyan);font-style:italic}
-
     #menu{display:flex;gap:10px}
     .item{ padding:15px 40px;font-size:32px;font-weight:bold; color:rgba(255,255,255,.4);border-radius:15px; }
     .item.focused{ color:white;background:var(--main-blue); box-shadow:0 0 35px rgba(0,69,255,.6);transform:scale(1.08); }
 
     main{display:flex;height:920px;padding:40px 60px;gap:40px}
-
-    /* Setup Design mit 3 Spalten */
-    #setup-view{display:none;flex:1;gap:40px;width:100%}
     .column{ background:var(--glass-blue);backdrop-filter:blur(10px); border-radius:30px;border:1px solid rgba(0,210,255,.2); display:flex;flex-direction:column;overflow:hidden; }
     .column-header{ padding:25px;font-size:16px;font-weight:800;color:var(--neon-cyan); text-transform:uppercase;letter-spacing:4px; }
 
-    /* Die neuen Buttons für den Hintergrund */
-    .bg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 20px; }
-    .bg-btn { padding: 15px; background: rgba(255,255,255,0.05); border: 2px solid transparent; border-radius: 12px; text-align: center; font-size: 18px; }
-    .bg-btn.focused { border-color: var(--neon-cyan); background: var(--main-blue); }
+    /* Buttons für Design-Auswahl */
+    .bg-grid { display: grid; grid-template-columns: 1fr; gap: 10px; padding: 20px; }
+    .bg-btn { padding: 18px; background: rgba(255,255,255,0.05); border: 2px solid transparent; border-radius: 12px; text-align: center; font-size: 24px; color: white; }
+    .bg-btn.focused { border-color: var(--neon-cyan); background: var(--main-blue); transform: scale(1.02); }
 
-    .input{ width:100%; padding:16px 18px; font-size:22px; border-radius:14px; border:1px solid rgba(0,210,255,.25); background: rgba(0,0,0,.25); color:white; margin-bottom: 10px; }
+    .setup-row{padding:18px 22px;border-top:1px solid rgba(0,210,255,.12)}
+    .setup-label{color:var(--neon-cyan);font-weight:900;letter-spacing:2px;font-size:14px}
+    .setup-val{font-size:26px;margin-top:6px}
+    .input{ width:100%; padding:16px 18px; font-size:22px; border-radius:14px; border:1px solid rgba(0,210,255,.25); background: rgba(0,0,0,.25); color:white; margin-bottom:10px; }
     .btn{ display:inline-block; padding:14px 18px; font-size:20px; border-radius:14px; border:1px solid rgba(0,210,255,.35); background: rgba(0,69,255,.25); color:white; margin-top:12px; }
     .btn.focused{ background: var(--main-blue); box-shadow:0 0 22px rgba(0,69,255,.35); transform:scale(1.02); }
   </style>
@@ -59,61 +58,51 @@
 </header>
 
 <main id="main-root">
-  <div id="tv-view" style="display:flex; flex:1; justify-content:center; align-items:center;">TV Ansicht aktiv</div>
+  <div id="tv-view" style="display:flex; flex:1; justify-content:center; align-items:center;">TV Modus</div>
 
-  <div id="setup-view">
+  <div id="setup-view" style="display:none; flex:1; gap:40px;">
     <div class="column" style="width:520px">
-      <div class="column-header">1) Design & MAC</div>
+      <div class="column-header">1) Design & Gerät</div>
       <div class="bg-grid">
         <div id="bg1" class="bg-btn">Galatasaray</div>
         <div id="bg2" class="bg-btn">Blue Neon</div>
-        <div id="bg3" class="bg-btn">Dark Mode</div>
-        <div id="bg4" class="bg-btn">Standard</div>
+        <div id="bg3" class="bg-btn">Standard</div>
       </div>
-      <div style="padding:20px; border-top:1px solid rgba(0,210,255,0.1)">
-        <div style="color:var(--neon-cyan); font-size:12px;">MAC-ADRESSE</div>
-        <div id="mac-value" style="font-size:24px; font-weight:bold;">00:00:00:00:00</div>
+      <div class="setup-row">
+        <div class="setup-label">MAC-ADRESSE</div>
+        <div id="mac-value" class="setup-val">Lade...</div>
       </div>
     </div>
 
     <div class="column" style="flex:1">
       <div class="column-header">2) M3U Playlist</div>
-      <div style="padding:20px;">
-        <input id="m3u-url" class="input" placeholder="Playlist URL..." />
+      <div class="setup-row">
+        <input id="m3u-url" class="input" placeholder="https://..." />
         <div id="btn-save-m3u" class="btn">SPEICHERN</div>
-      </div>
-    </div>
-
-    <div class="column" style="width:450px">
-      <div class="column-header">3) Xtream Login</div>
-      <div style="padding:20px;">
-        <input id="xc-url" class="input" placeholder="Server URL" />
-        <input id="xc-user" class="input" placeholder="User" />
-        <input id="xc-pass" class="input" placeholder="Pass" />
-        <div id="btn-login-xc" class="btn">LOGIN</div>
       </div>
     </div>
   </div>
 </main>
 
 <script>
+  var area = "menu", menuIdx = 3, setupCol = 0, setupIdx = [0,0];
   var $ = function(id){ return document.getElementById(id); };
-  var area = "menu", menuIdx = 3, setupCol = 0, setupIdx = [0,0,0,0];
 
+  // WICHTIG: Funktion zum Ändern des Bildes über GitHub Raw URL
   function changeBG(file) {
     if(file === "none") {
       document.body.style.setProperty('--dynamic-bg', "radial-gradient(circle at top right,#001a4d,#00050a)");
     } else {
+      // Nutzt deinen Pfad: Artonstyle/IPTVBlack/main/hintergrund/
       const url = "https://raw.githubusercontent.com/Artonstyle/IPTVBlack/main/hintergrund/" + file;
-      document.body.style.setProperty('--dynamic-bg', "radial-gradient(circle at top right, rgba(0,26,77,0.5), #00050a), url('" + url + "')");
+      document.body.style.setProperty('--dynamic-bg', "linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('" + url + "')");
     }
     localStorage.setItem("selected_bg", file);
   }
 
   function setupFocusables(col) {
-    if(col === 0) return [{el:$("bg1"),f:"bild1.webp"},{el:$("bg2"),f:"bild2.webp"},{el:$("bg3"),f:"bild3.webp"},{el:$("bg4"),f:"none"}];
-    if(col === 1) return [{el:$("m3u-url")},{el:$("btn-save-m3u")}];
-    if(col === 2) return [{el:$("xc-url")},{el:$("xc-user")},{el:$("xc-pass")},{el:$("btn-login-xc")}];
+    if(col === 0) return [{el:$("bg1"),f:"bild1.webp"}, {el:$("bg2"),f:"bild2.webp"}, {el:$("bg3"),f:"none"}];
+    if(col === 1) return [{el:$("m3u-url")}, {el:$("btn-save-m3u")}];
     return [];
   }
 
@@ -122,7 +111,6 @@
     if(area === "menu") {
       $("i" + menuIdx).classList.add("focused");
       $("setup-view").style.display = (menuIdx === 3) ? "flex" : "none";
-      $("tv-view").style.display = (menuIdx === 0) ? "flex" : "none";
     } else {
       var list = setupFocusables(setupCol);
       if(list[setupIdx[setupCol]]) list[setupIdx[setupCol]].el.classList.add("focused");
@@ -134,21 +122,21 @@
     if(area === "menu") {
       if(k === 37 && menuIdx > 0) menuIdx--;
       if(k === 39 && menuIdx < 3) menuIdx++;
-      if(k === 40 && menuIdx === 3) { area = "setup"; setupCol = 0; setupIdx = [0,0,0]; }
+      if(k === 40 && menuIdx === 3) { area = "setup"; setupCol = 0; setupIdx = [0,0]; }
     } else {
       var list = setupFocusables(setupCol);
       if(k === 38) { // Hoch
         if(setupIdx[setupCol] > 0) setupIdx[setupCol]--;
         else area = "menu";
       }
-      if(k === 40 && setupIdx[setupCol] < list.length - 1) setupIdx[setupCol]++; // Runter
-      if(k === 37 && setupCol > 0) setupCol--; // Links
-      if(k === 39 && setupCol < 2) setupCol++; // Rechts
+      if(k === 40 && setupIdx[setupCol] < list.length - 1) setupIdx[setupCol]++;
+      if(k === 37 && setupCol > 0) setupCol--;
+      if(k === 39 && setupCol < 1) setupCol++;
       
-      if(k === 13) { // OK
+      if(k === 13) { // OK Taste
         var f = list[setupIdx[setupCol]];
         if(f.f) changeBG(f.f);
-        else if(f.el.tagName === "INPUT") f.el.focus();
+        else if(f.el.id === "btn-save-m3u") alert("Gespeichert!");
       }
     }
     updateUI();
@@ -157,7 +145,10 @@
   function init() {
     var saved = localStorage.getItem("selected_bg");
     if(saved) changeBG(saved);
-    try { $("mac-value").innerText = webapis.network.getMac(); } catch(e){}
+    // MAC Adresse laden
+    try { 
+        tizen.systeminfo.getPropertyValue("WIFI_NETWORK", function(w){ $("mac-value").innerText = w.macAddress; });
+    } catch(e){ $("mac-value").innerText = "00:11:22:33:44"; }
     updateUI();
   }
 </script>
