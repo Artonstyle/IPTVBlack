@@ -10,12 +10,12 @@
     :root{
       --main-blue:#0045ff; --neon-cyan:#00d2ff; --glass-blue:rgba(0,50,150,.3);
       --fav-gold:#ffcc00; --muted: rgba(255,255,255,.45);
-      --bg-image: radial-gradient(circle at top right,#001a4d,#00050a);
+      --dynamic-bg: radial-gradient(circle at top right,#001a4d,#00050a);
     }
     *{box-sizing:border-box; outline:none}
     body{
       width:1920px; height:1080px; margin:0; padding:0;
-      background: var(--bg-image); background-size: cover; background-position: center;
+      background: var(--dynamic-bg); background-size: cover; background-position: center;
       color:white; font-family:'Segoe UI',Arial,sans-serif; overflow:hidden;
     }
 
@@ -23,24 +23,27 @@
     .brand{ font-size:50px; font-weight:900; letter-spacing:-1px; }
     .brand span{ color:var(--neon-cyan); font-style:italic; }
     #menu{ display:flex; gap:10px; }
-    .item{ padding:15px 40px; font-size:32px; font-weight:bold; color:rgba(255,255,255,.4); border-radius:15px; transition:.25s; }
+    .item{ padding:15px 40px; font-size:32px; font-weight:bold; color:rgba(255,255,255,.4); border-radius:15px; }
     .item.focused{ color:white; background:var(--main-blue); box-shadow:0 0 35px rgba(0,69,255,.6); transform:scale(1.08); }
 
-    /* Einstellungs-Ansicht */
-    #setup-view{ display:none; flex:1; gap:40px; width:100%; padding:40px 60px; }
-    .column{ background:var(--glass-blue); backdrop-filter:blur(10px); border-radius:30px; border:1px solid rgba(0,210,255,.2); display:flex; flex-direction:column; overflow:hidden; }
-    .column-header{ padding:25px; font-size:16px; font-weight:800; color:var(--neon-cyan); text-transform:uppercase; letter-spacing:4px; }
+    /* Layout für die 3 Spalten in Einstellungen */
+    #setup-view{ display:none; flex-direction:row; gap:30px; width:100%; padding:30px 60px; }
+    .column{ background:var(--glass-blue); backdrop-filter:blur(15px); border-radius:30px; border:1px solid rgba(0,210,255,.2); display:flex; flex-direction:column; overflow:hidden; flex:1; }
+    .column-header{ padding:20px; font-size:16px; font-weight:800; color:var(--neon-cyan); text-transform:uppercase; letter-spacing:4px; border-bottom:1px solid rgba(0,210,255,.1); }
     
-    /* Hintergrund Grid */
-    .bg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 25px 25px 25px; }
-    .bg-btn { padding: 18px; background: rgba(255,255,255,0.05); border: 2px solid rgba(0,210,255,0.1); border-radius: 15px; text-align: center; font-size: 20px; font-weight: bold; }
-    .bg-btn.focused { border-color: var(--neon-cyan); background: var(--main-blue); transform: scale(1.05); }
+    .bg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 20px; }
+    .bg-btn { padding: 15px; background: rgba(255,255,255,0.05); border: 2px solid transparent; border-radius: 12px; text-align: center; font-size: 18px; }
+    .bg-btn.focused { border-color: var(--neon-cyan); background: var(--main-blue); }
 
-    /* Buttons & Inputs */
-    .btn{ padding:20px; background:var(--main-blue); color:white; border-radius:15px; text-align:center; font-weight:800; font-size:18px; }
-    .btn.focused{ border: 2px solid white; transform:scale(1.02); box-shadow:0 0 30px rgba(0,69,255,.5); }
-    input{ width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(0,210,255,0.2); padding:20px; color:white; font-size:20px; border-radius:15px; margin-bottom:10px; }
+    input{ width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(0,210,255,0.2); padding:15px; color:white; font-size:18px; border-radius:12px; margin-bottom:10px; }
     input.focused{ border-color:var(--neon-cyan); background:rgba(0,210,255,0.1); }
+    
+    .btn{ padding:15px; background:var(--main-blue); color:white; border-radius:12px; text-align:center; font-weight:bold; cursor:pointer; margin-bottom:10px; }
+    .btn.focused{ border:2px solid white; box-shadow:0 0 20px rgba(0,69,255,0.5); }
+    
+    .mac-box { padding: 0 20px 20px 20px; }
+    .mac-label { color: var(--neon-cyan); font-size: 12px; margin-bottom: 5px; }
+    .mac-val { font-size: 20px; font-weight: bold; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 10px; }
   </style>
 </head>
 
@@ -57,27 +60,40 @@
 
 <main id="main-root" style="display:flex; height:920px;">
   <div id="tv-view" style="display:flex; flex:1; justify-content:center; align-items:center;">TV Inhalte laden...</div>
-  <div id="vod-view" style="display:none; flex:1; justify-content:center; align-items:center;">Inhalte werden geladen...</div>
+  <div id="vod-view" style="display:none; flex:1; justify-content:center; align-items:center; font-size:30px; color:var(--muted);">Inhalte werden geladen (Netflix)...</div>
 
   <div id="setup-view">
-    <div class="column" style="width:550px">
+    <div class="column">
       <div class="column-header">1) Design & Gerät</div>
-      <div style="padding:25px;"><div id="mac-value" style="font-size:24px; font-weight:bold;">MAC: Lade...</div></div>
       <div class="bg-grid">
         <div id="bg1" class="bg-btn">Galatasaray</div>
         <div id="bg2" class="bg-btn">Blue Neon</div>
         <div id="bg3" class="bg-btn">Dark Mode</div>
         <div id="bg4" class="bg-btn">Standard</div>
       </div>
+      <div class="mac-box">
+        <div class="mac-label">DEINE MAC-ADRESSE</div>
+        <div id="mac-value" class="mac-val">00:00:00:00:00:00</div>
+      </div>
     </div>
-    <div class="column" style="flex:1">
+
+    <div class="column">
       <div class="column-header">2) M3U Playlist</div>
-      <div style="padding:25px;">
-        <input id="m3u-url" type="text" placeholder="URL eingeben...">
-        <div style="display:flex; gap:10px;">
-          <div id="btn-save-m3u" class="btn" style="flex:1">SPEICHERN</div>
-          <div id="btn-load-m3u" class="btn" style="flex:1">LADEN</div>
-        </div>
+      <div style="padding:20px;">
+        <input id="m3u-url" type="text" placeholder="Playlist URL...">
+        <div id="btn-save-m3u" class="btn">LISTE SPEICHERN</div>
+        <div id="btn-load-m3u" class="btn">LISTE LADEN</div>
+        <div id="setup-saved-list" style="margin-top:10px; max-height:200px; overflow-y:auto;"></div>
+      </div>
+    </div>
+
+    <div class="column">
+      <div class="column-header">3) Xtream Codes</div>
+      <div style="padding:20px;">
+        <input id="xc-url" type="text" placeholder="Server URL">
+        <input id="xc-user" type="text" placeholder="Nutzername">
+        <input id="xc-pass" type="password" placeholder="Passwort">
+        <div id="btn-login-xc" class="btn">LOGIN</div>
       </div>
     </div>
   </div>
@@ -85,26 +101,18 @@
 
 <script>
   var $ = function(id){ return document.getElementById(id); };
-  var area = "menu", menuIdx = 3, setupCol = 1, setupIdx = [0,0,0];
+  var area = "menu", menuIdx = 3, setupCol = 0, setupIdx = [0,0,0];
 
   function changeBG(file) {
     const url = "https://raw.githubusercontent.com/Artonstyle/IPTVBlack/main/hintergrund/" + file;
-    document.body.style.setProperty('--bg-image', "radial-gradient(circle at top right, rgba(0,26,77,0.5), #00050a), url('" + url + "')");
+    document.body.style.setProperty('--dynamic-bg', "radial-gradient(circle at top right, rgba(0,26,77,0.5), #00050a), url('" + url + "')");
     localStorage.setItem("selected_bg", file);
   }
 
   function setupFocusables(col) {
-    if(col === 1) {
-      return [
-        { el: $("bg1"), type: "btn", file: "bild1.webp" },
-        { el: $("bg2"), type: "btn", file: "bild2.webp" },
-        { el: $("bg3"), type: "btn", file: "bild3.webp" },
-        { el: $("bg4"), type: "btn", file: "bild4.webp" },
-        { el: $("m3u-url"), type: "input" },
-        { el: $("btn-save-m3u"), type: "btn" },
-        { el: $("btn-load-m3u"), type: "btn" }
-      ];
-    }
+    if(col === 0) return [{el:$("bg1"),file:"bild1.webp"},{el:$("bg2"),file:"bild2.webp"},{el:$("bg3"),file:"bild3.webp"},{el:$("bg4"),file:"bild4.webp"}];
+    if(col === 1) return [{el:$("m3u-url")},{el:$("btn-save-m3u")},{el:$("btn-load-m3u")}];
+    if(col === 2) return [{el:$("xc-url")},{el:$("xc-user")},{el:$("xc-pass")},{el:$("btn-login-xc")}];
     return [];
   }
 
@@ -112,6 +120,9 @@
     document.querySelectorAll(".item, .bg-btn, .btn, input").forEach(e => e.classList.remove("focused"));
     if(area === "menu") {
       $("i" + menuIdx).classList.add("focused");
+      $("setup-view").style.display = (menuIdx === 3) ? "flex" : "none";
+      $("tv-view").style.display = (menuIdx === 0) ? "flex" : "none";
+      $("vod-view").style.display = (menuIdx === 1 || menuIdx === 2) ? "flex" : "none";
     } else {
       var list = setupFocusables(setupCol);
       if(list[setupIdx[setupCol]]) list[setupIdx[setupCol]].el.classList.add("focused");
@@ -123,7 +134,7 @@
     if(area === "menu") {
       if(k === 37 && menuIdx > 0) menuIdx--;
       if(k === 39 && menuIdx < 3) menuIdx++;
-      if(k === 40 && menuIdx === 3) { area = "setup"; setupCol = 1; setupIdx[1] = 0; }
+      if(k === 40 && menuIdx === 3) { area = "setup"; setupCol = 0; setupIdx = [0,0,0]; }
     } else {
       var list = setupFocusables(setupCol);
       if(k === 38) { // Hoch
@@ -131,10 +142,13 @@
         else area = "menu";
       }
       if(k === 40 && setupIdx[setupCol] < list.length - 1) setupIdx[setupCol]++;
-      if(k === 13) { // OK Taste
-        var item = list[setupIdx[setupCol]];
-        if(item.file) changeBG(item.file);
-        else if(item.el.click) item.el.click();
+      if(k === 37 && setupCol > 0) setupCol--; // Links
+      if(k === 39 && setupCol < 2) setupCol++; // Rechts
+      if(k === 13) { // OK
+        var f = list[setupIdx[setupCol]];
+        if(f.file) changeBG(f.file);
+        else if(f.el.id === "btn-save-m3u") alert("Gespeichert");
+        else if(f.el.tagName === "INPUT") f.el.focus();
       }
     }
     updateUI();
@@ -143,7 +157,7 @@
   function init() {
     var saved = localStorage.getItem("selected_bg");
     if(saved) changeBG(saved);
-    try { $("mac-value").innerText = "MAC: " + webapis.network.getMac(); } catch(e){}
+    try { $("mac-value").innerText = webapis.network.getMac(); } catch(e){}
     updateUI();
   }
 </script>
