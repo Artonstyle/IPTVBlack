@@ -9,9 +9,8 @@
     :root{
       --blue:#0045ff;
       --cyan:#00d2ff;
-      --glass:rgba(0,0,0,.55);
       --glass2:rgba(0,40,120,.25);
-      --muted:rgba(255,255,255,.55);
+      --muted:rgba(255,255,255,.65);
       --danger:#ff4d4d;
     }
     *{box-sizing:border-box; outline:none}
@@ -59,7 +58,6 @@
       flex-direction:column;
     }
 
-    /* CONTENT PLACEHOLDERS */
     #tv-view, #vod-view, #setup-view { height:100%; display:none; }
     #tv-view{ display:flex; align-items:center; justify-content:center; font-size:48px; color:rgba(255,255,255,.85); }
     #vod-view{ display:flex; align-items:center; justify-content:center; font-size:48px; color:rgba(255,255,255,.85); }
@@ -92,23 +90,17 @@
       transform:scale(1.02);
     }
 
-    .setup-body{
+    /* Single content column (INFO/ACTION removed) */
+    .content-col{
       flex:1;
-      display:flex;
-      gap:22px;
-      overflow:hidden;
-    }
-
-    /* Left list / grid */
-    .col{
-      background: rgba(0,0,0,.25);
+      background: rgba(0,0,0,.22);
       border:1px solid rgba(0,210,255,.14);
       border-radius:26px;
       overflow:hidden;
       display:flex;
       flex-direction:column;
     }
-    .col-header{
+    .content-header{
       padding:18px 20px;
       color:var(--cyan);
       font-weight:900;
@@ -117,13 +109,14 @@
       text-transform:uppercase;
       border-bottom:1px solid rgba(0,210,255,.10);
     }
-    .col-body{
+    .content-body{
       flex:1;
       overflow-y:auto;
       padding:16px;
     }
-    .col-body::-webkit-scrollbar{ width:0; }
+    .content-body::-webkit-scrollbar{ width:0; }
 
+    /* Cards */
     .card{
       border-radius:18px;
       border:1px solid rgba(0,210,255,.14);
@@ -131,7 +124,7 @@
       padding:16px;
       margin-bottom:14px;
       transition:.12s;
-      color:rgba(255,255,255,.85);
+      color:rgba(255,255,255,.90);
     }
     .card.focused{
       border-color: rgba(0,210,255,.65);
@@ -139,17 +132,34 @@
       transform: scale(1.01);
       background: rgba(0,69,255,.18);
     }
-    .card-title{ font-weight:900; font-size:22px; }
-    .card-sub{ margin-top:6px; color:rgba(255,255,255,.5); font-size:16px; word-break:break-all; }
+    .card-title{ font-weight:900; font-size:26px; }
+    .card-sub{ margin-top:8px; color:rgba(255,255,255,.60); font-size:20px; word-break:break-all; }
+    .badge{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      background: rgba(0,210,255,.12);
+      border:1px solid rgba(0,210,255,.22);
+      color: rgba(255,255,255,.85);
+      font-weight:900;
+      font-size:16px;
+      margin-left:10px;
+    }
+    .danger{ color: var(--danger); font-weight:900; }
 
+    /* Bigger profile text for TV (M3U/XC) */
+    .profile .card-title{ font-size:32px; }
+    .profile .card-sub{ font-size:24px; }
+
+    /* Background grid: 6 columns smaller */
     .grid{
       display:grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap:14px;
+      grid-template-columns: repeat(6, 1fr);
+      gap:12px;
     }
     .gitem{
-      height:170px;
-      border-radius:18px;
+      height:120px;                 /* smaller */
+      border-radius:16px;
       border:1px solid rgba(0,210,255,.14);
       background: rgba(0,0,0,.22);
       overflow:hidden;
@@ -158,7 +168,7 @@
     }
     .gitem.focused{
       border-color: rgba(0,210,255,.70);
-      box-shadow:0 0 22px rgba(0,210,255,.12);
+      box-shadow:0 0 18px rgba(0,210,255,.10);
       transform: scale(1.03);
     }
     .gthumb{
@@ -169,39 +179,36 @@
     }
     .glabel{
       position:absolute; left:0; right:0; bottom:0;
-      padding:10px 10px;
-      font-size:14px;
+      padding:8px 8px;
+      font-size:12px;
       font-weight:900;
       background: linear-gradient(to top, rgba(0,0,0,.85), rgba(0,0,0,0));
       text-shadow:0 2px 8px rgba(0,0,0,.6);
       white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
     }
 
-    .right{
-      width:560px;
-    }
-    .form-row{ margin-bottom:12px; }
-    .label{ color:var(--cyan); font-weight:900; letter-spacing:2px; font-size:13px; }
+    /* Form items inside same column */
+    .label{ color:var(--cyan); font-weight:900; letter-spacing:2px; font-size:14px; margin-top:6px; }
     .input{
       width:100%;
-      padding:16px 16px;
-      margin-top:8px;
+      padding:18px 16px;
+      margin-top:10px;
       border-radius:14px;
       border:1px solid rgba(0,210,255,.22);
       background: rgba(0,0,0,.28);
       color:#fff;
-      font-size:20px;
+      font-size:22px;               /* bigger for TV */
     }
-    .btnrow{ display:flex; gap:12px; margin-top:12px; }
+    .btnrow{ display:flex; gap:12px; margin-top:14px; }
     .btn{
       flex:1;
-      padding:14px 14px;
+      padding:16px 14px;
       text-align:center;
       border-radius:14px;
       border:1px solid rgba(0,210,255,.22);
       background: rgba(0,69,255,.20);
       font-weight:900;
-      font-size:18px;
+      font-size:20px;               /* bigger */
       transition:.12s;
     }
     .btn.focused{
@@ -209,24 +216,18 @@
       box-shadow:0 0 18px rgba(0,69,255,.35);
       transform:scale(1.02);
     }
+
+    .divider{
+      height:1px;
+      background: rgba(0,210,255,.18);
+      margin:16px 0;
+    }
     .hint{
-      margin-top:16px;
-      color:rgba(255,255,255,.55);
-      font-size:16px;
+      margin-top:12px;
+      color:rgba(255,255,255,.58);
+      font-size:18px;
       line-height:1.35;
     }
-    .badge{
-      display:inline-block;
-      padding:6px 10px;
-      border-radius:999px;
-      background: rgba(0,210,255,.12);
-      border:1px solid rgba(0,210,255,.22);
-      color: rgba(255,255,255,.85);
-      font-weight:900;
-      font-size:14px;
-      margin-left:10px;
-    }
-    .danger{ color: var(--danger); font-weight:900; }
   </style>
 </head>
 
@@ -246,7 +247,6 @@
       <div id="tv-view">Willkommen (TV)</div>
       <div id="vod-view">Willkommen (Filme/Serien Demo)</div>
 
-      <!-- SETUP -->
       <div id="setup-view">
         <div class="tabs">
           <div id="t0" class="tab">HINTERGRUND</div>
@@ -255,18 +255,9 @@
           <div id="t3" class="tab">MAC ADRESSE</div>
         </div>
 
-        <div class="setup-body">
-          <!-- LEFT -->
-          <div id="left-col" class="col" style="flex:1">
-            <div id="left-title" class="col-header">HINTERGRUND</div>
-            <div id="left-body" class="col-body"></div>
-          </div>
-
-          <!-- RIGHT -->
-          <div class="col right">
-            <div class="col-header">INFO / AKTION</div>
-            <div id="right-body" class="col-body"></div>
-          </div>
+        <div class="content-col">
+          <div id="content-title" class="content-header">HINTERGRUND</div>
+          <div id="content-body" class="content-body"></div>
         </div>
       </div>
     </div>
@@ -278,31 +269,25 @@
   // ===========================
   var GH_OWNER = "Artonstyle";
   var GH_REPO  = "IPTVBlack";
-  var GH_BG_DIR = "hintergrund"; // Ordner in deinem Repo
+  var GH_BG_DIR = "hintergrund";
 
   // ===========================
   // STATE
   // ===========================
-  var area = "menu";       // menu | tabs | content
+  var area = "menu";   // menu | tabs | content
   var menuIdx = 3;
 
-  var tabIdx = 0;          // 0=BG 1=M3U 2=XC 3=MAC
-  var contentIdx = 0;      // Fokus Index im linken Bereich
-  var contentCols = 4;     // für Grid (BG)
-  var contentMode = "list"; // "grid" oder "list"
+  var tabIdx = 0;      // 0=BG 1=M3U 2=XC 3=MAC
+  var focusIdx = 0;
 
-  // Inputs/Buttons Fokus in rechter Spalte (pro Tab unterschiedlich)
-  var rightIdx = 0;
-  var rightFocus = false; // false = links, true = rechts
+  // Background items
+  var bgItems = []; // {name, raw}
 
   // Profiles Storage
   var m3uProfiles = JSON.parse(localStorage.getItem("iptv_m3u_profiles") || "[]");
   var xcProfiles  = JSON.parse(localStorage.getItem("iptv_xc_profiles")  || "[]");
   var activeM3U   = localStorage.getItem("iptv_active_m3u") || "";
-  var activeXC    = localStorage.getItem("iptv_active_xc")  || ""; // profile id
-
-  // Background images list from GitHub
-  var bgItems = []; // {name, raw}
+  var activeXC    = localStorage.getItem("iptv_active_xc")  || "";
 
   function $(id){ return document.getElementById(id); }
   function esc(s){
@@ -310,15 +295,7 @@
       .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
   }
   function nowBust(){ return "t=" + Date.now(); }
-
-  // ===========================
-  // VIEW SWITCH
-  // ===========================
-  function showMain(which){
-    $("tv-view").style.display = (which==="tv") ? "flex" : "none";
-    $("vod-view").style.display = (which==="vod") ? "flex" : "none";
-    $("setup-view").style.display = (which==="setup") ? "flex" : "none";
-  }
+  function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
 
   // ===========================
   // INIT
@@ -329,30 +306,28 @@
         .forEach(function(k){ tizen.tvinputdevice.registerKey(k); });
     }catch(e){}
 
-    // Default: Settings
+    normalizeProfiles();
+
     showMain("setup");
     area = "menu";
     menuIdx = 3;
 
-    // Render all
-    normalizeProfiles();
     renderMenu();
     renderTabs();
-    renderTabContent();
-    updateFocus();
 
-    // Preload BG list when entering BG tab
+    // Tabs preview should show immediately on highlight
+    renderTabPreview();
+
+    // BG auto load
     loadBackgroundsFromGitHub();
 
-    // MAC
-    updateMacText();
+    updateFocus();
   }
 
   function normalizeProfiles(){
     if(!Array.isArray(m3uProfiles)) m3uProfiles = [];
     if(!Array.isArray(xcProfiles))  xcProfiles  = [];
 
-    // Ensure ids
     for(var i=0;i<m3uProfiles.length;i++){
       if(!m3uProfiles[i].id) m3uProfiles[i].id = "m3u_" + Date.now() + "_" + i;
     }
@@ -365,7 +340,16 @@
   }
 
   // ===========================
-  // RENDER
+  // MAIN VIEW SWITCH
+  // ===========================
+  function showMain(which){
+    $("tv-view").style.display = (which==="tv") ? "flex" : "none";
+    $("vod-view").style.display = (which==="vod") ? "flex" : "none";
+    $("setup-view").style.display = (which==="setup") ? "flex" : "none";
+  }
+
+  // ===========================
+  // RENDER UI
   // ===========================
   function renderMenu(){
     for(var i=0;i<4;i++){
@@ -375,105 +359,84 @@
 
   function renderTabs(){
     for(var i=0;i<4;i++){
-      $("t"+i).classList.toggle("focused", (area==="tabs" && i===tabIdx) || (area!=="menu" && tabIdx===i && area!=="tabs" && area!=="menu" && false));
+      $("t"+i).classList.toggle("focused", area==="tabs" && i===tabIdx);
     }
   }
 
   function setTabTitle(){
     var titles = ["HINTERGRUND","M3U PROFILE","XTREAM PROFILE","MAC ADRESSE"];
-    $("left-title").innerText = titles[tabIdx];
+    $("content-title").innerText = titles[tabIdx];
   }
 
-  function renderTabContent(){
+  // ✅ PREVIEW: shows immediately while switching tabs, no OK needed
+  function renderTabPreview(){
     setTabTitle();
-    contentIdx = 0;
-    rightIdx = 0;
-    rightFocus = false;
+    focusIdx = 0;
 
-    if(tabIdx===0){
-      renderBGTab();
-      return;
-    }
-    if(tabIdx===1){
-      renderM3UTab();
-      return;
-    }
-    if(tabIdx===2){
-      renderXCTab();
-      return;
-    }
-    renderMACTab();
+    if(tabIdx===0) renderBGTab();
+    else if(tabIdx===1) renderM3UTab();
+    else if(tabIdx===2) renderXCTab();
+    else renderMACTab();
+
+    updateFocus();
   }
 
-  // -------- BG TAB --------
+  // ===========================
+  // BACKGROUND TAB
+  // ===========================
   function renderBGTab(){
-    contentMode = "grid";
-    contentCols = 4;
-
-    var lb = $("left-body");
+    var host = $("content-body");
     if(!bgItems.length){
-      lb.innerHTML =
+      host.innerHTML =
         '<div class="card">'+
           '<div class="card-title">Lade Hintergründe…</div>'+
-          '<div class="card-sub">GitHub Ordner: /'+esc(GH_BG_DIR)+'</div>'+
+          '<div class="card-sub">GitHub: /'+esc(GH_BG_DIR)+'</div>'+
         '</div>';
-    }else{
-      var html = '<div class="grid">';
-      for(var i=0;i<bgItems.length;i++){
-        html +=
-          '<div class="gitem">'+
-            '<img class="gthumb" src="'+bgItems[i].raw+'?'+nowBust()+'" />'+
-            '<div class="glabel">'+esc(bgItems[i].name)+'</div>'+
-          '</div>';
-      }
-      html += '</div>';
-      lb.innerHTML = html;
+      return;
     }
 
-    $("right-body").innerHTML =
+    var html = '<div class="grid">';
+    for(var i=0;i<bgItems.length;i++){
+      html +=
+        '<div class="gitem focusable" data-kind="bg" data-idx="'+i+'">'+
+          '<img class="gthumb" src="'+bgItems[i].raw+'?'+nowBust()+'"/>'+
+          '<div class="glabel">'+esc(bgItems[i].name)+'</div>'+
+        '</div>';
+    }
+    html += '</div>';
+
+    html +=
+      '<div class="divider"></div>'+
       '<div class="card">'+
-        '<div class="card-title">Hintergrund wählen</div>'+
-        '<div class="card-sub">OK = setzen • 0 = Standard</div>'+
-        '<div class="hint">Die Bilder werden automatisch aus <b>/'+esc(GH_BG_DIR)+'</b> geladen (ohne list.txt).</div>'+
+        '<div class="card-title">Tipps</div>'+
+        '<div class="card-sub">OK = Hintergrund setzen • 0 = Standard</div>'+
       '</div>';
+
+    host.innerHTML = html;
   }
 
   function loadBackgroundsFromGitHub(){
-    // GitHub contents API
     var url = "https://api.github.com/repos/"+encodeURIComponent(GH_OWNER)+"/"+encodeURIComponent(GH_REPO)+"/contents/"+encodeURIComponent(GH_BG_DIR)+"?"+nowBust();
     fetch(url)
       .then(function(r){ return r.json(); })
       .then(function(arr){
-        if(!Array.isArray(arr)){ bgItems=[]; renderTabContent(); updateFocus(); return; }
+        if(!Array.isArray(arr)){ bgItems=[]; if(tabIdx===0) renderTabPreview(); return; }
         var list = [];
         for(var i=0;i<arr.length;i++){
           var it = arr[i];
           if(!it || it.type!=="file") continue;
           var n = (it.name||"").toLowerCase();
           if(!(n.endsWith(".jpg") || n.endsWith(".jpeg") || n.endsWith(".png") || n.endsWith(".webp"))) continue;
-
-          // raw url (recommended)
-          var raw = "https://raw.githubusercontent.com/"+GH_OWNER+"/"+GH_REPO+"/main/"+GH_BG_DIR+"/"+encodeURIComponent(it.name);
-          // encodeURIComponent only filename; keep path stable
-          raw = "https://raw.githubusercontent.com/"+GH_OWNER+"/"+GH_REPO+"/main/"+GH_BG_DIR+"/"+it.name;
+          var raw = "https://raw.githubusercontent.com/"+GH_OWNER+"/"+GH_REPO+"/main/"+GH_BG_DIR+"/"+it.name;
           list.push({ name: it.name, raw: raw });
         }
-
-        // sort
         list.sort(function(a,b){ return a.name.localeCompare(b.name); });
         bgItems = list;
-
-        if(tabIdx===0){
-          renderTabContent();
-          updateFocus();
-        }
+        if(tabIdx===0) renderTabPreview();
       })
       .catch(function(){
         bgItems = [];
-        if(tabIdx===0){
-          renderTabContent();
-          updateFocus();
-        }
+        if(tabIdx===0) renderTabPreview();
       });
   }
 
@@ -489,55 +452,51 @@
     document.body.style.backgroundPosition = "center";
   }
 
-  // -------- M3U TAB --------
+  // ===========================
+  // M3U TAB (Bigger text)
+  // ===========================
   function renderM3UTab(){
-    contentMode = "list";
-    var lb = $("left-body");
-
-    // left: list profiles
+    var host = $("content-body");
     var html = "";
-    for(var i=0;i<m3uProfiles.length;i++){
-      var p = m3uProfiles[i];
-      var isActive = (p && p.url && p.url===activeM3U);
-      html +=
-        '<div class="card">'+
-          '<div class="card-title">'+esc(p.name || ("Profil "+(i+1)))+(isActive ? '<span class="badge">AKTIV</span>' : '')+'</div>'+
-          '<div class="card-sub">'+esc(p.url || "-")+'</div>'+
-          '<div class="card-sub"><span class="danger">0</span> = Löschen • OK = Aktivieren</div>'+
-        '</div>';
-    }
-    if(!m3uProfiles.length){
-      html =
-        '<div class="card">'+
-          '<div class="card-title">Keine M3U Profile</div>'+
-          '<div class="card-sub">Rechts eintragen und speichern.</div>'+
-        '</div>';
-    }
-    lb.innerHTML = html;
 
-    // right: form
-    $("right-body").innerHTML =
-      '<div class="form-row">'+
+    if(m3uProfiles.length){
+      for(var i=0;i<m3uProfiles.length;i++){
+        var p = m3uProfiles[i];
+        var isActive = (p.url && p.url===activeM3U);
+        html +=
+          '<div class="card profile focusable" data-kind="m3uProfile" data-idx="'+i+'">'+
+            '<div class="card-title">'+esc(p.name || ("Profil "+(i+1)))+(isActive?'<span class="badge">AKTIV</span>':'')+'</div>'+
+            '<div class="card-sub">'+esc(p.url || "-")+'</div>'+
+            '<div class="card-sub"><span class="danger">0</span> = Löschen • OK = Aktivieren</div>'+
+          '</div>';
+      }
+    }else{
+      html +=
+        '<div class="card profile">'+
+          '<div class="card-title">Keine M3U Profile</div>'+
+          '<div class="card-sub">Unten Name + URL speichern.</div>'+
+        '</div>';
+    }
+
+    html += '<div class="divider"></div>';
+
+    html +=
+      '<div class="card">'+
+        '<div class="card-title">Neues M3U Profil</div>'+
         '<div class="label">PROFILNAME</div>'+
-        '<input id="m3u-name" class="input" placeholder="z.B. Mein Anbieter" />'+
-      '</div>'+
-      '<div class="form-row">'+
+        '<input id="m3u-name" class="input focusable" data-kind="m3uInput" data-idx="0" placeholder="z.B. Mein Anbieter" />'+
         '<div class="label">M3U URL</div>'+
-        '<input id="m3u-url" class="input" placeholder="https://example.com/list.m3u" />'+
-      '</div>'+
-      '<div class="btnrow">'+
-        '<div id="m3u-save" class="btn">SPEICHERN</div>'+
-        '<div id="m3u-clear" class="btn">LEEREN</div>'+
-      '</div>'+
-      '<div class="hint">'+
-        'Links Profile auswählen: <b>OK</b> = aktivieren • <b>0</b> = löschen.<br>'+
-        'Rechts: Name+URL speichern (Multi-Profile).'+
+        '<input id="m3u-url" class="input focusable" data-kind="m3uInput" data-idx="1" placeholder="https://example.com/list.m3u" />'+
+        '<div class="btnrow">'+
+          '<div id="m3u-save" class="btn focusable" data-kind="m3uBtn" data-idx="0">SPEICHERN</div>'+
+          '<div id="m3u-clear" class="btn focusable" data-kind="m3uBtn" data-idx="1">LEEREN</div>'+
+        '</div>'+
+        '<div class="hint">OK auf Eingabe = Tastatur • OK auf SPEICHERN = speichern</div>'+
       '</div>';
 
-    // Prefill
-    try{
-      $("m3u-url").value = activeM3U || "";
-    }catch(e){}
+    host.innerHTML = html;
+
+    try{ $("m3u-url").value = activeM3U || ""; }catch(e){}
   }
 
   function saveM3UProfile(){
@@ -555,8 +514,7 @@
     localStorage.setItem("iptv_active_m3u", url);
     activeM3U = url;
 
-    renderTabContent();
-    updateFocus();
+    renderTabPreview();
   }
 
   function deleteM3UProfile(index){
@@ -571,71 +529,65 @@
       localStorage.setItem("iptv_active_m3u", "");
     }
 
-    renderTabContent();
-    updateFocus();
+    renderTabPreview();
   }
 
   function activateM3UProfile(index){
     if(index<0 || index>=m3uProfiles.length) return;
     activeM3U = m3uProfiles[index].url || "";
     localStorage.setItem("iptv_active_m3u", activeM3U);
-    renderTabContent();
-    updateFocus();
+    renderTabPreview();
   }
 
-  // -------- XTREAM TAB --------
+  // ===========================
+  // XTREAM TAB (Bigger text)
+  // ===========================
   function renderXCTab(){
-    contentMode = "list";
-    var lb = $("left-body");
-
+    var host = $("content-body");
     var html = "";
-    for(var i=0;i<xcProfiles.length;i++){
-      var p = xcProfiles[i];
-      var isActive = (p.id === activeXC);
-      html +=
-        '<div class="card">'+
-          '<div class="card-title">'+esc(p.name || ("Xtream "+(i+1)))+(isActive ? '<span class="badge">AKTIV</span>' : '')+'</div>'+
-          '<div class="card-sub">'+esc(p.url || "-")+'</div>'+
-          '<div class="card-sub">User: '+esc(p.user || "-")+'</div>'+
-          '<div class="card-sub"><span class="danger">0</span> = Löschen • OK = Aktivieren</div>'+
-        '</div>';
-    }
-    if(!xcProfiles.length){
-      html =
-        '<div class="card">'+
-          '<div class="card-title">Keine Xtream Profile</div>'+
-          '<div class="card-sub">Rechts eintragen und speichern.</div>'+
-        '</div>';
-    }
-    lb.innerHTML = html;
 
-    $("right-body").innerHTML =
-      '<div class="form-row">'+
+    if(xcProfiles.length){
+      for(var i=0;i<xcProfiles.length;i++){
+        var p = xcProfiles[i];
+        var isActive = (p.id === activeXC);
+        html +=
+          '<div class="card profile focusable" data-kind="xcProfile" data-idx="'+i+'">'+
+            '<div class="card-title">'+esc(p.name || ("Xtream "+(i+1)))+(isActive?'<span class="badge">AKTIV</span>':'')+'</div>'+
+            '<div class="card-sub">'+esc(p.url || "-")+'</div>'+
+            '<div class="card-sub">User: '+esc(p.user || "-")+'</div>'+
+            '<div class="card-sub"><span class="danger">0</span> = Löschen • OK = Aktivieren</div>'+
+          '</div>';
+      }
+    }else{
+      html +=
+        '<div class="card profile">'+
+          '<div class="card-title">Keine Xtream Profile</div>'+
+          '<div class="card-sub">Unten ein Profil speichern.</div>'+
+        '</div>';
+    }
+
+    html += '<div class="divider"></div>';
+
+    html +=
+      '<div class="card">'+
+        '<div class="card-title">Neues Xtream Profil</div>'+
         '<div class="label">PROFILNAME</div>'+
-        '<input id="xc-name" class="input" placeholder="z.B. Anbieter 1" />'+
-      '</div>'+
-      '<div class="form-row">'+
+        '<input id="xc-name" class="input focusable" data-kind="xcInput" data-idx="0" placeholder="z.B. Anbieter 1" />'+
         '<div class="label">SERVER URL</div>'+
-        '<input id="xc-url" class="input" placeholder="http://server:port" />'+
-      '</div>'+
-      '<div class="form-row">'+
+        '<input id="xc-url" class="input focusable" data-kind="xcInput" data-idx="1" placeholder="http://server:port" />'+
         '<div class="label">BENUTZERNAME</div>'+
-        '<input id="xc-user" class="input" placeholder="username" />'+
-      '</div>'+
-      '<div class="form-row">'+
+        '<input id="xc-user" class="input focusable" data-kind="xcInput" data-idx="2" placeholder="username" />'+
         '<div class="label">PASSWORT</div>'+
-        '<input id="xc-pass" class="input" placeholder="password" />'+
-      '</div>'+
-      '<div class="btnrow">'+
-        '<div id="xc-save" class="btn">SPEICHERN</div>'+
-        '<div id="xc-clear" class="btn">LEEREN</div>'+
-      '</div>'+
-      '<div class="hint">'+
-        'Links Profile auswählen: <b>OK</b> = aktivieren • <b>0</b> = löschen.<br>'+
-        'Beim Aktivieren wird dieses Profil als „aktiv“ gespeichert.'+
+        '<input id="xc-pass" class="input focusable" data-kind="xcInput" data-idx="3" placeholder="password" />'+
+        '<div class="btnrow">'+
+          '<div id="xc-save" class="btn focusable" data-kind="xcBtn" data-idx="0">SPEICHERN</div>'+
+          '<div id="xc-clear" class="btn focusable" data-kind="xcBtn" data-idx="1">LEEREN</div>'+
+        '</div>'+
+        '<div class="hint">OK auf Eingabe = Tastatur • OK auf SPEICHERN = speichern</div>'+
       '</div>';
 
-    // Prefill active profile values
+    host.innerHTML = html;
+
     var ap = getActiveXCProfile();
     if(ap){
       try{
@@ -664,8 +616,7 @@
     localStorage.setItem("iptv_active_xc", id);
     activeXC = id;
 
-    renderTabContent();
-    updateFocus();
+    renderTabPreview();
   }
 
   function deleteXCProfile(index){
@@ -680,16 +631,14 @@
       localStorage.setItem("iptv_active_xc", "");
     }
 
-    renderTabContent();
-    updateFocus();
+    renderTabPreview();
   }
 
   function activateXCProfile(index){
     if(index<0 || index>=xcProfiles.length) return;
     activeXC = xcProfiles[index].id;
     localStorage.setItem("iptv_active_xc", activeXC);
-    renderTabContent();
-    updateFocus();
+    renderTabPreview();
   }
 
   function getActiveXCProfile(){
@@ -699,35 +648,38 @@
     return null;
   }
 
-  // -------- MAC TAB --------
+  // ===========================
+  // MAC TAB
+  // ===========================
   function renderMACTab(){
-    contentMode = "list";
     var mac = getMacAddressSafe();
-
-    $("left-body").innerHTML =
-      '<div class="card">'+
+    $("content-body").innerHTML =
+      '<div class="card profile focusable" data-kind="mac" data-idx="0">'+
         '<div class="card-title">MAC ADRESSE</div>'+
-        '<div class="card-sub" style="font-size:22px">'+esc(mac)+'</div>'+
+        '<div class="card-sub" style="font-size:28px">'+esc(mac)+'</div>'+
         '<div class="card-sub">OK = aktualisieren</div>'+
-      '</div>';
-
-    $("right-body").innerHTML =
-      '<div class="card">'+
-        '<div class="card-title">Hinweis</div>'+
-        '<div class="hint">Je nach Gerät/Netzwerk kann die MAC aus WebAPI oder SystemInfo kommen.</div>'+
-      '</div>';
+      '</div>'+
+      '<div class="hint">Hinweis: Manche Geräte geben die MAC nur über WebAPI zurück.</div>';
   }
 
-  function updateMacText(){
-    if(tabIdx===3){
-      renderTabContent();
-      updateFocus();
-    }
+  function getMacAddressSafe(){
+    try{
+      if(window.webapis && webapis.network && typeof webapis.network.getMac==="function"){
+        var m = webapis.network.getMac();
+        if(m) return m;
+      }
+    }catch(e){}
+    return "unbekannt";
   }
 
   // ===========================
-  // FOCUS / UI
+  // FOCUS HELPERS
   // ===========================
+  function getFocusables(){
+    var host = $("content-body");
+    return host.querySelectorAll(".focusable, .gitem.focusable, .btn.focusable, .input.focusable, .card.focusable");
+  }
+
   function updateFocus(){
     // menu focus
     for(var i=0;i<4;i++){
@@ -739,67 +691,19 @@
       $("t"+t).classList.toggle("focused", area==="tabs" && t===tabIdx);
     }
 
-    // clear left focus
-    var left = $("left-body");
-    var cards = left.querySelectorAll(".card");
-    var gitems = left.querySelectorAll(".gitem");
-
-    for(var c=0;c<cards.length;c++) cards[c].classList.remove("focused");
-    for(var g=0;g<gitems.length;g++) gitems[g].classList.remove("focused");
-
-    // clear right focus
-    var rb = $("right-body");
-    var inputs = rb.querySelectorAll(".input");
-    var btns = rb.querySelectorAll(".btn");
-    for(var i2=0;i2<inputs.length;i2++) inputs[i2].classList.remove("focused");
-    for(var b2=0;b2<btns.length;b2++) btns[b2].classList.remove("focused");
+    // content focus
+    var f = getFocusables();
+    for(var j=0;j<f.length;j++){
+      f[j].classList.remove("focused");
+    }
 
     if(area==="content"){
-      if(!rightFocus){
-        if(contentMode==="grid"){
-          if(gitems.length){
-            contentIdx = clamp(contentIdx, 0, gitems.length-1);
-            gitems[contentIdx].classList.add("focused");
-            try{ gitems[contentIdx].scrollIntoView({block:"center"}); }catch(e){}
-          }
-        }else{
-          if(cards.length){
-            contentIdx = clamp(contentIdx, 0, cards.length-1);
-            cards[contentIdx].classList.add("focused");
-            try{ cards[contentIdx].scrollIntoView({block:"center"}); }catch(e){}
-          }
-        }
-      }else{
-        // right focus order: inputs then buttons
-        var focusables = [];
-        for(var ii=0;ii<inputs.length;ii++) focusables.push(inputs[ii]);
-        for(var bb=0;bb<btns.length;bb++) focusables.push(btns[bb]);
-
-        if(focusables.length){
-          rightIdx = clamp(rightIdx, 0, focusables.length-1);
-          focusables[rightIdx].classList.add("focused");
-          try{ focusables[rightIdx].scrollIntoView({block:"center"}); }catch(e){}
-        }
+      if(f.length){
+        focusIdx = clamp(focusIdx, 0, f.length-1);
+        f[focusIdx].classList.add("focused");
+        try{ f[focusIdx].scrollIntoView({block:"center"}); }catch(e){}
       }
     }
-  }
-
-  function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
-
-  // ===========================
-  // MAC (SAFE)
-  // ===========================
-  function getMacAddressSafe(){
-    // 1) webapis.network.getMac()
-    try{
-      if(window.webapis && webapis.network && typeof webapis.network.getMac==="function"){
-        var m = webapis.network.getMac();
-        if(m) return m;
-      }
-    }catch(e){}
-
-    // 2) tizen.systeminfo NETWORK fallback (sync not possible, return text)
-    return "unbekannt";
   }
 
   // ===========================
@@ -818,7 +722,6 @@
 
       if(area==="content"){
         area = "tabs";
-        rightFocus = false;
         updateFocus();
         return;
       }
@@ -827,244 +730,162 @@
         updateFocus();
         return;
       }
-      // area menu => exit app
       try{ tizen.application.getCurrentApplication().exit(); }catch(ex){}
       return;
     }
 
-    // ========== MENU ==========
+    // MENU
     if(area==="menu"){
       if(k===37) menuIdx = (menuIdx>0) ? menuIdx-1 : 3;
       if(k===39) menuIdx = (menuIdx<3) ? menuIdx+1 : 0;
 
       if(k===13 || k===40){
-        if(menuIdx===0){ showMain("tv"); area="menu"; }
-        if(menuIdx===1){ showMain("vod"); area="menu"; $("vod-view").innerText="Filme (Demo)"; }
-        if(menuIdx===2){ showMain("vod"); area="menu"; $("vod-view").innerText="Serien (Demo)"; }
+        if(menuIdx===0){ showMain("tv"); }
+        if(menuIdx===1){ showMain("vod"); $("vod-view").innerText="Filme (Demo)"; }
+        if(menuIdx===2){ showMain("vod"); $("vod-view").innerText="Serien (Demo)"; }
         if(menuIdx===3){
           showMain("setup");
           area="tabs";
           renderTabs();
-          renderTabContent();
+          renderTabPreview();
         }
       }
       updateFocus();
       return;
     }
 
-    // ========== TABS ==========
+    // TABS (✅ preview on switch; ✅ enter content only on OK)
     if(area==="tabs"){
       if(k===37) tabIdx = (tabIdx>0) ? tabIdx-1 : 3;
       if(k===39) tabIdx = (tabIdx<3) ? tabIdx+1 : 0;
 
+      // show preview immediately without OK
+      renderTabs();
+      renderTabPreview();
+
+      // OK enters content
       if(k===13 || k===40){
         area="content";
-        rightFocus = false;
-        renderTabs();
-        renderTabContent();
-      }else{
-        renderTabs();
+        focusIdx = 0;
+        updateFocus();
       }
-
-      // Ensure BG list loaded
-      if(tabIdx===0 && !bgItems.length) loadBackgroundsFromGitHub();
-      if(tabIdx===3) updateMacText();
-
-      updateFocus();
       return;
     }
 
-    // ========== CONTENT ==========
+    // CONTENT
     if(area==="content"){
-      // delete key = 0 in list tabs
+      var focusables = getFocusables();
+      var len = focusables.length;
+
+      // 0 deletes selected profile OR sets default bg
       if(k===48){
-        if(!rightFocus){
-          if(tabIdx===1) deleteM3UProfile(contentIdx);
-          if(tabIdx===2) deleteXCProfile(contentIdx);
-        }else{
-          // in BG tab: 0 sets default background too
-          if(tabIdx===0) setBackground(null);
-        }
-        updateFocus();
-        return;
-      }
-
-      // Left/Right switch between left list and right form (except BG tab where right is info only)
-      if(k===37){
-        if(rightFocus){
-          rightFocus = false;
-          updateFocus();
-          return;
-        }
-        // left navigation
-        if(contentMode==="grid"){
-          if(contentIdx % contentCols !== 0) contentIdx--;
-        }else{
-          // list left does nothing
-        }
-        updateFocus();
-        return;
-      }
-
-      if(k===39){
-        // allow going to right panel for M3U/XC
-        if(!rightFocus && (tabIdx===1 || tabIdx===2)){
-          rightFocus = true;
-          rightIdx = 0;
-          updateFocus();
-          return;
-        }
-        if(!rightFocus && contentMode==="grid"){
-          var max = bgItems.length-1;
-          if(contentIdx < max){
-            // wrap to row start if at row end like netflix feel
-            if((contentIdx % contentCols) === contentCols-1) contentIdx = contentIdx - (contentIdx % contentCols);
-            else contentIdx++;
-          }
-        }
-        updateFocus();
-        return;
-      }
-
-      // Up/Down navigation
-      if(k===38){
-        if(rightFocus){
-          rightIdx = Math.max(0, rightIdx-1);
-          updateFocus();
-          return;
-        }
-        if(contentMode==="grid"){
-          if(contentIdx < contentCols){
-            // go back to tabs
-            area="tabs";
-            updateFocus();
-            return;
-          }
-          contentIdx = Math.max(0, contentIdx - contentCols);
-        }else{
-          if(contentIdx===0){
-            area="tabs";
-            updateFocus();
-            return;
-          }
-          contentIdx--;
-        }
-        updateFocus();
-        return;
-      }
-
-      if(k===40){
-        if(rightFocus){
-          rightIdx = rightIdx + 1;
-          updateFocus();
-          return;
-        }
-        if(contentMode==="grid"){
-          var next = contentIdx + contentCols;
-          if(next <= bgItems.length-1) contentIdx = next;
-        }else{
-          contentIdx = Math.min(getLeftCount()-1, contentIdx+1);
-        }
-        updateFocus();
-        return;
-      }
-
-      // OK / ENTER
-      if(k===13){
-        // If right focused: act on fields/buttons
-        if(rightFocus){
-          if(tabIdx===1){
-            // M3U: input focus on OK if input
-            var rb = $("right-body");
-            var inputs = rb.querySelectorAll(".input");
-            var btns = rb.querySelectorAll(".btn");
-            var focusables = [];
-            for(var ii=0;ii<inputs.length;ii++) focusables.push(inputs[ii]);
-            for(var bb=0;bb<btns.length;bb++) focusables.push(btns[bb]);
-            var f = focusables[rightIdx];
-            if(!f) return;
-
-            if(f.tagName==="INPUT"){
-              try{ f.focus(); }catch(e){}
-              return;
-            }
-            if(f.id==="m3u-save") saveM3UProfile();
-            if(f.id==="m3u-clear"){
-              try{
-                $("m3u-name").value="";
-                $("m3u-url").value= activeM3U || "";
-              }catch(e){}
-              updateFocus();
-            }
-            return;
-          }
-
-          if(tabIdx===2){
-            var rb2 = $("right-body");
-            var inputs2 = rb2.querySelectorAll(".input");
-            var btns2 = rb2.querySelectorAll(".btn");
-            var focusables2 = [];
-            for(var ii2=0;ii2<inputs2.length;ii2++) focusables2.push(inputs2[ii2]);
-            for(var bb2=0;bb2<btns2.length;bb2++) focusables2.push(btns2[bb2]);
-            var f2 = focusables2[rightIdx];
-            if(!f2) return;
-
-            if(f2.tagName==="INPUT"){
-              try{ f2.focus(); }catch(e){}
-              return;
-            }
-            if(f2.id==="xc-save") saveXCProfile();
-            if(f2.id==="xc-clear"){
-              try{
-                $("xc-name").value="";
-                $("xc-url").value="";
-                $("xc-user").value="";
-                $("xc-pass").value="";
-              }catch(e){}
-              updateFocus();
-            }
-            return;
-          }
-
-          // BG right panel has no action (except 0 default handled)
-          return;
-        }
-
-        // Left actions per tab
         if(tabIdx===0){
-          if(bgItems[contentIdx]){
-            setBackground(bgItems[contentIdx].raw);
+          setBackground(null);
+        }else{
+          if(len){
+            var el = focusables[focusIdx];
+            var kind = el.getAttribute("data-kind") || "";
+            var idx = parseInt(el.getAttribute("data-idx")||"-1",10);
+
+            if(kind==="m3uProfile") deleteM3UProfile(idx);
+            if(kind==="xcProfile") deleteXCProfile(idx);
           }
-          return;
         }
-        if(tabIdx===1){
-          activateM3UProfile(contentIdx);
-          return;
-        }
-        if(tabIdx===2){
-          activateXCProfile(contentIdx);
-          return;
-        }
-        if(tabIdx===3){
-          // refresh MAC
-          renderTabContent();
+        updateFocus();
+        return;
+      }
+
+      // UP/DOWN
+      if(k===38){
+        if(focusIdx===0){
+          area="tabs";
           updateFocus();
+          return;
+        }
+        focusIdx = Math.max(0, focusIdx-1);
+        updateFocus();
+        return;
+      }
+      if(k===40){
+        if(len) focusIdx = Math.min(len-1, focusIdx+1);
+        updateFocus();
+        return;
+      }
+
+      // LEFT/RIGHT for BG grid nicer movement (6 cols)
+      if(tabIdx===0){
+        var cols = 6;
+        if(k===37){
+          // left
+          focusIdx = Math.max(0, focusIdx-1);
+          updateFocus();
+          return;
+        }
+        if(k===39){
+          // right
+          if(len) focusIdx = Math.min(len-1, focusIdx+1);
+          updateFocus();
+          return;
+        }
+        if(k===38){
+          // already handled
+        }
+        if(k===40){
+          // already handled
+        }
+      }
+
+      // OK actions
+      if(k===13 && len){
+        var el2 = focusables[focusIdx];
+
+        // input: focus keyboard
+        if(el2.tagName==="INPUT"){
+          try{ el2.focus(); }catch(e){}
+          return;
+        }
+
+        var kind2 = el2.getAttribute("data-kind") || "";
+        var idx2 = parseInt(el2.getAttribute("data-idx")||"-1",10);
+
+        if(tabIdx===0 && kind2==="bg"){
+          if(bgItems[idx2]) setBackground(bgItems[idx2].raw);
+          return;
+        }
+
+        if(kind2==="m3uProfile") { activateM3UProfile(idx2); return; }
+        if(el2.id==="m3u-save") { saveM3UProfile(); return; }
+        if(el2.id==="m3u-clear"){
+          try{
+            $("m3u-name").value="";
+            $("m3u-url").value=activeM3U||"";
+          }catch(e){}
+          updateFocus();
+          return;
+        }
+
+        if(kind2==="xcProfile") { activateXCProfile(idx2); return; }
+        if(el2.id==="xc-save") { saveXCProfile(); return; }
+        if(el2.id==="xc-clear"){
+          try{
+            $("xc-name").value="";
+            $("xc-url").value="";
+            $("xc-user").value="";
+            $("xc-pass").value="";
+          }catch(e){}
+          updateFocus();
+          return;
+        }
+
+        if(kind2==="mac"){
+          renderTabPreview();
           return;
         }
       }
     }
   });
 
-  function getLeftCount(){
-    if(tabIdx===0) return bgItems.length;
-    if(tabIdx===1) return Math.max(1, m3uProfiles.length);
-    if(tabIdx===2) return Math.max(1, xcProfiles.length);
-    return 1;
-  }
-
-  // ===========================
-  // CLICK SUPPORT (EMULATOR)
-  // ===========================
+  // Click support (emulator)
   document.addEventListener("click", function(ev){
     var id = (ev.target && ev.target.id) ? ev.target.id : "";
     if(id==="m3u-save") saveM3UProfile();
