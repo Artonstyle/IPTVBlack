@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Black IPTV 2026</title>
+  <title>Black IPTV 2026 - Tizen Pro</title>
   <script type="text/javascript" src="$WEBAPIS/webapis/webapis.js"></script>
   <script src="main.js"></script>
   <style>
@@ -20,11 +20,10 @@
     .item { padding: 15px 35px; font-size: 32px; font-weight: bold; color: rgba(255,255,255,.3); border-radius: 12px; }
     
     #clock-box { text-align: right; min-width: 450px; }
-    #time { font-size: 70px; font-weight: bold; line-height: 1; color: white; }
-    #date { font-size: 24px; color: var(--cyan); margin-top: 5px; font-weight: bold; }
+    #time { font-size: 75px; font-weight: bold; line-height: 1; color: white; }
+    #date { font-size: 24px; color: var(--cyan); margin-top: 5px; font-weight: bold; text-transform: uppercase; }
 
     main { display: flex; height: 920px; padding: 30px; gap: 20px; box-sizing: border-box; }
-    
     #tv-view { display: flex; width: 100%; gap: 20px; }
     .tv-column { background: var(--panel); border-radius: 20px; border: 1px solid rgba(0,210,255,0.2); display: flex; flex-direction: column; overflow: hidden; }
     #cat-list { width: 400px; }
@@ -38,13 +37,12 @@
     
     .focused { background: var(--blue) !important; color: white !important; border-left-color: var(--cyan) !important; transform: scale(1.02); }
     h2 { color: var(--cyan); font-size: 28px; margin: 20px; border-bottom: 1px solid rgba(0,210,255,0.3); padding-bottom: 10px; width: 80%; text-align: center; }
-    
-    #video-window { width: 100%; height: 450px; background: #000; border: 2px solid var(--cyan); border-radius: 20px; }
     input { width: 90%; padding: 20px; margin: 20px 0; background: #111; border: 1px solid var(--cyan); color: white; font-size: 22px; border-radius: 10px; text-align: center; }
+    #mac-box { margin-top: auto; background: rgba(0,210,255,0.1); padding: 15px 40px; border: 1px solid var(--cyan); border-radius: 15px; }
   </style>
 </head>
 
-<body>
+<body onload="initApp()" tabindex="0">
   <header>
     <div style="font-size: 45px; font-weight: bold;">BLACK<span style="color:var(--cyan)">IPTV</span></div>
     <nav id="menu">
@@ -54,8 +52,8 @@
       <div id="i3" class="item">EINSTELLUNG</div>
     </nav>
     <div id="clock-box">
-        <div id="time">00:00</div>
-        <div id="date">08. Februar 2026</div>
+        <div id="time">--:--</div>
+        <div id="date">Lädt...</div>
     </div>
   </header>
 
@@ -63,15 +61,15 @@
     <div id="tv-view">
         <div id="cat-list" class="tv-column">
             <h2>KATEGORIEN</h2>
-            <div id="cat-container" class="list-container"><div class="list-item">Wird geladen...</div></div>
+            <div class="list-container"><div class="list-item">Wird geladen...</div></div>
         </div>
         <div id="chan-list" class="tv-column">
             <h2>SENDER</h2>
-            <div id="chan-container" class="list-container"><div class="list-item">...</div></div>
+            <div class="list-container"><div class="list-item">...</div></div>
         </div>
-        <div id="mini-player" style="flex:1">
-            <div id="video-window"></div>
-            <div style="padding:20px"><h1 id="cur-ch" style="margin:0; font-size: 40px;">Live Vorschau</h1></div>
+        <div style="flex:1; display:flex; flex-direction:column; gap:20px;">
+            <div id="video-window" style="height:450px; background:#000; border:2px solid var(--cyan); border-radius:20px;"></div>
+            <div style="padding:10px;"><h1 style="margin:0">Live Vorschau</h1></div>
         </div>
     </div>
     
@@ -85,86 +83,77 @@
       </div>
       <div class="column">
         <h2>INFO & STATUS</h2>
-        <div id="b5" class="btn">PLAYLIST SYNCHRONISIEREN</div>
+        <div id="b5" class="btn">LINK VOM HANDY LADEN</div>
         <input id="url-display" type="text" placeholder="Kein Link aktiv" readonly>
-        <div id="status" style="color:var(--cyan); font-size:22px; margin:10px;">System bereit</div>
-        <div id="mac-info" style="margin-top:auto; font-size:26px; color:white; background:rgba(255,255,255,0.1); padding:10px 30px; border-radius:10px;">MAC: Suche...</div>
+        <div id="status" style="color:var(--cyan); font-size:22px; margin-bottom:20px;">System bereit</div>
+        <div id="mac-box">
+            <div id="mac-info" style="font-size:35px; font-weight:bold;">MAC: lade...</div>
+        </div>
       </div>
     </div>
   </main>
 
 <script>
-  // 1. UHRZEIT FUNKTION (Sofortstart)
-  function initClock() {
-    const timeEl = document.getElementById("time");
-    const dateEl = document.getElementById("date");
+  // 1. ECHTE TIZEN UHRZEIT 
+  function updateTime() {
+    var d = new Date();
+    var h = d.getHours(), m = d.getMinutes();
+    document.getElementById("time").innerText = (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m;
     
-    const tick = () => {
-      const n = new Date();
-      timeEl.innerText = n.getHours().toString().padStart(2, '0') + ":" + n.getMinutes().toString().padStart(2, '0');
-      const opt = { weekday: 'long', day: '2-digit', month: 'long' };
-      dateEl.innerText = n.toLocaleDateString('de-DE', opt) + " 2026";
-    };
-    tick();
-    setInterval(tick, 1000); // Jede Sekunde für maximale Genauigkeit
+    var tage = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
+    var monate = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
+    document.getElementById("date").innerText = tage[d.getDay()] + ", " + d.getDate() + ". " + monate[d.getMonth()] + " 2026";
   }
 
-  // 2. MAC ADRESSE FUNKTION (Sicher verpackt)
-  function getMacAddress() {
-    const macEl = document.getElementById("mac-info");
+  // 2. ECHTE TIZEN MAC-ADRESSE (WIFI & LAN) 
+  function loadMac() {
+    var macEl = document.getElementById("mac-info");
     try {
-      if (window.webapis && webapis.network) {
-        webapis.network.getMac((m) => {
-          macEl.innerText = "MAC: " + m.toUpperCase();
-        }, (err) => {
-          macEl.innerText = "MAC: Nicht verfügbar";
-        });
-      } else {
-        macEl.innerText = "MAC: Kein Tizen";
-      }
-    } catch (e) {
-      macEl.innerText = "MAC: Fehler";
+      tizen.systeminfo.getPropertyValue("WIFI_NETWORK", function(w) {
+        if(w.macAddress) macEl.innerText = "MAC: " + w.macAddress.toUpperCase();
+        else loadLan();
+      }, loadLan);
+    } catch(e) { loadLan(); }
+
+    function loadLan() {
+      try {
+        tizen.systeminfo.getPropertyValue("ETHERNET_NETWORK", function(l) {
+          macEl.innerText = "MAC: " + (l.macAddress ? l.macAddress.toUpperCase() : "NICHT VERFÜGBAR");
+        }, function() { macEl.innerText = "MAC: NICHT VERFÜGBAR"; });
+      } catch(e) { macEl.innerText = "MAC: NICHT VERFÜGBAR"; }
     }
   }
 
   // 3. SETUP AKTIONEN
   window.handleSetupOK = function(idx) {
-    if (idx === 1) setBG("bild1.webp");
-    else if (idx === 2) setBG("bild2.webp");
-    else if (idx === 3) setBG("Albania.png");
-    else if (idx === 4) setBG("Albania2.jpg");
-    else if (idx === 5) loadHandy();
-  };
-
-  function setBG(img) {
-    document.body.style.backgroundImage = "linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://raw.githubusercontent.com/Artonstyle/IPTVBlack/main/hintergrund/" + img + "')";
-    document.getElementById("status").innerText = "Design geändert!";
-  }
-
-  function loadHandy() {
-    document.getElementById("status").innerText = "Lade...";
-    fetch("https://raw.githubusercontent.com/Artonstyle/IPTVBlack/main/playlist.txt?t=" + Date.now())
-      .then(r => r.text()).then(t => {
-        document.getElementById("url-display").value = t.trim();
-        document.getElementById("status").innerText = "Erfolgreich geladen!";
-      }).catch(e => { document.getElementById("status").innerText = "Fehler!"; });
-  }
-
-  // START
-  window.onload = function() {
-    initClock();
-    getMacAddress();
-    
-    if (window.update) {
-        const oldUpdate = window.update;
-        window.update = function() {
-            oldUpdate();
-            if(document.getElementById("tv-view")) document.getElementById("tv-view").style.display = (window.mIdx === 0) ? "flex" : "none";
-            if(document.getElementById("setup-view")) document.getElementById("setup-view").style.display = (window.mIdx === 3) ? "flex" : "none";
-        };
-        window.update();
+    if (idx <= 4) {
+        var imgs = ["bild1.webp", "bild2.webp", "Albania.png", "Albania2.jpg"];
+        document.body.style.backgroundImage = "linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://raw.githubusercontent.com/Artonstyle/IPTVBlack/main/hintergrund/" + imgs[idx-1] + "')";
+    } else if (idx === 5) {
+        fetch("https://raw.githubusercontent.com/Artonstyle/IPTVBlack/main/playlist.txt?t=" + Date.now())
+          .then(r => r.text()).then(t => { document.getElementById("url-display").value = t.trim(); });
     }
-  };
+  }
+
+  // START FUNKTION [cite: 2, 3, 5]
+  function initApp() {
+    document.body.focus();
+    setInterval(function() { document.body.focus(); }, 500); // Focus-Trick 
+    
+    updateTime();
+    setInterval(updateTime, 1000); // Uhr-Update 
+    loadMac(); // MAC-Laden 
+
+    if (window.update) {
+      const oldUpdate = window.update;
+      window.update = function() {
+        oldUpdate();
+        document.getElementById("tv-view").style.display = (window.mIdx === 0) ? "flex" : "none";
+        document.getElementById("setup-view").style.display = (window.mIdx === 3) ? "flex" : "none";
+      };
+      window.update();
+    }
+  }
 </script>
 </body>
 </html>
