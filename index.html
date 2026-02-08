@@ -2,39 +2,95 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Black IPTV 2026 - Control Fix</title>
-  <script type="text/javascript" src="$WEBAPIS/webapis/webapis.js"></script>
+  <title>Black IPTV 2026</title>
+
+  <!-- WICHTIG:
+       Auf GitHub Pages gibt es kein $WEBAPIS.
+       Deshalb NICHT einbinden. (Auf Tizen kannst du es wieder aktivieren.)
+       <script type="text/javascript" src="$WEBAPIS/webapis/webapis.js"></script>
+  -->
+
   <style>
     :root {
       --blue: #0045ff; --cyan: #00d2ff;
       --bg: radial-gradient(circle at top right, #001a4d, #00050a);
     }
+    *{box-sizing:border-box; outline:none;}
     body {
-      width: 1920px; height: 1080px; margin: 0; background: var(--bg);
+      width: 1920px; height: 1080px; margin: 0;
+      background: var(--bg);
       background-size: cover; background-position: center;
       color: white; font-family: Arial, sans-serif; overflow: hidden;
     }
-    header { height: 160px; display: flex; justify-content: space-between; align-items: center; padding: 0 80px; border-bottom: 2px solid rgba(0,210,255,0.2); }
+    header {
+      height: 160px; display: flex; justify-content: space-between; align-items: center;
+      padding: 0 80px; border-bottom: 2px solid rgba(0,210,255,0.2);
+    }
     #menu { display: flex; gap: 20px; }
-    .item { padding: 20px 40px; font-size: 35px; font-weight: bold; color: rgba(255,255,255,0.3); border-radius: 15px; border: 3px solid transparent; }
-    
-    /* Fokus-Design */
-    .focused { border-color: white !important; background: var(--blue) !important; color: white !important; box-shadow: 0 0 30px var(--blue); transform: scale(1.05); }
+    .item {
+      padding: 20px 40px; font-size: 35px; font-weight: bold;
+      color: rgba(255,255,255,.45); border-radius: 15px; transition:.15s;
+    }
+    .item.focused {
+      color: white; background: var(--blue);
+      box-shadow: 0 0 30px rgba(0,69,255,.8);
+      transform: scale(1.05);
+    }
 
-    main { display: flex; height: 920px; padding: 50px; gap: 30px; position: relative; }
+    main { display: flex; height: 920px; padding: 50px; gap: 30px; }
+    #tv-content { font-size: 40px; margin: auto; opacity:.9; }
+
     #setup-view { display: none; width: 100%; gap: 30px; }
-    .column { background: rgba(0,0,0,0.7); border: 2px solid var(--cyan); border-radius: 30px; flex: 1; padding: 30px; display: flex; flex-direction: column; align-items: center; }
-    
-    .bg-btn, .btn { width: 90%; padding: 20px; margin: 10px 0; background: rgba(255,255,255,0.1); border: 3px solid transparent; border-radius: 15px; text-align: center; font-size: 24px; color: white; cursor: pointer; }
-    
-    input { width: 90%; padding: 20px; margin: 10px 0; background: #111; border: 2px solid var(--cyan); color: white; font-size: 20px; border-radius: 10px; text-align: center; }
-    .qr { background: white; padding: 10px; margin: 10px; border-radius: 10px; }
+    .column {
+      background: rgba(0,0,0,0.6);
+      border: 2px solid rgba(0,210,255,0.6);
+      border-radius: 30px;
+      flex: 1; padding: 30px;
+      display: flex; flex-direction: column; align-items: center;
+      overflow:hidden;
+    }
+
+    .bg-btn, .btn {
+      width: 90%;
+      padding: 20px;
+      margin: 10px 0;
+      background: rgba(255,255,255,0.08);
+      border: 3px solid transparent;
+      border-radius: 15px;
+      text-align: center;
+      font-size: 24px;
+      color: white;
+      transition:.12s;
+    }
+    .bg-btn.focused, .btn.focused, input.focused {
+      border-color: white;
+      background: rgba(0,69,255,.6);
+      box-shadow: 0 0 18px rgba(0,69,255,.35);
+      transform: scale(1.02);
+    }
+
+    input {
+      width: 90%;
+      padding: 20px;
+      margin: 10px 0;
+      background: #222;
+      border: 1px solid var(--cyan);
+      color: white;
+      font-size: 20px;
+      border-radius: 10px;
+    }
+
+    .qr { background: white; padding: 10px; margin: 20px; border-radius: 10px; }
+    .hint { width:90%; margin-top:18px; color:rgba(255,255,255,.6); font-size:18px; line-height:1.35; text-align:center;}
+    .status { width:90%; margin-top:12px; color: var(--cyan); font-size:18px; text-align:center; }
   </style>
 </head>
 
 <body onload="init()">
   <header>
-    <div style="font-size: 50px; font-weight: bold;">BLACK<span style="color:var(--cyan)">IPTV</span></div>
+    <div style="font-size: 50px; font-weight: bold;">
+      BLACK<span style="color:var(--cyan)">IPTV</span>
+    </div>
     <nav id="menu">
       <div id="i0" class="item">TV</div>
       <div id="i1" class="item">FILME</div>
@@ -44,99 +100,195 @@
   </header>
 
   <main>
-    <div id="tv-content" style="font-size: 45px; margin: auto; font-weight: 200;">Inhalte werden geladen...</div>
-    
+    <div id="tv-content">Willkommen</div>
+
     <div id="setup-view">
       <div class="column">
-        <h2 style="color:var(--cyan); margin-bottom:20px;">DESIGN</h2>
+        <h2 style="color:var(--cyan); margin:0 0 10px 0;">DESIGN</h2>
         <div id="b1" class="bg-btn">Galatasaray</div>
         <div id="b2" class="bg-btn">Blue Neon</div>
         <div id="b3" class="bg-btn">Standard</div>
-        <div id="mac" style="margin-top:40px; color:var(--cyan); font-weight: bold;">MAC: Lade...</div>
+
+        <div id="mac" class="status" style="margin-top:20px;">MAC: Lade…</div>
+
+        <div class="hint">
+          Navigation: ←/→ Menü • ↓ ins Setup • ↑ zurück • OK auswählen
+        </div>
       </div>
 
       <div class="column">
-        <h2 style="color:var(--cyan); margin-bottom:20px;">M3U HANDY SYNC</h2>
-        <div class="qr"><img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://github.com/Artonstyle/IPTVBlack/edit/main/playlist.txt"></div>
-        <div id="b4" class="btn">VOM HANDY LADEN</div>
-        <input id="url-display" type="text" value="Kein Link aktiv" readonly>
+        <h2 style="color:var(--cyan); margin:0 0 10px 0;">HANDY UPLOAD</h2>
+        <div class="qr">
+          <img
+            alt="QR"
+            src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https://github.com/Artonstyle/IPTVBlack/edit/main/playlist.txt">
+        </div>
+
+        <div id="b4" class="btn">LINK VOM HANDY LADEN</div>
+        <input id="url-display" type="text" placeholder="Kein Link empfangen" readonly>
+
+        <div id="status" class="status"></div>
+        <div class="hint">
+          Tipp: In GitHub “Raw” Link funktioniert am besten.
+        </div>
       </div>
     </div>
   </main>
 
 <script>
-  var area = "menu", mIdx = 3, sIdx = 1;
+  // -------- Helpers ----------
+  var area = "menu";          // "menu" | "setup"
+  var mIdx = 0;               // Start: TV
+  var sIdx = 1;               // Setup Focus: b1..b4
   var $ = function(id) { return document.getElementById(id); };
 
+  function setStatus(msg){
+    var el = $("status");
+    if(el) el.innerText = msg || "";
+  }
+
+  function safeFocus(el){
+    if(!el) return;
+    try { el.scrollIntoView({block:"center"}); } catch(e) {}
+  }
+
   function update() {
-    // Alle Klassen entfernen
-    document.querySelectorAll(".item, .bg-btn, .btn").forEach(el => el.classList.remove("focused"));
-    
+    // reset focus classes
+    document.querySelectorAll(".item, .bg-btn, .btn, input").forEach(function(el){
+      el.classList.remove("focused");
+    });
+
+    // show/hide views
+    $("setup-view").style.display = (mIdx === 3) ? "flex" : "none";
+    $("tv-content").style.display = (mIdx === 3) ? "none" : "block";
+
     if (area === "menu") {
-      $("i" + mIdx).classList.add("focused");
-      $("setup-view").style.display = (mIdx === 3) ? "flex" : "none";
-      $("tv-content").style.display = (mIdx === 3) ? "none" : "block";
+      var mi = $("i" + mIdx);
+      if(mi) { mi.classList.add("focused"); safeFocus(mi); }
     } else {
-      $("b" + sIdx).classList.add("focused");
+      var si = $("b" + sIdx);
+      if(si) { si.classList.add("focused"); safeFocus(si); }
     }
+  }
+
+  // -------- Key mapping (robust for TV remotes + browsers) ----------
+  function keyName(e){
+    // Use e.key when available
+    if(e.key){
+      if(e.key === "ArrowUp") return "UP";
+      if(e.key === "ArrowDown") return "DOWN";
+      if(e.key === "ArrowLeft") return "LEFT";
+      if(e.key === "ArrowRight") return "RIGHT";
+      if(e.key === "Enter") return "OK";
+      if(e.key === "Backspace" || e.key === "Escape") return "BACK";
+    }
+    // Fallback keyCode
+    var k = e.keyCode;
+    if(k===38) return "UP";
+    if(k===40) return "DOWN";
+    if(k===37) return "LEFT";
+    if(k===39) return "RIGHT";
+    if(k===13) return "OK";
+    if(k===27 || k===8 || k===10009) return "BACK"; // 10009 = Tizen Back
+    return "";
   }
 
   window.addEventListener("keydown", function(e) {
-    var k = e.keyCode;
-    // Tizen / WebOS Keycodes abfangen
-    if (area === "menu") {
-      if (k == 37 && mIdx > 0) mIdx--; // Links
-      else if (k == 39 && mIdx < 3) mIdx++; // Rechts
-      else if (k == 40 && mIdx == 3) { // Runter zu Einstellung
-        area = "setup"; 
-        sIdx = 1; 
-      }
-    } 
-    else { // Bereich: SETUP
-      if (k == 38) { // Hoch
-        if (sIdx > 1 && sIdx != 4) sIdx--; 
-        else if (sIdx == 4) sIdx = 1; // Von Handy-Button zurück zu Design
-        else area = "menu"; 
-      }
-      else if (k == 40) { // Runter
-        if (sIdx < 3) sIdx++;
-      }
-      else if (k == 39 && sIdx <= 3) sIdx = 4; // Rechts zur Handy-Spalte
-      else if (k == 37 && sIdx == 4) sIdx = 1; // Links zur Design-Spalte
+    var k = keyName(e);
+    if(!k) return;
 
-      if (k == 13) { // OK (Enter)
-        if (sIdx == 1) setBG("bild1.webp");
-        if (sIdx == 2) setBG("bild2.webp");
-        if (sIdx == 3) setBG("none");
-        if (sIdx == 4) loadHandy();
+    // prevent page scrolling / default actions (wichtig auf Browser-TV)
+    e.preventDefault();
+
+    if (area === "menu") {
+      if (k === "LEFT")  mIdx = (mIdx > 0) ? (mIdx-1) : 3;
+      if (k === "RIGHT") mIdx = (mIdx < 3) ? (mIdx+1) : 0;
+
+      if (k === "DOWN") {
+        if (mIdx === 3) { area = "setup"; sIdx = 1; }
+      }
+
+      // optional: OK on menu (enter Setup if Einstellungen)
+      if (k === "OK") {
+        if (mIdx === 3) { area = "setup"; sIdx = 1; }
       }
     }
+    else {
+      // Setup navigation: two columns
+      if (k === "UP") {
+        if (sIdx > 1) sIdx--;
+        else area = "menu";
+      }
+      if (k === "DOWN") {
+        if (sIdx < 4) sIdx++;
+      }
+      if (k === "LEFT" || k === "RIGHT") {
+        // Switch columns: 1..3 left, 4 right
+        sIdx = (sIdx <= 3) ? 4 : 1;
+      }
+
+      if (k === "OK") {
+        if (sIdx === 1) setBG("bild1.webp");     // Galatasaray
+        if (sIdx === 2) setBG("bild2.webp");     // Blue Neon
+        if (sIdx === 3) setBG("none");           // Standard
+        if (sIdx === 4) loadHandy();
+      }
+
+      if (k === "BACK") {
+        area = "menu";
+      }
+    }
+
     update();
-  });
+  }, {passive:false});
 
   function setBG(img) {
+    setStatus("");
     if (img === "none") {
-      document.body.style.backgroundImage = "none";
-    } else {
-      var url = "https://raw.githubusercontent.com/Artonstyle/IPTVBlack/main/hintergrund/" + img + "?v=" + new Date().getTime();
-      document.body.style.backgroundImage = "linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('" + url + "')";
+      document.body.style.backgroundImage = "";
+      document.body.style.background = "var(--bg)";
+      return;
     }
+    var url = "https://raw.githubusercontent.com/Artonstyle/IPTVBlack/main/hintergrund/" + img + "?t=" + Date.now();
+    document.body.style.backgroundImage =
+      "linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url('" + url + "')";
+    document.body.style.backgroundSize = "cover";
+    document.body.style.backgroundPosition = "center";
   }
 
   function loadHandy() {
-    fetch("https://raw.githubusercontent.com/Artonstyle/IPTVBlack/main/playlist.txt?v=" + new Date().getTime())
-    .then(r => r.text()).then(d => { 
-      $("url-display").value = d.trim().substring(0, 30) + "..."; 
-      alert("Erfolg: Link geladen!"); 
-    }).catch(e => alert("Fehler: playlist.txt nicht gefunden"));
+    setStatus("Lade Link…");
+    fetch("https://raw.githubusercontent.com/Artonstyle/IPTVBlack/main/playlist.txt?t=" + Date.now(), {cache:"no-store"})
+      .then(function(r){
+        if(!r.ok) throw new Error("HTTP " + r.status);
+        return r.text();
+      })
+      .then(function(d){
+        $("url-display").value = (d||"").trim();
+        setStatus("Link geladen ✓");
+      })
+      .catch(function(err){
+        setStatus("Fehler beim Laden: " + err.message);
+      });
   }
 
   function init() {
-    try { 
-      // Samsung Tizen MAC Abruf
-      var mac = webapis.network.getMac();
-      $("mac").innerText = "MAC: " + mac; 
-    } catch(e) { $("mac").innerText = "MAC: 00:11:22:33:44"; }
+    // MAC: nur wenn Tizen/WebAPIs vorhanden
+    var macText = "MAC: nicht verfügbar (GitHub Browser)";
+    try{
+      if(window.webapis && webapis.network && typeof webapis.network.getMac === "function"){
+        macText = "MAC: " + webapis.network.getMac();
+      } else if(window.tizen && tizen.systeminfo){
+        // optional fallback – aber nicht immer zuverlässig
+        macText = "MAC: (Tizen erkannt)";
+      }
+    }catch(e){}
+    $("mac").innerText = macText;
+
+    // Start: TV view
+    area = "menu";
+    mIdx = 0;
+    sIdx = 1;
     update();
   }
 </script>
