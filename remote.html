@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<body style="font-family:sans-serif; padding:20px; background:#000; color:#fff; text-align:center;">
+    <h2>Black IPTV Remote</h2>
+    <p>Link hier einfügen:</p>
+    <input id="link" type="text" style="width:90%; padding:15px; border-radius:10px; border:none;">
+    <br><br>
+    <button onclick="send()" style="padding:15px 30px; background:#0045ff; color:white; border:none; border-radius:10px; font-weight:bold;">AN TV SENDEN</button>
+    <p id="stat"></p>
+
+    <script>
+        function send() {
+            const val = document.getElementById('link').value;
+            document.getElementById('stat').innerText = "Sende zu GitHub...";
+            // Hier müsstest du dich kurz bei GitHub einloggen um die Datei zu ändern 
+            // ODER: Du nutzt einfach den "Edit" Button direkt auf GitHub.
+            alert("Kopiere den Link und bearbeite die 'playlist.txt' in deinem GitHub!");
+            window.location.href = "https://github.com/Artonstyle/IPTVBlack/edit/main/playlist.txt";
+        }
+    </script>
+</body>
+</html>
