@@ -90,10 +90,10 @@
       transform:scale(1.02);
     }
 
-    /* Single content column (INFO/ACTION removed) */
+    /* Single content column */
     .content-col{
       flex:1;
-      background: rgba(0,0,0,.22);
+      background: rgba(0,0,0,.26);              /* etwas dunkler -> bessere Lesbarkeit */
       border:1px solid rgba(0,210,255,.14);
       border-radius:26px;
       overflow:hidden;
@@ -147,48 +147,58 @@
     }
     .danger{ color: var(--danger); font-weight:900; }
 
-    /* Bigger profile text for TV (M3U/XC) */
+    /* Bigger profile text for TV */
     .profile .card-title{ font-size:32px; }
     .profile .card-sub{ font-size:24px; }
 
-    /* Background grid: 6 columns smaller */
-    .grid{
-      display:grid;
-      grid-template-columns: repeat(6, 1fr);
+    /* ✅ HINTERGRUND: FLEX-GRID (Tizen kompatibel) */
+    .tile-wrap{
+      display:flex;
+      flex-wrap:wrap;
       gap:12px;
     }
-    .gitem{
-      height:120px;                 /* smaller */
+    .tile{
+      flex: 0 0 calc((100% - 12px*5) / 6);  /* 6 Spalten */
       border-radius:16px;
       border:1px solid rgba(0,210,255,.14);
-      background: rgba(0,0,0,.22);
+      background: rgba(0,0,0,.28);
       overflow:hidden;
       position:relative;
       transition:.12s;
     }
-    .gitem.focused{
-      border-color: rgba(0,210,255,.70);
-      box-shadow:0 0 18px rgba(0,210,255,.10);
-      transform: scale(1.03);
+    /* 16:9 Tile */
+    .tile::before{
+      content:"";
+      display:block;
+      padding-top:56.25%;
     }
-    .gthumb{
+    .tile.focused{
+      border-color: rgba(0,210,255,.80);
+      box-shadow:0 0 18px rgba(0,210,255,.12);
+      transform: scale(1.04);
+    }
+    .tile img{
+      position:absolute; inset:0;
       width:100%; height:100%;
       object-fit:cover;
-      opacity:.92;
       display:block;
+      filter: contrast(1.15) saturate(1.15) brightness(1.05); /* ✅ sichtbar */
+      opacity:.98;
     }
-    .glabel{
+    .tile .label{
       position:absolute; left:0; right:0; bottom:0;
-      padding:8px 8px;
-      font-size:12px;
+      padding:10px 10px;
+      font-size:14px;                 /* größer lesbar */
       font-weight:900;
-      background: linear-gradient(to top, rgba(0,0,0,.85), rgba(0,0,0,0));
-      text-shadow:0 2px 8px rgba(0,0,0,.6);
+      background: linear-gradient(to top, rgba(0,0,0,.90), rgba(0,0,0,0));
+      text-shadow:0 2px 10px rgba(0,0,0,.75);
       white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      color:#fff;
+      letter-spacing:.5px;
     }
 
-    /* Form items inside same column */
-    .label{ color:var(--cyan); font-weight:900; letter-spacing:2px; font-size:14px; margin-top:6px; }
+    /* Form items */
+    .label2{ color:var(--cyan); font-weight:900; letter-spacing:2px; font-size:14px; margin-top:6px; }
     .input{
       width:100%;
       padding:18px 16px;
@@ -197,7 +207,7 @@
       border:1px solid rgba(0,210,255,.22);
       background: rgba(0,0,0,.28);
       color:#fff;
-      font-size:22px;               /* bigger for TV */
+      font-size:22px;
     }
     .btnrow{ display:flex; gap:12px; margin-top:14px; }
     .btn{
@@ -208,7 +218,7 @@
       border:1px solid rgba(0,210,255,.22);
       background: rgba(0,69,255,.20);
       font-weight:900;
-      font-size:20px;               /* bigger */
+      font-size:20px;
       transition:.12s;
     }
     .btn.focused{
@@ -227,6 +237,9 @@
       color:rgba(255,255,255,.58);
       font-size:18px;
       line-height:1.35;
+    }
+    .focusable.focused{
+      outline: none;
     }
   </style>
 </head>
@@ -314,13 +327,9 @@
 
     renderMenu();
     renderTabs();
-
-    // Tabs preview should show immediately on highlight
     renderTabPreview();
 
-    // BG auto load
     loadBackgroundsFromGitHub();
-
     updateFocus();
   }
 
@@ -368,7 +377,6 @@
     $("content-title").innerText = titles[tabIdx];
   }
 
-  // ✅ PREVIEW: shows immediately while switching tabs, no OK needed
   function renderTabPreview(){
     setTabTitle();
     focusIdx = 0;
@@ -382,7 +390,7 @@
   }
 
   // ===========================
-  // BACKGROUND TAB
+  // BACKGROUND TAB (FLEX GRID)
   // ===========================
   function renderBGTab(){
     var host = $("content-body");
@@ -395,12 +403,12 @@
       return;
     }
 
-    var html = '<div class="grid">';
+    var html = '<div class="tile-wrap">';
     for(var i=0;i<bgItems.length;i++){
       html +=
-        '<div class="gitem focusable" data-kind="bg" data-idx="'+i+'">'+
-          '<img class="gthumb" src="'+bgItems[i].raw+'?'+nowBust()+'"/>'+
-          '<div class="glabel">'+esc(bgItems[i].name)+'</div>'+
+        '<div class="tile focusable" data-kind="bg" data-idx="'+i+'">'+
+          '<img src="'+bgItems[i].raw+'?'+nowBust()+'" />'+
+          '<div class="label">'+esc(bgItems[i].name)+'</div>'+
         '</div>';
     }
     html += '</div>';
@@ -453,7 +461,7 @@
   }
 
   // ===========================
-  // M3U TAB (Bigger text)
+  // M3U TAB
   // ===========================
   function renderM3UTab(){
     var host = $("content-body");
@@ -483,19 +491,18 @@
     html +=
       '<div class="card">'+
         '<div class="card-title">Neues M3U Profil</div>'+
-        '<div class="label">PROFILNAME</div>'+
-        '<input id="m3u-name" class="input focusable" data-kind="m3uInput" data-idx="0" placeholder="z.B. Mein Anbieter" />'+
-        '<div class="label">M3U URL</div>'+
-        '<input id="m3u-url" class="input focusable" data-kind="m3uInput" data-idx="1" placeholder="https://example.com/list.m3u" />'+
+        '<div class="label2">PROFILNAME</div>'+
+        '<input id="m3u-name" class="input focusable" placeholder="z.B. Mein Anbieter" />'+
+        '<div class="label2">M3U URL</div>'+
+        '<input id="m3u-url" class="input focusable" placeholder="https://example.com/list.m3u" />'+
         '<div class="btnrow">'+
-          '<div id="m3u-save" class="btn focusable" data-kind="m3uBtn" data-idx="0">SPEICHERN</div>'+
-          '<div id="m3u-clear" class="btn focusable" data-kind="m3uBtn" data-idx="1">LEEREN</div>'+
+          '<div id="m3u-save" class="btn focusable">SPEICHERN</div>'+
+          '<div id="m3u-clear" class="btn focusable">LEEREN</div>'+
         '</div>'+
         '<div class="hint">OK auf Eingabe = Tastatur • OK auf SPEICHERN = speichern</div>'+
       '</div>';
 
     host.innerHTML = html;
-
     try{ $("m3u-url").value = activeM3U || ""; }catch(e){}
   }
 
@@ -540,7 +547,7 @@
   }
 
   // ===========================
-  // XTREAM TAB (Bigger text)
+  // XTREAM TAB
   // ===========================
   function renderXCTab(){
     var host = $("content-body");
@@ -571,17 +578,17 @@
     html +=
       '<div class="card">'+
         '<div class="card-title">Neues Xtream Profil</div>'+
-        '<div class="label">PROFILNAME</div>'+
-        '<input id="xc-name" class="input focusable" data-kind="xcInput" data-idx="0" placeholder="z.B. Anbieter 1" />'+
-        '<div class="label">SERVER URL</div>'+
-        '<input id="xc-url" class="input focusable" data-kind="xcInput" data-idx="1" placeholder="http://server:port" />'+
-        '<div class="label">BENUTZERNAME</div>'+
-        '<input id="xc-user" class="input focusable" data-kind="xcInput" data-idx="2" placeholder="username" />'+
-        '<div class="label">PASSWORT</div>'+
-        '<input id="xc-pass" class="input focusable" data-kind="xcInput" data-idx="3" placeholder="password" />'+
+        '<div class="label2">PROFILNAME</div>'+
+        '<input id="xc-name" class="input focusable" placeholder="z.B. Anbieter 1" />'+
+        '<div class="label2">SERVER URL</div>'+
+        '<input id="xc-url" class="input focusable" placeholder="http://server:port" />'+
+        '<div class="label2">BENUTZERNAME</div>'+
+        '<input id="xc-user" class="input focusable" placeholder="username" />'+
+        '<div class="label2">PASSWORT</div>'+
+        '<input id="xc-pass" class="input focusable" placeholder="password" />'+
         '<div class="btnrow">'+
-          '<div id="xc-save" class="btn focusable" data-kind="xcBtn" data-idx="0">SPEICHERN</div>'+
-          '<div id="xc-clear" class="btn focusable" data-kind="xcBtn" data-idx="1">LEEREN</div>'+
+          '<div id="xc-save" class="btn focusable">SPEICHERN</div>'+
+          '<div id="xc-clear" class="btn focusable">LEEREN</div>'+
         '</div>'+
         '<div class="hint">OK auf Eingabe = Tastatur • OK auf SPEICHERN = speichern</div>'+
       '</div>';
@@ -676,22 +683,17 @@
   // FOCUS HELPERS
   // ===========================
   function getFocusables(){
-    var host = $("content-body");
-    return host.querySelectorAll(".focusable, .gitem.focusable, .btn.focusable, .input.focusable, .card.focusable");
+    return $("content-body").querySelectorAll(".focusable, .tile");
   }
 
   function updateFocus(){
-    // menu focus
     for(var i=0;i<4;i++){
       $("m"+i).classList.toggle("focused", area==="menu" && i===menuIdx);
     }
-
-    // tabs focus
     for(var t=0;t<4;t++){
       $("t"+t).classList.toggle("focused", area==="tabs" && t===tabIdx);
     }
 
-    // content focus
     var f = getFocusables();
     for(var j=0;j<f.length;j++){
       f[j].classList.remove("focused");
@@ -715,21 +717,10 @@
     // BACK
     if(k===10009 || k===27){
       var ae = document.activeElement;
-      if(ae && ae.tagName==="INPUT"){
-        try{ ae.blur(); }catch(ex){}
-        return;
-      }
+      if(ae && ae.tagName==="INPUT"){ try{ ae.blur(); }catch(ex){} return; }
 
-      if(area==="content"){
-        area = "tabs";
-        updateFocus();
-        return;
-      }
-      if(area==="tabs"){
-        area = "menu";
-        updateFocus();
-        return;
-      }
+      if(area==="content"){ area="tabs"; updateFocus(); return; }
+      if(area==="tabs"){ area="menu"; updateFocus(); return; }
       try{ tizen.application.getCurrentApplication().exit(); }catch(ex){}
       return;
     }
@@ -754,16 +745,14 @@
       return;
     }
 
-    // TABS (✅ preview on switch; ✅ enter content only on OK)
+    // TABS (preview on switch; enter content on OK)
     if(area==="tabs"){
       if(k===37) tabIdx = (tabIdx>0) ? tabIdx-1 : 3;
       if(k===39) tabIdx = (tabIdx<3) ? tabIdx+1 : 0;
 
-      // show preview immediately without OK
       renderTabs();
       renderTabPreview();
 
-      // OK enters content
       if(k===13 || k===40){
         area="content";
         focusIdx = 0;
@@ -777,31 +766,24 @@
       var focusables = getFocusables();
       var len = focusables.length;
 
-      // 0 deletes selected profile OR sets default bg
+      // 0 deletes profile OR sets default bg
       if(k===48){
         if(tabIdx===0){
           setBackground(null);
-        }else{
-          if(len){
-            var el = focusables[focusIdx];
-            var kind = el.getAttribute("data-kind") || "";
-            var idx = parseInt(el.getAttribute("data-idx")||"-1",10);
-
-            if(kind==="m3uProfile") deleteM3UProfile(idx);
-            if(kind==="xcProfile") deleteXCProfile(idx);
-          }
+        }else if(len){
+          var el = focusables[focusIdx];
+          var kind = el.getAttribute("data-kind") || "";
+          var idx = parseInt(el.getAttribute("data-idx")||"-1",10);
+          if(kind==="m3uProfile") deleteM3UProfile(idx);
+          if(kind==="xcProfile") deleteXCProfile(idx);
         }
         updateFocus();
         return;
       }
 
-      // UP/DOWN
+      // NAV
       if(k===38){
-        if(focusIdx===0){
-          area="tabs";
-          updateFocus();
-          return;
-        }
+        if(focusIdx===0){ area="tabs"; updateFocus(); return; }
         focusIdx = Math.max(0, focusIdx-1);
         updateFocus();
         return;
@@ -812,26 +794,30 @@
         return;
       }
 
-      // LEFT/RIGHT for BG grid nicer movement (6 cols)
+      // ✅ BG: 6-Spalten Navigation (Left/Right + Up/Down in rows)
       if(tabIdx===0){
         var cols = 6;
-        if(k===37){
-          // left
-          focusIdx = Math.max(0, focusIdx-1);
+
+        if(k===37){ // left
+          if(len) focusIdx = Math.max(0, focusIdx-1);
           updateFocus();
           return;
         }
-        if(k===39){
-          // right
+        if(k===39){ // right
           if(len) focusIdx = Math.min(len-1, focusIdx+1);
           updateFocus();
           return;
         }
-        if(k===38){
-          // already handled
+        if(k===38){ // up row
+          var up = focusIdx - cols;
+          if(up >= 0){ focusIdx = up; updateFocus(); }
+          else { area="tabs"; updateFocus(); }
+          return;
         }
-        if(k===40){
-          // already handled
+        if(k===40){ // down row
+          var dn = focusIdx + cols;
+          if(dn <= len-1){ focusIdx = dn; updateFocus(); }
+          return;
         }
       }
 
@@ -839,11 +825,7 @@
       if(k===13 && len){
         var el2 = focusables[focusIdx];
 
-        // input: focus keyboard
-        if(el2.tagName==="INPUT"){
-          try{ el2.focus(); }catch(e){}
-          return;
-        }
+        if(el2.tagName==="INPUT"){ try{ el2.focus(); }catch(e){} return; }
 
         var kind2 = el2.getAttribute("data-kind") || "";
         var idx2 = parseInt(el2.getAttribute("data-idx")||"-1",10);
@@ -856,31 +838,18 @@
         if(kind2==="m3uProfile") { activateM3UProfile(idx2); return; }
         if(el2.id==="m3u-save") { saveM3UProfile(); return; }
         if(el2.id==="m3u-clear"){
-          try{
-            $("m3u-name").value="";
-            $("m3u-url").value=activeM3U||"";
-          }catch(e){}
-          updateFocus();
-          return;
+          try{ $("m3u-name").value=""; $("m3u-url").value=activeM3U||""; }catch(e){}
+          updateFocus(); return;
         }
 
         if(kind2==="xcProfile") { activateXCProfile(idx2); return; }
         if(el2.id==="xc-save") { saveXCProfile(); return; }
         if(el2.id==="xc-clear"){
-          try{
-            $("xc-name").value="";
-            $("xc-url").value="";
-            $("xc-user").value="";
-            $("xc-pass").value="";
-          }catch(e){}
-          updateFocus();
-          return;
+          try{ $("xc-name").value=""; $("xc-url").value=""; $("xc-user").value=""; $("xc-pass").value=""; }catch(e){}
+          updateFocus(); return;
         }
 
-        if(kind2==="mac"){
-          renderTabPreview();
-          return;
-        }
+        if(kind2==="mac"){ renderTabPreview(); return; }
       }
     }
   });
@@ -889,15 +858,9 @@
   document.addEventListener("click", function(ev){
     var id = (ev.target && ev.target.id) ? ev.target.id : "";
     if(id==="m3u-save") saveM3UProfile();
-    if(id==="m3u-clear"){
-      try{ $("m3u-name").value=""; $("m3u-url").value=activeM3U||""; }catch(e){}
-      updateFocus();
-    }
+    if(id==="m3u-clear"){ try{ $("m3u-name").value=""; $("m3u-url").value=activeM3U||""; }catch(e){} updateFocus(); }
     if(id==="xc-save") saveXCProfile();
-    if(id==="xc-clear"){
-      try{ $("xc-name").value=""; $("xc-url").value=""; $("xc-user").value=""; $("xc-pass").value=""; }catch(e){}
-      updateFocus();
-    }
+    if(id==="xc-clear"){ try{ $("xc-name").value=""; $("xc-url").value=""; $("xc-user").value=""; $("xc-pass").value=""; }catch(e){} updateFocus(); }
   });
 </script>
 </body>
