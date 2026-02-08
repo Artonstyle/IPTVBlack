@@ -1,522 +1,1083 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <title>Black IPTV 2026 (Tizen)</title>
+  <meta charset="UTF-8" />
+  <title>Black IPTV 2026 – Tabs Setup</title>
   <script type="text/javascript" src="$WEBAPIS/webapis/webapis.js"></script>
 
   <style>
-    :root { --blue:#0045ff; --cyan:#00d2ff; --bg: radial-gradient(circle at top right,#001a4d,#00050a); }
-    * { box-sizing:border-box; outline:none; }
+    :root{
+      --blue:#0045ff;
+      --cyan:#00d2ff;
+      --glass:rgba(0,0,0,.55);
+      --glass2:rgba(0,40,120,.25);
+      --muted:rgba(255,255,255,.55);
+      --danger:#ff4d4d;
+    }
+    *{box-sizing:border-box; outline:none}
     body{
       width:1920px;height:1080px;margin:0;
-      background: var(--bg);
+      background: radial-gradient(circle at top right, #001a4d, #00050a);
       background-size:cover;background-position:center;
-      color:#fff;font-family:Arial,sans-serif;overflow:hidden;
+      color:#fff;font-family: Arial, sans-serif; overflow:hidden;
     }
+
     header{
-      height:160px;display:flex;justify-content:space-between;align-items:center;
-      padding:0 80px;border-bottom:2px solid rgba(0,210,255,.2);
+      height:160px;
+      display:flex; justify-content:space-between; align-items:center;
+      padding:0 80px;
+      border-bottom:2px solid rgba(0,210,255,.15);
     }
-    #menu{display:flex;gap:20px}
-    .item{
-      padding:20px 40px;font-size:35px;font-weight:bold;
-      color:rgba(255,255,255,.45);border-radius:15px;transition:.12s;
+    .brand{font-size:52px; font-weight:900; letter-spacing:-1px}
+    .brand span{color:var(--cyan); font-style:italic}
+    #menu{display:flex; gap:18px}
+    .menu-item{
+      padding:18px 46px;
+      font-size:34px;
+      font-weight:900;
+      color:rgba(255,255,255,.35);
+      border-radius:16px;
+      transition:.15s;
     }
-    .item.focused{
-      color:white;background:var(--blue);
-      box-shadow:0 0 30px rgba(0,69,255,.8);transform:scale(1.05);
+    .menu-item.focused{
+      background:var(--blue);
+      color:#fff;
+      box-shadow:0 0 30px rgba(0,69,255,.6);
+      transform:scale(1.04);
     }
 
-    main{display:flex;height:920px;padding:50px;gap:30px}
-    #tv-content{font-size:40px;margin:auto;opacity:.9}
+    main{height:920px; padding:40px 60px}
 
-    #setup-view{display:none;width:100%;gap:30px}
-    .column{
-      background:rgba(0,0,0,.6);
-      border:2px solid rgba(0,210,255,.6);
-      border-radius:30px;flex:1;padding:30px;
-      display:flex;flex-direction:column;align-items:center;
+    .panel{
+      height:100%;
+      border-radius:32px;
+      background: var(--glass2);
+      border:1px solid rgba(0,210,255,.18);
+      backdrop-filter: blur(10px);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+    }
+
+    /* CONTENT PLACEHOLDERS */
+    #tv-view, #vod-view, #setup-view { height:100%; display:none; }
+    #tv-view{ display:flex; align-items:center; justify-content:center; font-size:48px; color:rgba(255,255,255,.85); }
+    #vod-view{ display:flex; align-items:center; justify-content:center; font-size:48px; color:rgba(255,255,255,.85); }
+
+    /* SETUP LAYOUT */
+    #setup-view{ display:flex; flex-direction:column; gap:22px; padding:22px; }
+
+    .tabs{
+      display:flex; gap:14px;
+      padding:10px;
+      border-radius:22px;
+      background: rgba(0,0,0,.25);
+      border:1px solid rgba(0,210,255,.16);
+    }
+    .tab{
+      padding:14px 24px;
+      font-size:22px;
+      font-weight:900;
+      color:rgba(255,255,255,.45);
+      border-radius:16px;
+      transition:.12s;
+      background: rgba(0,0,0,.15);
+      border:1px solid rgba(0,210,255,.10);
+    }
+    .tab.focused{
+      color:#fff;
+      background: var(--blue);
+      border-color: rgba(255,255,255,.15);
+      box-shadow:0 0 18px rgba(0,69,255,.35);
+      transform:scale(1.02);
+    }
+
+    .setup-body{
+      flex:1;
+      display:flex;
+      gap:22px;
       overflow:hidden;
     }
 
-    .list-wrap{
-      width:100%;flex:1;overflow-y:auto;padding:10px 0;
+    /* Left list / grid */
+    .col{
+      background: rgba(0,0,0,.25);
+      border:1px solid rgba(0,210,255,.14);
+      border-radius:26px;
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
     }
-    .list-wrap::-webkit-scrollbar{width:0}
+    .col-header{
+      padding:18px 20px;
+      color:var(--cyan);
+      font-weight:900;
+      letter-spacing:3px;
+      font-size:14px;
+      text-transform:uppercase;
+      border-bottom:1px solid rgba(0,210,255,.10);
+    }
+    .col-body{
+      flex:1;
+      overflow-y:auto;
+      padding:16px;
+    }
+    .col-body::-webkit-scrollbar{ width:0; }
 
-    .bg-btn,.btn{
-      width:90%;padding:20px;margin:10px auto;
-      background:rgba(255,255,255,.08);
-      border:3px solid transparent;border-radius:15px;
-      text-align:center;font-size:24px;color:#fff;transition:.12s;
+    .card{
+      border-radius:18px;
+      border:1px solid rgba(0,210,255,.14);
+      background: rgba(0,0,0,.22);
+      padding:16px;
+      margin-bottom:14px;
+      transition:.12s;
+      color:rgba(255,255,255,.85);
     }
-    .bg-btn.focused,.btn.focused,input.focused{
-      border-color:#fff;background:rgba(0,69,255,.6);
-      box-shadow:0 0 18px rgba(0,69,255,.35);transform:scale(1.02);
+    .card.focused{
+      border-color: rgba(0,210,255,.65);
+      box-shadow:0 0 22px rgba(0,210,255,.12);
+      transform: scale(1.01);
+      background: rgba(0,69,255,.18);
+    }
+    .card-title{ font-weight:900; font-size:22px; }
+    .card-sub{ margin-top:6px; color:rgba(255,255,255,.5); font-size:16px; word-break:break-all; }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap:14px;
+    }
+    .gitem{
+      height:170px;
+      border-radius:18px;
+      border:1px solid rgba(0,210,255,.14);
+      background: rgba(0,0,0,.22);
+      overflow:hidden;
+      position:relative;
+      transition:.12s;
+    }
+    .gitem.focused{
+      border-color: rgba(0,210,255,.70);
+      box-shadow:0 0 22px rgba(0,210,255,.12);
+      transform: scale(1.03);
+    }
+    .gthumb{
+      width:100%; height:100%;
+      object-fit:cover;
+      opacity:.92;
+      display:block;
+    }
+    .glabel{
+      position:absolute; left:0; right:0; bottom:0;
+      padding:10px 10px;
+      font-size:14px;
+      font-weight:900;
+      background: linear-gradient(to top, rgba(0,0,0,.85), rgba(0,0,0,0));
+      text-shadow:0 2px 8px rgba(0,0,0,.6);
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
     }
 
-    input{
-      width:90%;padding:20px;margin:10px 0;
-      background:#222;border:1px solid var(--cyan);
-      color:white;font-size:20px;border-radius:10px;
+    .right{
+      width:560px;
     }
-
-    .qr{background:#fff;padding:10px;margin:20px;border-radius:10px}
-    .status{width:90%;margin-top:12px;color:var(--cyan);font-size:18px;text-align:center;min-height:24px}
-    .hint{width:90%;margin-top:14px;color:rgba(255,255,255,.6);font-size:18px;line-height:1.35;text-align:center}
+    .form-row{ margin-bottom:12px; }
+    .label{ color:var(--cyan); font-weight:900; letter-spacing:2px; font-size:13px; }
+    .input{
+      width:100%;
+      padding:16px 16px;
+      margin-top:8px;
+      border-radius:14px;
+      border:1px solid rgba(0,210,255,.22);
+      background: rgba(0,0,0,.28);
+      color:#fff;
+      font-size:20px;
+    }
+    .btnrow{ display:flex; gap:12px; margin-top:12px; }
+    .btn{
+      flex:1;
+      padding:14px 14px;
+      text-align:center;
+      border-radius:14px;
+      border:1px solid rgba(0,210,255,.22);
+      background: rgba(0,69,255,.20);
+      font-weight:900;
+      font-size:18px;
+      transition:.12s;
+    }
+    .btn.focused{
+      background: var(--blue);
+      box-shadow:0 0 18px rgba(0,69,255,.35);
+      transform:scale(1.02);
+    }
+    .hint{
+      margin-top:16px;
+      color:rgba(255,255,255,.55);
+      font-size:16px;
+      line-height:1.35;
+    }
+    .badge{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      background: rgba(0,210,255,.12);
+      border:1px solid rgba(0,210,255,.22);
+      color: rgba(255,255,255,.85);
+      font-weight:900;
+      font-size:14px;
+      margin-left:10px;
+    }
+    .danger{ color: var(--danger); font-weight:900; }
   </style>
 </head>
 
 <body onload="init()">
-<header>
-  <div style="font-size:50px;font-weight:bold;">BLACK<span style="color:var(--cyan)">IPTV</span></div>
-  <nav id="menu">
-    <div id="i0" class="item">TV</div>
-    <div id="i1" class="item">FILME</div>
-    <div id="i2" class="item">SERIEN</div>
-    <div id="i3" class="item">EINSTELLUNG</div>
-  </nav>
-</header>
+  <header>
+    <div class="brand">BLACK<span>IPTV</span></div>
+    <nav id="menu">
+      <div id="m0" class="menu-item">TV</div>
+      <div id="m1" class="menu-item">FILME</div>
+      <div id="m2" class="menu-item">SERIEN</div>
+      <div id="m3" class="menu-item">EINSTELLUNG</div>
+    </nav>
+  </header>
 
-<main>
-  <div id="tv-content">Willkommen</div>
+  <main>
+    <div class="panel">
+      <div id="tv-view">Willkommen (TV)</div>
+      <div id="vod-view">Willkommen (Filme/Serien Demo)</div>
 
-  <div id="setup-view">
-    <!-- DESIGN -->
-    <div class="column">
-      <h2 style="color:var(--cyan);margin:0 0 10px 0;">DESIGN</h2>
+      <!-- SETUP -->
+      <div id="setup-view">
+        <div class="tabs">
+          <div id="t0" class="tab">HINTERGRUND</div>
+          <div id="t1" class="tab">M3U PROFILE</div>
+          <div id="t2" class="tab">XTREAM PROFILE</div>
+          <div id="t3" class="tab">MAC ADRESSE</div>
+        </div>
 
-      <div id="bg-list" class="list-wrap"></div>
+        <div class="setup-body">
+          <!-- LEFT -->
+          <div id="left-col" class="col" style="flex:1">
+            <div id="left-title" class="col-header">HINTERGRUND</div>
+            <div id="left-body" class="col-body"></div>
+          </div>
 
-      <div id="mac" class="status" style="margin-top:10px;">MAC: Lade…</div>
-      <div id="bg-status" class="status"></div>
-
-      <div class="hint">
-        Navigation: ←/→ Menü • ↓ ins Setup • ↑ zurück • OK auswählen • Back = Zurück
+          <!-- RIGHT -->
+          <div class="col right">
+            <div class="col-header">INFO / AKTION</div>
+            <div id="right-body" class="col-body"></div>
+          </div>
+        </div>
       </div>
     </div>
-
-    <!-- HANDY UPLOAD -->
-    <div class="column">
-      <h2 style="color:var(--cyan);margin:0 0 10px 0;">HANDY UPLOAD</h2>
-
-      <div class="qr">
-        <img alt="QR" src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https://github.com/Artonstyle/IPTVBlack/edit/main/playlist.txt">
-      </div>
-
-      <div id="bUpload" class="btn">LINK VOM HANDY LADEN</div>
-      <input id="url-display" type="text" placeholder="Kein Link empfangen" readonly>
-      <div id="status" class="status"></div>
-
-      <div class="hint">
-        Hinweis: In <b>playlist.txt</b> muss wirklich nur der Link stehen.
-      </div>
-    </div>
-  </div>
-</main>
+  </main>
 
 <script>
-  // ---------------------------
-  // CONFIG (dein Repo)
-  // ---------------------------
-  var OWNER = "Artonstyle";
-  var REPO  = "IPTVBlack";
-  var BRANCH = "main";
-  var BG_FOLDER = "hintergrund";
-  var GITHUB_CONTENTS_URL =
-    "https://api.github.com/repos/" + OWNER + "/" + REPO + "/contents/" + BG_FOLDER + "?ref=" + BRANCH + "&t=" + Date.now();
+  // ===========================
+  // KONFIG (DEIN GITHUB REPO)
+  // ===========================
+  var GH_OWNER = "Artonstyle";
+  var GH_REPO  = "IPTVBlack";
+  var GH_BG_DIR = "hintergrund"; // Ordner in deinem Repo
 
-  var PLAYLIST_URL = "https://raw.githubusercontent.com/" + OWNER + "/" + REPO + "/" + BRANCH + "/playlist.txt?t=" + Date.now();
+  // ===========================
+  // STATE
+  // ===========================
+  var area = "menu";       // menu | tabs | content
+  var menuIdx = 3;
 
-  // ---------------------------
-  // State
-  // ---------------------------
-  var area = "menu";     // menu | setup
-  var mIdx = 0;          // 0..3
-  var setupCol = 0;      // 0=design, 1=upload
-  var bgIdx = 0;
+  var tabIdx = 0;          // 0=BG 1=M3U 2=XC 3=MAC
+  var contentIdx = 0;      // Fokus Index im linken Bereich
+  var contentCols = 4;     // für Grid (BG)
+  var contentMode = "list"; // "grid" oder "list"
 
-  // bgButtons: {type:'auto'|'img'|'none', label, url}
-  var bgButtons = [];
+  // Inputs/Buttons Fokus in rechter Spalte (pro Tab unterschiedlich)
+  var rightIdx = 0;
+  var rightFocus = false; // false = links, true = rechts
 
-  var slideshowTimer = null;
-  var slideshowIdx = 0;
+  // Profiles Storage
+  var m3uProfiles = JSON.parse(localStorage.getItem("iptv_m3u_profiles") || "[]");
+  var xcProfiles  = JSON.parse(localStorage.getItem("iptv_xc_profiles")  || "[]");
+  var activeM3U   = localStorage.getItem("iptv_active_m3u") || "";
+  var activeXC    = localStorage.getItem("iptv_active_xc")  || ""; // profile id
+
+  // Background images list from GitHub
+  var bgItems = []; // {name, raw}
 
   function $(id){ return document.getElementById(id); }
+  function esc(s){
+    return String(s||"")
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+  function nowBust(){ return "t=" + Date.now(); }
 
-  function setStatus(msg){ $("status").innerText = msg || ""; }
-  function setBgStatus(msg){ $("bg-status").innerText = msg || ""; }
-
-  function safeScroll(el){
-    try{ el && el.scrollIntoView({block:"center"}); }catch(e){}
+  // ===========================
+  // VIEW SWITCH
+  // ===========================
+  function showMain(which){
+    $("tv-view").style.display = (which==="tv") ? "flex" : "none";
+    $("vod-view").style.display = (which==="vod") ? "flex" : "none";
+    $("setup-view").style.display = (which==="setup") ? "flex" : "none";
   }
 
-  function escapeHtml(s){
-    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  // ===========================
+  // INIT
+  // ===========================
+  function init(){
+    try{
+      ["Up","Down","Left","Right","Enter","Back","0","1","2","3","4","5","6","7","8","9"]
+        .forEach(function(k){ tizen.tvinputdevice.registerKey(k); });
+    }catch(e){}
+
+    // Default: Settings
+    showMain("setup");
+    area = "menu";
+    menuIdx = 3;
+
+    // Render all
+    normalizeProfiles();
+    renderMenu();
+    renderTabs();
+    renderTabContent();
+    updateFocus();
+
+    // Preload BG list when entering BG tab
+    loadBackgroundsFromGitHub();
+
+    // MAC
+    updateMacText();
   }
 
-  // ---------------------------
-  // UI Render
-  // ---------------------------
-  function renderBgList(){
-    var host = $("bg-list");
-    var html = "";
-    for(var i=0;i<bgButtons.length;i++){
-      html += '<div id="bg'+i+'" class="bg-btn">'+ escapeHtml(bgButtons[i].label) +'</div>';
+  function normalizeProfiles(){
+    if(!Array.isArray(m3uProfiles)) m3uProfiles = [];
+    if(!Array.isArray(xcProfiles))  xcProfiles  = [];
+
+    // Ensure ids
+    for(var i=0;i<m3uProfiles.length;i++){
+      if(!m3uProfiles[i].id) m3uProfiles[i].id = "m3u_" + Date.now() + "_" + i;
     }
-    host.innerHTML = html;
+    for(var j=0;j<xcProfiles.length;j++){
+      if(!xcProfiles[j].id) xcProfiles[j].id = "xc_" + Date.now() + "_" + j;
+    }
+
+    localStorage.setItem("iptv_m3u_profiles", JSON.stringify(m3uProfiles));
+    localStorage.setItem("iptv_xc_profiles", JSON.stringify(xcProfiles));
   }
 
-  function clampBgIdx(i){
-    if(i<0) return 0;
-    if(i>bgButtons.length-1) return bgButtons.length-1;
-    return i;
+  // ===========================
+  // RENDER
+  // ===========================
+  function renderMenu(){
+    for(var i=0;i<4;i++){
+      $("m"+i).classList.toggle("focused", area==="menu" && i===menuIdx);
+    }
   }
 
-  function update(){
-    // reset focus
-    var foc = document.querySelectorAll(".item, .bg-btn, .btn, input");
-    for(var i=0;i<foc.length;i++) foc[i].classList.remove("focused");
+  function renderTabs(){
+    for(var i=0;i<4;i++){
+      $("t"+i).classList.toggle("focused", (area==="tabs" && i===tabIdx) || (area!=="menu" && tabIdx===i && area!=="tabs" && area!=="menu" && false));
+    }
+  }
 
-    // show view
-    $("setup-view").style.display = (mIdx===3) ? "flex" : "none";
-    $("tv-content").style.display = (mIdx===3) ? "none" : "block";
+  function setTabTitle(){
+    var titles = ["HINTERGRUND","M3U PROFILE","XTREAM PROFILE","MAC ADRESSE"];
+    $("left-title").innerText = titles[tabIdx];
+  }
 
-    if(area==="menu"){
-      var mi = $("i"+mIdx);
-      if(mi){ mi.classList.add("focused"); safeScroll(mi); }
+  function renderTabContent(){
+    setTabTitle();
+    contentIdx = 0;
+    rightIdx = 0;
+    rightFocus = false;
+
+    if(tabIdx===0){
+      renderBGTab();
       return;
     }
+    if(tabIdx===1){
+      renderM3UTab();
+      return;
+    }
+    if(tabIdx===2){
+      renderXCTab();
+      return;
+    }
+    renderMACTab();
+  }
 
-    // setup focus
-    if(setupCol===0){
-      var bi = $("bg"+bgIdx);
-      if(bi){ bi.classList.add("focused"); safeScroll(bi); }
+  // -------- BG TAB --------
+  function renderBGTab(){
+    contentMode = "grid";
+    contentCols = 4;
+
+    var lb = $("left-body");
+    if(!bgItems.length){
+      lb.innerHTML =
+        '<div class="card">'+
+          '<div class="card-title">Lade Hintergründe…</div>'+
+          '<div class="card-sub">GitHub Ordner: /'+esc(GH_BG_DIR)+'</div>'+
+        '</div>';
     }else{
-      $("bUpload").classList.add("focused");
-      safeScroll($("bUpload"));
+      var html = '<div class="grid">';
+      for(var i=0;i<bgItems.length;i++){
+        html +=
+          '<div class="gitem">'+
+            '<img class="gthumb" src="'+bgItems[i].raw+'?'+nowBust()+'" />'+
+            '<div class="glabel">'+esc(bgItems[i].name)+'</div>'+
+          '</div>';
+      }
+      html += '</div>';
+      lb.innerHTML = html;
     }
+
+    $("right-body").innerHTML =
+      '<div class="card">'+
+        '<div class="card-title">Hintergrund wählen</div>'+
+        '<div class="card-sub">OK = setzen • 0 = Standard</div>'+
+        '<div class="hint">Die Bilder werden automatisch aus <b>/'+esc(GH_BG_DIR)+'</b> geladen (ohne list.txt).</div>'+
+      '</div>';
   }
 
-  // ---------------------------
-  // Background Engine
-  // ---------------------------
-  function stopSlideshow(){
-    if(slideshowTimer){ clearInterval(slideshowTimer); slideshowTimer = null; }
+  function loadBackgroundsFromGitHub(){
+    // GitHub contents API
+    var url = "https://api.github.com/repos/"+encodeURIComponent(GH_OWNER)+"/"+encodeURIComponent(GH_REPO)+"/contents/"+encodeURIComponent(GH_BG_DIR)+"?"+nowBust();
+    fetch(url)
+      .then(function(r){ return r.json(); })
+      .then(function(arr){
+        if(!Array.isArray(arr)){ bgItems=[]; renderTabContent(); updateFocus(); return; }
+        var list = [];
+        for(var i=0;i<arr.length;i++){
+          var it = arr[i];
+          if(!it || it.type!=="file") continue;
+          var n = (it.name||"").toLowerCase();
+          if(!(n.endsWith(".jpg") || n.endsWith(".jpeg") || n.endsWith(".png") || n.endsWith(".webp"))) continue;
+
+          // raw url (recommended)
+          var raw = "https://raw.githubusercontent.com/"+GH_OWNER+"/"+GH_REPO+"/main/"+GH_BG_DIR+"/"+encodeURIComponent(it.name);
+          // encodeURIComponent only filename; keep path stable
+          raw = "https://raw.githubusercontent.com/"+GH_OWNER+"/"+GH_REPO+"/main/"+GH_BG_DIR+"/"+it.name;
+          list.push({ name: it.name, raw: raw });
+        }
+
+        // sort
+        list.sort(function(a,b){ return a.name.localeCompare(b.name); });
+        bgItems = list;
+
+        if(tabIdx===0){
+          renderTabContent();
+          updateFocus();
+        }
+      })
+      .catch(function(){
+        bgItems = [];
+        if(tabIdx===0){
+          renderTabContent();
+          updateFocus();
+        }
+      });
   }
 
-  function setBGUrl(url){
-    stopSlideshow();
-    localStorage.setItem("bg_mode", "url");
-    localStorage.setItem("bg_url", url || "");
-
-    if(!url){
-      setBGNone();
+  function setBackground(rawUrl){
+    if(!rawUrl){
+      document.body.style.backgroundImage = "";
+      document.body.style.background = "radial-gradient(circle at top right, #001a4d, #00050a)";
       return;
     }
-
-    var u = url + (url.indexOf("?")>-1 ? "&" : "?") + "t=" + Date.now();
     document.body.style.backgroundImage =
-      "linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url('" + u + "')";
+      "linear-gradient(rgba(0,0,0,.45), rgba(0,0,0,.55)), url('"+rawUrl+"?"+nowBust()+"')";
     document.body.style.backgroundSize = "cover";
     document.body.style.backgroundPosition = "center";
   }
 
-  function setBGNone(){
-    stopSlideshow();
-    localStorage.setItem("bg_mode", "none");
-    localStorage.removeItem("bg_url");
+  // -------- M3U TAB --------
+  function renderM3UTab(){
+    contentMode = "list";
+    var lb = $("left-body");
 
-    document.body.style.backgroundImage = "";
-    document.body.style.background = "var(--bg)";
-  }
-
-  function startSlideshow(){
-    stopSlideshow();
-    localStorage.setItem("bg_mode", "auto");
-    localStorage.removeItem("bg_url");
-
-    var images = bgButtons.filter(function(x){ return x.type==="img" && x.url; });
-    if(!images.length){
-      setBGNone();
-      return;
+    // left: list profiles
+    var html = "";
+    for(var i=0;i<m3uProfiles.length;i++){
+      var p = m3uProfiles[i];
+      var isActive = (p && p.url && p.url===activeM3U);
+      html +=
+        '<div class="card">'+
+          '<div class="card-title">'+esc(p.name || ("Profil "+(i+1)))+(isActive ? '<span class="badge">AKTIV</span>' : '')+'</div>'+
+          '<div class="card-sub">'+esc(p.url || "-")+'</div>'+
+          '<div class="card-sub"><span class="danger">0</span> = Löschen • OK = Aktivieren</div>'+
+        '</div>';
     }
-
-    slideshowIdx = parseInt(localStorage.getItem("bg_auto_idx") || "0", 10);
-    if(isNaN(slideshowIdx) || slideshowIdx<0 || slideshowIdx>=images.length) slideshowIdx = 0;
-
-    function apply(){
-      var u = images[slideshowIdx].url;
-      setBGUrl(u); // speichert mode=url, aber wir wollen mode=auto behalten:
-      localStorage.setItem("bg_mode","auto");
-      localStorage.setItem("bg_auto_idx", String(slideshowIdx));
-      slideshowIdx = (slideshowIdx + 1) % images.length;
+    if(!m3uProfiles.length){
+      html =
+        '<div class="card">'+
+          '<div class="card-title">Keine M3U Profile</div>'+
+          '<div class="card-sub">Rechts eintragen und speichern.</div>'+
+        '</div>';
     }
+    lb.innerHTML = html;
 
-    apply();
-    // alle 12 Sekunden wechseln
-    slideshowTimer = setInterval(apply, 12000);
-  }
+    // right: form
+    $("right-body").innerHTML =
+      '<div class="form-row">'+
+        '<div class="label">PROFILNAME</div>'+
+        '<input id="m3u-name" class="input" placeholder="z.B. Mein Anbieter" />'+
+      '</div>'+
+      '<div class="form-row">'+
+        '<div class="label">M3U URL</div>'+
+        '<input id="m3u-url" class="input" placeholder="https://example.com/list.m3u" />'+
+      '</div>'+
+      '<div class="btnrow">'+
+        '<div id="m3u-save" class="btn">SPEICHERN</div>'+
+        '<div id="m3u-clear" class="btn">LEEREN</div>'+
+      '</div>'+
+      '<div class="hint">'+
+        'Links Profile auswählen: <b>OK</b> = aktivieren • <b>0</b> = löschen.<br>'+
+        'Rechts: Name+URL speichern (Multi-Profile).'+
+      '</div>';
 
-  function applySavedBackground(){
-    var mode = localStorage.getItem("bg_mode") || "none";
-    var url  = localStorage.getItem("bg_url") || "";
-
-    if(mode==="auto"){
-      startSlideshow();
-      return;
-    }
-    if(mode==="url" && url){
-      setBGUrl(url);
-      return;
-    }
-    setBGNone();
-  }
-
-  function activateBgSelection(){
-    var b = bgButtons[bgIdx];
-    if(!b) return;
-
-    if(b.type==="auto"){ startSlideshow(); return; }
-    if(b.type==="none"){ setBGNone(); return; }
-    if(b.type==="img"){ setBGUrl(b.url); return; }
-  }
-
-  // ---------------------------
-  // AUTO load images from GitHub folder (OHNE list.txt)
-  // ---------------------------
-  function isImageName(name){
-    name = (name || "").toLowerCase();
-    return (
-      name.endsWith(".png") || name.endsWith(".jpg") || name.endsWith(".jpeg") ||
-      name.endsWith(".webp") || name.endsWith(".gif")
-    );
-  }
-
-  function loadBackgroundsFromGitHub(){
-    setBgStatus("Lade Designs…");
-
-    // fallback (wenn API blockiert/timeout)
-    bgButtons = [
-      {type:"auto", label:"AUTO SLIDESHOW", url:""},
-      {type:"none", label:"STANDARD", url:""}
-    ];
-    renderBgList();
-
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", GITHUB_CONTENTS_URL, true);
-    xhr.timeout = 15000;
-
-    xhr.onreadystatechange = function(){
-      if(xhr.readyState !== 4) return;
-
-      if(xhr.status === 200){
-        var arr;
-        try{ arr = JSON.parse(xhr.responseText || "[]"); }catch(e){ arr = []; }
-
-        // arr enthält Dateien im Ordner
-        var images = [];
-        for(var i=0;i<arr.length;i++){
-          var it = arr[i];
-          if(!it || it.type !== "file") continue;
-          if(!isImageName(it.name)) continue;
-
-          // GitHub API liefert download_url (raw)
-          if(it.download_url){
-            images.push({ name: it.name, url: it.download_url });
-          }
-        }
-
-        // sort nach name
-        images.sort(function(a,b){
-          return a.name.localeCompare(b.name);
-        });
-
-        // build buttons
-        var list = [{type:"auto", label:"AUTO SLIDESHOW", url:""}];
-        for(var j=0;j<images.length;j++){
-          list.push({type:"img", label: images[j].name, url: images[j].url});
-        }
-        list.push({type:"none", label:"STANDARD", url:""});
-
-        bgButtons = list;
-        renderBgList();
-        bgIdx = clampBgIdx(bgIdx);
-
-        setBgStatus(images.length ? ("Designs gefunden: " + images.length) : "Keine Bilder im Hintergrund-Ordner gefunden");
-        applySavedBackground();
-        update();
-      }else{
-        setBgStatus("Design-Ordner konnte nicht geladen werden (HTTP " + xhr.status + ")");
-        applySavedBackground();
-        update();
-      }
-    };
-
-    xhr.ontimeout = function(){
-      setBgStatus("Timeout beim Laden der Designs");
-      applySavedBackground();
-      update();
-    };
-    xhr.onerror = function(){
-      setBgStatus("Netzwerkfehler beim Laden der Designs");
-      applySavedBackground();
-      update();
-    };
-
-    xhr.send();
-  }
-
-  // ---------------------------
-  // Handy link load
-  // ---------------------------
-  function loadHandy(){
-    setStatus("Lade Link…");
-
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", PLAYLIST_URL, true);
-    xhr.timeout = 15000;
-
-    xhr.onreadystatechange = function(){
-      if(xhr.readyState !== 4) return;
-      if(xhr.status === 200){
-        var txt = (xhr.responseText || "").trim();
-        $("url-display").value = txt;
-        setStatus("Link geladen ✓");
-      }else{
-        setStatus("Fehler: HTTP " + xhr.status);
-      }
-    };
-    xhr.ontimeout = function(){ setStatus("Timeout beim Laden"); };
-    xhr.onerror = function(){ setStatus("Netzwerkfehler"); };
-    xhr.send();
-  }
-
-  // ---------------------------
-  // MAC Address (Tizen korrekt)
-  // ---------------------------
-  function fetchMacAddress(){
-    $("mac").innerText = "MAC: Lade…";
-
-    function setMac(val){
-      var v = (val && String(val).trim()) ? String(val).trim() : "unbekannt";
-      $("mac").innerText = "MAC: " + v;
-    }
-
+    // Prefill
     try{
-      tizen.systeminfo.getPropertyValue(
-        "WIFI_NETWORK",
-        function(w){ if(w && w.macAddress) setMac(w.macAddress); else loadLan(); },
-        function(){ loadLan(); }
-      );
-    }catch(e){ loadLan(); }
-
-    function loadLan(){
-      try{
-        tizen.systeminfo.getPropertyValue(
-          "ETHERNET_NETWORK",
-          function(l){ if(l && l.macAddress) setMac(l.macAddress); else loadNetworkFallback(); },
-          function(){ loadNetworkFallback(); }
-        );
-      }catch(e){ loadNetworkFallback(); }
-    }
-
-    function loadNetworkFallback(){
-      try{
-        tizen.systeminfo.getPropertyValue(
-          "NETWORK",
-          function(n){ setMac(n && (n.wifiMacAddress || n.ethernetMacAddress || n.macAddress)); },
-          function(){ setMac(""); }
-        );
-      }catch(e){ setMac(""); }
-    }
-  }
-
-  // ---------------------------
-  // Keys (Tizen Remote)
-  // ---------------------------
-  function registerKeys(){
-    try{
-      var keys = ["Up","Down","Left","Right","Enter","Back","Return"];
-      for(var i=0;i<keys.length;i++){
-        try{ tizen.tvinputdevice.registerKey(keys[i]); }catch(e){}
-      }
+      $("m3u-url").value = activeM3U || "";
     }catch(e){}
   }
 
+  function saveM3UProfile(){
+    var name = ($("m3u-name").value || "").trim();
+    var url  = ($("m3u-url").value  || "").trim();
+    if(!url) return;
+
+    if(!name) name = "M3U " + (m3uProfiles.length+1);
+
+    var id = "m3u_" + Date.now();
+    m3uProfiles.unshift({ id:id, name:name, url:url });
+    if(m3uProfiles.length>30) m3uProfiles = m3uProfiles.slice(0,30);
+
+    localStorage.setItem("iptv_m3u_profiles", JSON.stringify(m3uProfiles));
+    localStorage.setItem("iptv_active_m3u", url);
+    activeM3U = url;
+
+    renderTabContent();
+    updateFocus();
+  }
+
+  function deleteM3UProfile(index){
+    if(index<0 || index>=m3uProfiles.length) return;
+    var wasActive = (m3uProfiles[index].url === activeM3U);
+
+    m3uProfiles.splice(index,1);
+    localStorage.setItem("iptv_m3u_profiles", JSON.stringify(m3uProfiles));
+
+    if(wasActive){
+      activeM3U = "";
+      localStorage.setItem("iptv_active_m3u", "");
+    }
+
+    renderTabContent();
+    updateFocus();
+  }
+
+  function activateM3UProfile(index){
+    if(index<0 || index>=m3uProfiles.length) return;
+    activeM3U = m3uProfiles[index].url || "";
+    localStorage.setItem("iptv_active_m3u", activeM3U);
+    renderTabContent();
+    updateFocus();
+  }
+
+  // -------- XTREAM TAB --------
+  function renderXCTab(){
+    contentMode = "list";
+    var lb = $("left-body");
+
+    var html = "";
+    for(var i=0;i<xcProfiles.length;i++){
+      var p = xcProfiles[i];
+      var isActive = (p.id === activeXC);
+      html +=
+        '<div class="card">'+
+          '<div class="card-title">'+esc(p.name || ("Xtream "+(i+1)))+(isActive ? '<span class="badge">AKTIV</span>' : '')+'</div>'+
+          '<div class="card-sub">'+esc(p.url || "-")+'</div>'+
+          '<div class="card-sub">User: '+esc(p.user || "-")+'</div>'+
+          '<div class="card-sub"><span class="danger">0</span> = Löschen • OK = Aktivieren</div>'+
+        '</div>';
+    }
+    if(!xcProfiles.length){
+      html =
+        '<div class="card">'+
+          '<div class="card-title">Keine Xtream Profile</div>'+
+          '<div class="card-sub">Rechts eintragen und speichern.</div>'+
+        '</div>';
+    }
+    lb.innerHTML = html;
+
+    $("right-body").innerHTML =
+      '<div class="form-row">'+
+        '<div class="label">PROFILNAME</div>'+
+        '<input id="xc-name" class="input" placeholder="z.B. Anbieter 1" />'+
+      '</div>'+
+      '<div class="form-row">'+
+        '<div class="label">SERVER URL</div>'+
+        '<input id="xc-url" class="input" placeholder="http://server:port" />'+
+      '</div>'+
+      '<div class="form-row">'+
+        '<div class="label">BENUTZERNAME</div>'+
+        '<input id="xc-user" class="input" placeholder="username" />'+
+      '</div>'+
+      '<div class="form-row">'+
+        '<div class="label">PASSWORT</div>'+
+        '<input id="xc-pass" class="input" placeholder="password" />'+
+      '</div>'+
+      '<div class="btnrow">'+
+        '<div id="xc-save" class="btn">SPEICHERN</div>'+
+        '<div id="xc-clear" class="btn">LEEREN</div>'+
+      '</div>'+
+      '<div class="hint">'+
+        'Links Profile auswählen: <b>OK</b> = aktivieren • <b>0</b> = löschen.<br>'+
+        'Beim Aktivieren wird dieses Profil als „aktiv“ gespeichert.'+
+      '</div>';
+
+    // Prefill active profile values
+    var ap = getActiveXCProfile();
+    if(ap){
+      try{
+        $("xc-name").value = ap.name || "";
+        $("xc-url").value  = ap.url  || "";
+        $("xc-user").value = ap.user || "";
+        $("xc-pass").value = ap.pass || "";
+      }catch(e){}
+    }
+  }
+
+  function saveXCProfile(){
+    var name = ($("xc-name").value || "").trim();
+    var url  = ($("xc-url").value  || "").trim();
+    var user = ($("xc-user").value || "").trim();
+    var pass = ($("xc-pass").value || "").trim();
+    if(!url || !user) return;
+
+    if(!name) name = "Xtream " + (xcProfiles.length+1);
+
+    var id = "xc_" + Date.now();
+    xcProfiles.unshift({ id:id, name:name, url:url, user:user, pass:pass });
+    if(xcProfiles.length>30) xcProfiles = xcProfiles.slice(0,30);
+
+    localStorage.setItem("iptv_xc_profiles", JSON.stringify(xcProfiles));
+    localStorage.setItem("iptv_active_xc", id);
+    activeXC = id;
+
+    renderTabContent();
+    updateFocus();
+  }
+
+  function deleteXCProfile(index){
+    if(index<0 || index>=xcProfiles.length) return;
+    var wasActive = (xcProfiles[index].id === activeXC);
+
+    xcProfiles.splice(index,1);
+    localStorage.setItem("iptv_xc_profiles", JSON.stringify(xcProfiles));
+
+    if(wasActive){
+      activeXC = "";
+      localStorage.setItem("iptv_active_xc", "");
+    }
+
+    renderTabContent();
+    updateFocus();
+  }
+
+  function activateXCProfile(index){
+    if(index<0 || index>=xcProfiles.length) return;
+    activeXC = xcProfiles[index].id;
+    localStorage.setItem("iptv_active_xc", activeXC);
+    renderTabContent();
+    updateFocus();
+  }
+
+  function getActiveXCProfile(){
+    for(var i=0;i<xcProfiles.length;i++){
+      if(xcProfiles[i].id === activeXC) return xcProfiles[i];
+    }
+    return null;
+  }
+
+  // -------- MAC TAB --------
+  function renderMACTab(){
+    contentMode = "list";
+    var mac = getMacAddressSafe();
+
+    $("left-body").innerHTML =
+      '<div class="card">'+
+        '<div class="card-title">MAC ADRESSE</div>'+
+        '<div class="card-sub" style="font-size:22px">'+esc(mac)+'</div>'+
+        '<div class="card-sub">OK = aktualisieren</div>'+
+      '</div>';
+
+    $("right-body").innerHTML =
+      '<div class="card">'+
+        '<div class="card-title">Hinweis</div>'+
+        '<div class="hint">Je nach Gerät/Netzwerk kann die MAC aus WebAPI oder SystemInfo kommen.</div>'+
+      '</div>';
+  }
+
+  function updateMacText(){
+    if(tabIdx===3){
+      renderTabContent();
+      updateFocus();
+    }
+  }
+
+  // ===========================
+  // FOCUS / UI
+  // ===========================
+  function updateFocus(){
+    // menu focus
+    for(var i=0;i<4;i++){
+      $("m"+i).classList.toggle("focused", area==="menu" && i===menuIdx);
+    }
+
+    // tabs focus
+    for(var t=0;t<4;t++){
+      $("t"+t).classList.toggle("focused", area==="tabs" && t===tabIdx);
+    }
+
+    // clear left focus
+    var left = $("left-body");
+    var cards = left.querySelectorAll(".card");
+    var gitems = left.querySelectorAll(".gitem");
+
+    for(var c=0;c<cards.length;c++) cards[c].classList.remove("focused");
+    for(var g=0;g<gitems.length;g++) gitems[g].classList.remove("focused");
+
+    // clear right focus
+    var rb = $("right-body");
+    var inputs = rb.querySelectorAll(".input");
+    var btns = rb.querySelectorAll(".btn");
+    for(var i2=0;i2<inputs.length;i2++) inputs[i2].classList.remove("focused");
+    for(var b2=0;b2<btns.length;b2++) btns[b2].classList.remove("focused");
+
+    if(area==="content"){
+      if(!rightFocus){
+        if(contentMode==="grid"){
+          if(gitems.length){
+            contentIdx = clamp(contentIdx, 0, gitems.length-1);
+            gitems[contentIdx].classList.add("focused");
+            try{ gitems[contentIdx].scrollIntoView({block:"center"}); }catch(e){}
+          }
+        }else{
+          if(cards.length){
+            contentIdx = clamp(contentIdx, 0, cards.length-1);
+            cards[contentIdx].classList.add("focused");
+            try{ cards[contentIdx].scrollIntoView({block:"center"}); }catch(e){}
+          }
+        }
+      }else{
+        // right focus order: inputs then buttons
+        var focusables = [];
+        for(var ii=0;ii<inputs.length;ii++) focusables.push(inputs[ii]);
+        for(var bb=0;bb<btns.length;bb++) focusables.push(btns[bb]);
+
+        if(focusables.length){
+          rightIdx = clamp(rightIdx, 0, focusables.length-1);
+          focusables[rightIdx].classList.add("focused");
+          try{ focusables[rightIdx].scrollIntoView({block:"center"}); }catch(e){}
+        }
+      }
+    }
+  }
+
+  function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+
+  // ===========================
+  // MAC (SAFE)
+  // ===========================
+  function getMacAddressSafe(){
+    // 1) webapis.network.getMac()
+    try{
+      if(window.webapis && webapis.network && typeof webapis.network.getMac==="function"){
+        var m = webapis.network.getMac();
+        if(m) return m;
+      }
+    }catch(e){}
+
+    // 2) tizen.systeminfo NETWORK fallback (sync not possible, return text)
+    return "unbekannt";
+  }
+
+  // ===========================
+  // KEY HANDLING
+  // ===========================
   document.addEventListener("keydown", function(e){
     var k = e.keyCode;
 
-    // Back / Return
-    if(k === 10009 || k === 27 || k === 461){
-      if(area !== "menu"){
-        area = "menu";
-        update();
+    // BACK
+    if(k===10009 || k===27){
+      var ae = document.activeElement;
+      if(ae && ae.tagName==="INPUT"){
+        try{ ae.blur(); }catch(ex){}
         return;
       }
+
+      if(area==="content"){
+        area = "tabs";
+        rightFocus = false;
+        updateFocus();
+        return;
+      }
+      if(area==="tabs"){
+        area = "menu";
+        updateFocus();
+        return;
+      }
+      // area menu => exit app
       try{ tizen.application.getCurrentApplication().exit(); }catch(ex){}
       return;
     }
 
-    // MENU
-    if(area === "menu"){
-      if(k === 37) mIdx = (mIdx > 0) ? (mIdx - 1) : 3;
-      else if(k === 39) mIdx = (mIdx < 3) ? (mIdx + 1) : 0;
-      else if(k === 40 || k === 13){
-        if(mIdx === 3){
-          area = "setup";
-          setupCol = 0;
-          bgIdx = clampBgIdx(bgIdx);
+    // ========== MENU ==========
+    if(area==="menu"){
+      if(k===37) menuIdx = (menuIdx>0) ? menuIdx-1 : 3;
+      if(k===39) menuIdx = (menuIdx<3) ? menuIdx+1 : 0;
+
+      if(k===13 || k===40){
+        if(menuIdx===0){ showMain("tv"); area="menu"; }
+        if(menuIdx===1){ showMain("vod"); area="menu"; $("vod-view").innerText="Filme (Demo)"; }
+        if(menuIdx===2){ showMain("vod"); area="menu"; $("vod-view").innerText="Serien (Demo)"; }
+        if(menuIdx===3){
+          showMain("setup");
+          area="tabs";
+          renderTabs();
+          renderTabContent();
         }
       }
-      update();
+      updateFocus();
       return;
     }
 
-    // SETUP
-    if(area === "setup"){
-      if(k === 37 || k === 39){
-        setupCol = (setupCol === 0) ? 1 : 0;
-        update();
+    // ========== TABS ==========
+    if(area==="tabs"){
+      if(k===37) tabIdx = (tabIdx>0) ? tabIdx-1 : 3;
+      if(k===39) tabIdx = (tabIdx<3) ? tabIdx+1 : 0;
+
+      if(k===13 || k===40){
+        area="content";
+        rightFocus = false;
+        renderTabs();
+        renderTabContent();
+      }else{
+        renderTabs();
+      }
+
+      // Ensure BG list loaded
+      if(tabIdx===0 && !bgItems.length) loadBackgroundsFromGitHub();
+      if(tabIdx===3) updateMacText();
+
+      updateFocus();
+      return;
+    }
+
+    // ========== CONTENT ==========
+    if(area==="content"){
+      // delete key = 0 in list tabs
+      if(k===48){
+        if(!rightFocus){
+          if(tabIdx===1) deleteM3UProfile(contentIdx);
+          if(tabIdx===2) deleteXCProfile(contentIdx);
+        }else{
+          // in BG tab: 0 sets default background too
+          if(tabIdx===0) setBackground(null);
+        }
+        updateFocus();
         return;
       }
 
-      if(setupCol === 0){
-        if(k === 38){
-          if(bgIdx > 0) bgIdx--;
-          else { area = "menu"; update(); return; }
-          update(); return;
+      // Left/Right switch between left list and right form (except BG tab where right is info only)
+      if(k===37){
+        if(rightFocus){
+          rightFocus = false;
+          updateFocus();
+          return;
         }
-        if(k === 40){
-          if(bgIdx < bgButtons.length-1) bgIdx++;
-          update(); return;
+        // left navigation
+        if(contentMode==="grid"){
+          if(contentIdx % contentCols !== 0) contentIdx--;
+        }else{
+          // list left does nothing
         }
-        if(k === 13){
-          activateBgSelection();
-          update(); return;
+        updateFocus();
+        return;
+      }
+
+      if(k===39){
+        // allow going to right panel for M3U/XC
+        if(!rightFocus && (tabIdx===1 || tabIdx===2)){
+          rightFocus = true;
+          rightIdx = 0;
+          updateFocus();
+          return;
         }
-      }else{
-        // upload column
-        if(k === 38){ area="menu"; update(); return; }
-        if(k === 13){ loadHandy(); update(); return; }
+        if(!rightFocus && contentMode==="grid"){
+          var max = bgItems.length-1;
+          if(contentIdx < max){
+            // wrap to row start if at row end like netflix feel
+            if((contentIdx % contentCols) === contentCols-1) contentIdx = contentIdx - (contentIdx % contentCols);
+            else contentIdx++;
+          }
+        }
+        updateFocus();
+        return;
+      }
+
+      // Up/Down navigation
+      if(k===38){
+        if(rightFocus){
+          rightIdx = Math.max(0, rightIdx-1);
+          updateFocus();
+          return;
+        }
+        if(contentMode==="grid"){
+          if(contentIdx < contentCols){
+            // go back to tabs
+            area="tabs";
+            updateFocus();
+            return;
+          }
+          contentIdx = Math.max(0, contentIdx - contentCols);
+        }else{
+          if(contentIdx===0){
+            area="tabs";
+            updateFocus();
+            return;
+          }
+          contentIdx--;
+        }
+        updateFocus();
+        return;
+      }
+
+      if(k===40){
+        if(rightFocus){
+          rightIdx = rightIdx + 1;
+          updateFocus();
+          return;
+        }
+        if(contentMode==="grid"){
+          var next = contentIdx + contentCols;
+          if(next <= bgItems.length-1) contentIdx = next;
+        }else{
+          contentIdx = Math.min(getLeftCount()-1, contentIdx+1);
+        }
+        updateFocus();
+        return;
+      }
+
+      // OK / ENTER
+      if(k===13){
+        // If right focused: act on fields/buttons
+        if(rightFocus){
+          if(tabIdx===1){
+            // M3U: input focus on OK if input
+            var rb = $("right-body");
+            var inputs = rb.querySelectorAll(".input");
+            var btns = rb.querySelectorAll(".btn");
+            var focusables = [];
+            for(var ii=0;ii<inputs.length;ii++) focusables.push(inputs[ii]);
+            for(var bb=0;bb<btns.length;bb++) focusables.push(btns[bb]);
+            var f = focusables[rightIdx];
+            if(!f) return;
+
+            if(f.tagName==="INPUT"){
+              try{ f.focus(); }catch(e){}
+              return;
+            }
+            if(f.id==="m3u-save") saveM3UProfile();
+            if(f.id==="m3u-clear"){
+              try{
+                $("m3u-name").value="";
+                $("m3u-url").value= activeM3U || "";
+              }catch(e){}
+              updateFocus();
+            }
+            return;
+          }
+
+          if(tabIdx===2){
+            var rb2 = $("right-body");
+            var inputs2 = rb2.querySelectorAll(".input");
+            var btns2 = rb2.querySelectorAll(".btn");
+            var focusables2 = [];
+            for(var ii2=0;ii2<inputs2.length;ii2++) focusables2.push(inputs2[ii2]);
+            for(var bb2=0;bb2<btns2.length;bb2++) focusables2.push(btns2[bb2]);
+            var f2 = focusables2[rightIdx];
+            if(!f2) return;
+
+            if(f2.tagName==="INPUT"){
+              try{ f2.focus(); }catch(e){}
+              return;
+            }
+            if(f2.id==="xc-save") saveXCProfile();
+            if(f2.id==="xc-clear"){
+              try{
+                $("xc-name").value="";
+                $("xc-url").value="";
+                $("xc-user").value="";
+                $("xc-pass").value="";
+              }catch(e){}
+              updateFocus();
+            }
+            return;
+          }
+
+          // BG right panel has no action (except 0 default handled)
+          return;
+        }
+
+        // Left actions per tab
+        if(tabIdx===0){
+          if(bgItems[contentIdx]){
+            setBackground(bgItems[contentIdx].raw);
+          }
+          return;
+        }
+        if(tabIdx===1){
+          activateM3UProfile(contentIdx);
+          return;
+        }
+        if(tabIdx===2){
+          activateXCProfile(contentIdx);
+          return;
+        }
+        if(tabIdx===3){
+          // refresh MAC
+          renderTabContent();
+          updateFocus();
+          return;
+        }
       }
     }
   });
 
-  function init(){
-    registerKeys();
-    fetchMacAddress();
-
-    // ✅ hier wird jetzt automatisch der Ordner /hintergrund gelistet:
-    loadBackgroundsFromGitHub();
-
-    area = "menu";
-    mIdx = 0;
-    setupCol = 0;
-    bgIdx = 0;
-    update();
+  function getLeftCount(){
+    if(tabIdx===0) return bgItems.length;
+    if(tabIdx===1) return Math.max(1, m3uProfiles.length);
+    if(tabIdx===2) return Math.max(1, xcProfiles.length);
+    return 1;
   }
+
+  // ===========================
+  // CLICK SUPPORT (EMULATOR)
+  // ===========================
+  document.addEventListener("click", function(ev){
+    var id = (ev.target && ev.target.id) ? ev.target.id : "";
+    if(id==="m3u-save") saveM3UProfile();
+    if(id==="m3u-clear"){
+      try{ $("m3u-name").value=""; $("m3u-url").value=activeM3U||""; }catch(e){}
+      updateFocus();
+    }
+    if(id==="xc-save") saveXCProfile();
+    if(id==="xc-clear"){
+      try{ $("xc-name").value=""; $("xc-url").value=""; $("xc-user").value=""; $("xc-pass").value=""; }catch(e){}
+      updateFocus();
+    }
+  });
 </script>
 </body>
 </html>
