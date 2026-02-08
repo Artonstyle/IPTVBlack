@@ -93,7 +93,7 @@
     /* Single content column */
     .content-col{
       flex:1;
-      background: rgba(0,0,0,.26);              /* etwas dunkler -> bessere Lesbarkeit */
+      background: rgba(0,0,0,.26);
       border:1px solid rgba(0,210,255,.14);
       border-radius:26px;
       overflow:hidden;
@@ -151,14 +151,14 @@
     .profile .card-title{ font-size:32px; }
     .profile .card-sub{ font-size:24px; }
 
-    /* ✅ HINTERGRUND: FLEX-GRID (Tizen kompatibel) */
+    /* ✅ HINTERGRUND: FLEX GRID (Tizen safe) */
     .tile-wrap{
       display:flex;
       flex-wrap:wrap;
       gap:12px;
     }
     .tile{
-      flex: 0 0 calc((100% - 12px*5) / 6);  /* 6 Spalten */
+      flex: 0 0 calc((100% - 12px*5) / 6); /* 6 Spalten */
       border-radius:16px;
       border:1px solid rgba(0,210,255,.14);
       background: rgba(0,0,0,.28);
@@ -166,38 +166,42 @@
       position:relative;
       transition:.12s;
     }
-    /* 16:9 Tile */
     .tile::before{
       content:"";
       display:block;
-      padding-top:56.25%;
+      padding-top:56.25%; /* 16:9 */
     }
     .tile.focused{
       border-color: rgba(0,210,255,.80);
       box-shadow:0 0 18px rgba(0,210,255,.12);
       transform: scale(1.04);
     }
+
+    /* ✅ FIX: KEIN inset:0 -> Tizen Bug */
     .tile img{
-      position:absolute; inset:0;
-      width:100%; height:100%;
+      position:absolute;
+      top:0; left:0; right:0; bottom:0;
+      width:100%;
+      height:100%;
       object-fit:cover;
       display:block;
-      filter: contrast(1.15) saturate(1.15) brightness(1.05); /* ✅ sichtbar */
-      opacity:.98;
+      opacity:1;              /* ✅ nicht ausblenden */
+      filter:none;            /* ✅ Tizen zickt manchmal bei filter */
+      background:#000;
     }
+
     .tile .label{
       position:absolute; left:0; right:0; bottom:0;
       padding:10px 10px;
-      font-size:14px;                 /* größer lesbar */
+      font-size:14px;
       font-weight:900;
-      background: linear-gradient(to top, rgba(0,0,0,.90), rgba(0,0,0,0));
+      background: linear-gradient(to top, rgba(0,0,0,.92), rgba(0,0,0,0));
       text-shadow:0 2px 10px rgba(0,0,0,.75);
       white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
       color:#fff;
       letter-spacing:.5px;
     }
 
-    /* Form items */
     .label2{ color:var(--cyan); font-weight:900; letter-spacing:2px; font-size:14px; margin-top:6px; }
     .input{
       width:100%;
@@ -227,20 +231,8 @@
       transform:scale(1.02);
     }
 
-    .divider{
-      height:1px;
-      background: rgba(0,210,255,.18);
-      margin:16px 0;
-    }
-    .hint{
-      margin-top:12px;
-      color:rgba(255,255,255,.58);
-      font-size:18px;
-      line-height:1.35;
-    }
-    .focusable.focused{
-      outline: none;
-    }
+    .divider{ height:1px; background: rgba(0,210,255,.18); margin:16px 0; }
+    .hint{ margin-top:12px; color:rgba(255,255,255,.58); font-size:18px; line-height:1.35; }
   </style>
 </head>
 
@@ -277,26 +269,18 @@
   </main>
 
 <script>
-  // ===========================
-  // KONFIG (DEIN GITHUB REPO)
-  // ===========================
   var GH_OWNER = "Artonstyle";
   var GH_REPO  = "IPTVBlack";
   var GH_BG_DIR = "hintergrund";
 
-  // ===========================
-  // STATE
-  // ===========================
-  var area = "menu";   // menu | tabs | content
+  var area = "menu";
   var menuIdx = 3;
 
-  var tabIdx = 0;      // 0=BG 1=M3U 2=XC 3=MAC
+  var tabIdx = 0;
   var focusIdx = 0;
 
-  // Background items
-  var bgItems = []; // {name, raw}
+  var bgItems = []; // {name, url}
 
-  // Profiles Storage
   var m3uProfiles = JSON.parse(localStorage.getItem("iptv_m3u_profiles") || "[]");
   var xcProfiles  = JSON.parse(localStorage.getItem("iptv_xc_profiles")  || "[]");
   var activeM3U   = localStorage.getItem("iptv_active_m3u") || "";
@@ -310,60 +294,35 @@
   function nowBust(){ return "t=" + Date.now(); }
   function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
 
-  // ===========================
-  // INIT
-  // ===========================
   function init(){
     try{
-      ["Up","Down","Left","Right","Enter","Back","0","1","2","3","4","5","6","7","8","9"]
-        .forEach(function(k){ tizen.tvinputdevice.registerKey(k); });
+      ["Up","Down","Left","Right","Enter","Back","0"].forEach(function(k){
+        tizen.tvinputdevice.registerKey(k);
+      });
     }catch(e){}
 
     normalizeProfiles();
 
     showMain("setup");
-    area = "menu";
-    menuIdx = 3;
+    area="menu"; menuIdx=3;
 
-    renderMenu();
     renderTabs();
     renderTabPreview();
-
     loadBackgroundsFromGitHub();
     updateFocus();
   }
 
   function normalizeProfiles(){
-    if(!Array.isArray(m3uProfiles)) m3uProfiles = [];
-    if(!Array.isArray(xcProfiles))  xcProfiles  = [];
-
-    for(var i=0;i<m3uProfiles.length;i++){
-      if(!m3uProfiles[i].id) m3uProfiles[i].id = "m3u_" + Date.now() + "_" + i;
-    }
-    for(var j=0;j<xcProfiles.length;j++){
-      if(!xcProfiles[j].id) xcProfiles[j].id = "xc_" + Date.now() + "_" + j;
-    }
-
+    if(!Array.isArray(m3uProfiles)) m3uProfiles=[];
+    if(!Array.isArray(xcProfiles))  xcProfiles=[];
     localStorage.setItem("iptv_m3u_profiles", JSON.stringify(m3uProfiles));
-    localStorage.setItem("iptv_xc_profiles", JSON.stringify(xcProfiles));
+    localStorage.setItem("iptv_xc_profiles",  JSON.stringify(xcProfiles));
   }
 
-  // ===========================
-  // MAIN VIEW SWITCH
-  // ===========================
   function showMain(which){
-    $("tv-view").style.display = (which==="tv") ? "flex" : "none";
-    $("vod-view").style.display = (which==="vod") ? "flex" : "none";
-    $("setup-view").style.display = (which==="setup") ? "flex" : "none";
-  }
-
-  // ===========================
-  // RENDER UI
-  // ===========================
-  function renderMenu(){
-    for(var i=0;i<4;i++){
-      $("m"+i).classList.toggle("focused", area==="menu" && i===menuIdx);
-    }
+    $("tv-view").style.display   = (which==="tv") ? "flex" : "none";
+    $("vod-view").style.display  = (which==="vod") ? "flex" : "none";
+    $("setup-view").style.display= (which==="setup") ? "flex" : "none";
   }
 
   function renderTabs(){
@@ -373,45 +332,69 @@
   }
 
   function setTabTitle(){
-    var titles = ["HINTERGRUND","M3U PROFILE","XTREAM PROFILE","MAC ADRESSE"];
+    var titles=["HINTERGRUND","M3U PROFILE","XTREAM PROFILE","MAC ADRESSE"];
     $("content-title").innerText = titles[tabIdx];
   }
 
   function renderTabPreview(){
     setTabTitle();
-    focusIdx = 0;
-
+    focusIdx=0;
     if(tabIdx===0) renderBGTab();
     else if(tabIdx===1) renderM3UTab();
     else if(tabIdx===2) renderXCTab();
     else renderMACTab();
-
     updateFocus();
   }
 
-  // ===========================
-  // BACKGROUND TAB (FLEX GRID)
-  // ===========================
+  // ✅ Hintergrund Thumbnails laden (WICHTIG: download_url benutzen)
+  function loadBackgroundsFromGitHub(){
+    var url="https://api.github.com/repos/"+encodeURIComponent(GH_OWNER)+"/"+encodeURIComponent(GH_REPO)+"/contents/"+encodeURIComponent(GH_BG_DIR)+"?"+nowBust();
+    fetch(url)
+      .then(function(r){ return r.json(); })
+      .then(function(arr){
+        var list=[];
+        if(Array.isArray(arr)){
+          for(var i=0;i<arr.length;i++){
+            var it=arr[i];
+            if(!it || it.type!=="file") continue;
+            var n=(it.name||"").toLowerCase();
+            if(!(n.endsWith(".jpg")||n.endsWith(".jpeg")||n.endsWith(".png")||n.endsWith(".webp"))) continue;
+
+            // ✅ stabilstes Thumbnail: it.download_url (kommt direkt von GitHub API)
+            var dl = it.download_url || ("https://raw.githubusercontent.com/"+GH_OWNER+"/"+GH_REPO+"/main/"+GH_BG_DIR+"/"+it.name);
+            list.push({ name: it.name, url: dl });
+          }
+        }
+        list.sort(function(a,b){ return a.name.localeCompare(b.name); });
+        bgItems=list;
+        if(tabIdx===0) renderTabPreview();
+      })
+      .catch(function(){
+        bgItems=[];
+        if(tabIdx===0) renderTabPreview();
+      });
+  }
+
   function renderBGTab(){
-    var host = $("content-body");
+    var host=$("content-body");
     if(!bgItems.length){
       host.innerHTML =
         '<div class="card">'+
-          '<div class="card-title">Lade Hintergründe…</div>'+
-          '<div class="card-sub">GitHub: /'+esc(GH_BG_DIR)+'</div>'+
+          '<div class="card-title">Keine Bilder gefunden</div>'+
+          '<div class="card-sub">Ordner: /'+esc(GH_BG_DIR)+'</div>'+
         '</div>';
       return;
     }
 
-    var html = '<div class="tile-wrap">';
+    var html='<div class="tile-wrap">';
     for(var i=0;i<bgItems.length;i++){
       html +=
         '<div class="tile focusable" data-kind="bg" data-idx="'+i+'">'+
-          '<img src="'+bgItems[i].raw+'?'+nowBust()+'" />'+
+          '<img src="'+bgItems[i].url+'?'+nowBust()+'" onerror="this.style.opacity=\'0\';" />'+
           '<div class="label">'+esc(bgItems[i].name)+'</div>'+
         '</div>';
     }
-    html += '</div>';
+    html+='</div>';
 
     html +=
       '<div class="divider"></div>'+
@@ -420,268 +403,44 @@
         '<div class="card-sub">OK = Hintergrund setzen • 0 = Standard</div>'+
       '</div>';
 
-    host.innerHTML = html;
+    host.innerHTML=html;
   }
 
-  function loadBackgroundsFromGitHub(){
-    var url = "https://api.github.com/repos/"+encodeURIComponent(GH_OWNER)+"/"+encodeURIComponent(GH_REPO)+"/contents/"+encodeURIComponent(GH_BG_DIR)+"?"+nowBust();
-    fetch(url)
-      .then(function(r){ return r.json(); })
-      .then(function(arr){
-        if(!Array.isArray(arr)){ bgItems=[]; if(tabIdx===0) renderTabPreview(); return; }
-        var list = [];
-        for(var i=0;i<arr.length;i++){
-          var it = arr[i];
-          if(!it || it.type!=="file") continue;
-          var n = (it.name||"").toLowerCase();
-          if(!(n.endsWith(".jpg") || n.endsWith(".jpeg") || n.endsWith(".png") || n.endsWith(".webp"))) continue;
-          var raw = "https://raw.githubusercontent.com/"+GH_OWNER+"/"+GH_REPO+"/main/"+GH_BG_DIR+"/"+it.name;
-          list.push({ name: it.name, raw: raw });
-        }
-        list.sort(function(a,b){ return a.name.localeCompare(b.name); });
-        bgItems = list;
-        if(tabIdx===0) renderTabPreview();
-      })
-      .catch(function(){
-        bgItems = [];
-        if(tabIdx===0) renderTabPreview();
-      });
-  }
-
-  function setBackground(rawUrl){
-    if(!rawUrl){
-      document.body.style.backgroundImage = "";
-      document.body.style.background = "radial-gradient(circle at top right, #001a4d, #00050a)";
+  function setBackground(url){
+    if(!url){
+      document.body.style.backgroundImage="";
+      document.body.style.background="radial-gradient(circle at top right, #001a4d, #00050a)";
       return;
     }
     document.body.style.backgroundImage =
-      "linear-gradient(rgba(0,0,0,.45), rgba(0,0,0,.55)), url('"+rawUrl+"?"+nowBust()+"')";
-    document.body.style.backgroundSize = "cover";
-    document.body.style.backgroundPosition = "center";
+      "linear-gradient(rgba(0,0,0,.45), rgba(0,0,0,.55)), url('"+url+"?"+nowBust()+"')";
+    document.body.style.backgroundSize="cover";
+    document.body.style.backgroundPosition="center";
   }
 
-  // ===========================
-  // M3U TAB
-  // ===========================
   function renderM3UTab(){
-    var host = $("content-body");
-    var html = "";
-
-    if(m3uProfiles.length){
-      for(var i=0;i<m3uProfiles.length;i++){
-        var p = m3uProfiles[i];
-        var isActive = (p.url && p.url===activeM3U);
-        html +=
-          '<div class="card profile focusable" data-kind="m3uProfile" data-idx="'+i+'">'+
-            '<div class="card-title">'+esc(p.name || ("Profil "+(i+1)))+(isActive?'<span class="badge">AKTIV</span>':'')+'</div>'+
-            '<div class="card-sub">'+esc(p.url || "-")+'</div>'+
-            '<div class="card-sub"><span class="danger">0</span> = Löschen • OK = Aktivieren</div>'+
-          '</div>';
-      }
-    }else{
-      html +=
-        '<div class="card profile">'+
-          '<div class="card-title">Keine M3U Profile</div>'+
-          '<div class="card-sub">Unten Name + URL speichern.</div>'+
-        '</div>';
-    }
-
-    html += '<div class="divider"></div>';
-
-    html +=
-      '<div class="card">'+
-        '<div class="card-title">Neues M3U Profil</div>'+
-        '<div class="label2">PROFILNAME</div>'+
-        '<input id="m3u-name" class="input focusable" placeholder="z.B. Mein Anbieter" />'+
-        '<div class="label2">M3U URL</div>'+
-        '<input id="m3u-url" class="input focusable" placeholder="https://example.com/list.m3u" />'+
-        '<div class="btnrow">'+
-          '<div id="m3u-save" class="btn focusable">SPEICHERN</div>'+
-          '<div id="m3u-clear" class="btn focusable">LEEREN</div>'+
-        '</div>'+
-        '<div class="hint">OK auf Eingabe = Tastatur • OK auf SPEICHERN = speichern</div>'+
-      '</div>';
-
-    host.innerHTML = html;
-    try{ $("m3u-url").value = activeM3U || ""; }catch(e){}
+    $("content-body").innerHTML =
+      '<div class="card profile"><div class="card-title">M3U</div><div class="card-sub">(Demo)</div></div>';
   }
-
-  function saveM3UProfile(){
-    var name = ($("m3u-name").value || "").trim();
-    var url  = ($("m3u-url").value  || "").trim();
-    if(!url) return;
-
-    if(!name) name = "M3U " + (m3uProfiles.length+1);
-
-    var id = "m3u_" + Date.now();
-    m3uProfiles.unshift({ id:id, name:name, url:url });
-    if(m3uProfiles.length>30) m3uProfiles = m3uProfiles.slice(0,30);
-
-    localStorage.setItem("iptv_m3u_profiles", JSON.stringify(m3uProfiles));
-    localStorage.setItem("iptv_active_m3u", url);
-    activeM3U = url;
-
-    renderTabPreview();
-  }
-
-  function deleteM3UProfile(index){
-    if(index<0 || index>=m3uProfiles.length) return;
-    var wasActive = (m3uProfiles[index].url === activeM3U);
-
-    m3uProfiles.splice(index,1);
-    localStorage.setItem("iptv_m3u_profiles", JSON.stringify(m3uProfiles));
-
-    if(wasActive){
-      activeM3U = "";
-      localStorage.setItem("iptv_active_m3u", "");
-    }
-
-    renderTabPreview();
-  }
-
-  function activateM3UProfile(index){
-    if(index<0 || index>=m3uProfiles.length) return;
-    activeM3U = m3uProfiles[index].url || "";
-    localStorage.setItem("iptv_active_m3u", activeM3U);
-    renderTabPreview();
-  }
-
-  // ===========================
-  // XTREAM TAB
-  // ===========================
   function renderXCTab(){
-    var host = $("content-body");
-    var html = "";
-
-    if(xcProfiles.length){
-      for(var i=0;i<xcProfiles.length;i++){
-        var p = xcProfiles[i];
-        var isActive = (p.id === activeXC);
-        html +=
-          '<div class="card profile focusable" data-kind="xcProfile" data-idx="'+i+'">'+
-            '<div class="card-title">'+esc(p.name || ("Xtream "+(i+1)))+(isActive?'<span class="badge">AKTIV</span>':'')+'</div>'+
-            '<div class="card-sub">'+esc(p.url || "-")+'</div>'+
-            '<div class="card-sub">User: '+esc(p.user || "-")+'</div>'+
-            '<div class="card-sub"><span class="danger">0</span> = Löschen • OK = Aktivieren</div>'+
-          '</div>';
-      }
-    }else{
-      html +=
-        '<div class="card profile">'+
-          '<div class="card-title">Keine Xtream Profile</div>'+
-          '<div class="card-sub">Unten ein Profil speichern.</div>'+
-        '</div>';
-    }
-
-    html += '<div class="divider"></div>';
-
-    html +=
-      '<div class="card">'+
-        '<div class="card-title">Neues Xtream Profil</div>'+
-        '<div class="label2">PROFILNAME</div>'+
-        '<input id="xc-name" class="input focusable" placeholder="z.B. Anbieter 1" />'+
-        '<div class="label2">SERVER URL</div>'+
-        '<input id="xc-url" class="input focusable" placeholder="http://server:port" />'+
-        '<div class="label2">BENUTZERNAME</div>'+
-        '<input id="xc-user" class="input focusable" placeholder="username" />'+
-        '<div class="label2">PASSWORT</div>'+
-        '<input id="xc-pass" class="input focusable" placeholder="password" />'+
-        '<div class="btnrow">'+
-          '<div id="xc-save" class="btn focusable">SPEICHERN</div>'+
-          '<div id="xc-clear" class="btn focusable">LEEREN</div>'+
-        '</div>'+
-        '<div class="hint">OK auf Eingabe = Tastatur • OK auf SPEICHERN = speichern</div>'+
-      '</div>';
-
-    host.innerHTML = html;
-
-    var ap = getActiveXCProfile();
-    if(ap){
-      try{
-        $("xc-name").value = ap.name || "";
-        $("xc-url").value  = ap.url  || "";
-        $("xc-user").value = ap.user || "";
-        $("xc-pass").value = ap.pass || "";
-      }catch(e){}
-    }
+    $("content-body").innerHTML =
+      '<div class="card profile"><div class="card-title">Xtream</div><div class="card-sub">(Demo)</div></div>';
   }
-
-  function saveXCProfile(){
-    var name = ($("xc-name").value || "").trim();
-    var url  = ($("xc-url").value  || "").trim();
-    var user = ($("xc-user").value || "").trim();
-    var pass = ($("xc-pass").value || "").trim();
-    if(!url || !user) return;
-
-    if(!name) name = "Xtream " + (xcProfiles.length+1);
-
-    var id = "xc_" + Date.now();
-    xcProfiles.unshift({ id:id, name:name, url:url, user:user, pass:pass });
-    if(xcProfiles.length>30) xcProfiles = xcProfiles.slice(0,30);
-
-    localStorage.setItem("iptv_xc_profiles", JSON.stringify(xcProfiles));
-    localStorage.setItem("iptv_active_xc", id);
-    activeXC = id;
-
-    renderTabPreview();
-  }
-
-  function deleteXCProfile(index){
-    if(index<0 || index>=xcProfiles.length) return;
-    var wasActive = (xcProfiles[index].id === activeXC);
-
-    xcProfiles.splice(index,1);
-    localStorage.setItem("iptv_xc_profiles", JSON.stringify(xcProfiles));
-
-    if(wasActive){
-      activeXC = "";
-      localStorage.setItem("iptv_active_xc", "");
-    }
-
-    renderTabPreview();
-  }
-
-  function activateXCProfile(index){
-    if(index<0 || index>=xcProfiles.length) return;
-    activeXC = xcProfiles[index].id;
-    localStorage.setItem("iptv_active_xc", activeXC);
-    renderTabPreview();
-  }
-
-  function getActiveXCProfile(){
-    for(var i=0;i<xcProfiles.length;i++){
-      if(xcProfiles[i].id === activeXC) return xcProfiles[i];
-    }
-    return null;
-  }
-
-  // ===========================
-  // MAC TAB
-  // ===========================
   function renderMACTab(){
-    var mac = getMacAddressSafe();
+    var mac="unbekannt";
+    try{
+      if(window.webapis && webapis.network && typeof webapis.network.getMac==="function"){
+        mac = webapis.network.getMac() || "unbekannt";
+      }
+    }catch(e){}
     $("content-body").innerHTML =
       '<div class="card profile focusable" data-kind="mac" data-idx="0">'+
         '<div class="card-title">MAC ADRESSE</div>'+
         '<div class="card-sub" style="font-size:28px">'+esc(mac)+'</div>'+
         '<div class="card-sub">OK = aktualisieren</div>'+
-      '</div>'+
-      '<div class="hint">Hinweis: Manche Geräte geben die MAC nur über WebAPI zurück.</div>';
+      '</div>';
   }
 
-  function getMacAddressSafe(){
-    try{
-      if(window.webapis && webapis.network && typeof webapis.network.getMac==="function"){
-        var m = webapis.network.getMac();
-        if(m) return m;
-      }
-    }catch(e){}
-    return "unbekannt";
-  }
-
-  // ===========================
-  // FOCUS HELPERS
-  // ===========================
   function getFocusables(){
     return $("content-body").querySelectorAll(".focusable, .tile");
   }
@@ -694,44 +453,32 @@
       $("t"+t).classList.toggle("focused", area==="tabs" && t===tabIdx);
     }
 
-    var f = getFocusables();
-    for(var j=0;j<f.length;j++){
-      f[j].classList.remove("focused");
-    }
+    var f=getFocusables();
+    for(var j=0;j<f.length;j++) f[j].classList.remove("focused");
 
-    if(area==="content"){
-      if(f.length){
-        focusIdx = clamp(focusIdx, 0, f.length-1);
-        f[focusIdx].classList.add("focused");
-        try{ f[focusIdx].scrollIntoView({block:"center"}); }catch(e){}
-      }
+    if(area==="content" && f.length){
+      focusIdx=clamp(focusIdx,0,f.length-1);
+      f[focusIdx].classList.add("focused");
+      try{ f[focusIdx].scrollIntoView({block:"center"}); }catch(e){}
     }
   }
 
-  // ===========================
-  // KEY HANDLING
-  // ===========================
   document.addEventListener("keydown", function(e){
-    var k = e.keyCode;
+    var k=e.keyCode;
 
-    // BACK
     if(k===10009 || k===27){
-      var ae = document.activeElement;
-      if(ae && ae.tagName==="INPUT"){ try{ ae.blur(); }catch(ex){} return; }
-
       if(area==="content"){ area="tabs"; updateFocus(); return; }
       if(area==="tabs"){ area="menu"; updateFocus(); return; }
       try{ tizen.application.getCurrentApplication().exit(); }catch(ex){}
       return;
     }
 
-    // MENU
     if(area==="menu"){
-      if(k===37) menuIdx = (menuIdx>0) ? menuIdx-1 : 3;
-      if(k===39) menuIdx = (menuIdx<3) ? menuIdx+1 : 0;
+      if(k===37) menuIdx=(menuIdx>0)?menuIdx-1:3;
+      if(k===39) menuIdx=(menuIdx<3)?menuIdx+1:0;
 
       if(k===13 || k===40){
-        if(menuIdx===0){ showMain("tv"); }
+        if(menuIdx===0) showMain("tv");
         if(menuIdx===1){ showMain("vod"); $("vod-view").innerText="Filme (Demo)"; }
         if(menuIdx===2){ showMain("vod"); $("vod-view").innerText="Serien (Demo)"; }
         if(menuIdx===3){
@@ -745,122 +492,66 @@
       return;
     }
 
-    // TABS (preview on switch; enter content on OK)
     if(area==="tabs"){
-      if(k===37) tabIdx = (tabIdx>0) ? tabIdx-1 : 3;
-      if(k===39) tabIdx = (tabIdx<3) ? tabIdx+1 : 0;
+      if(k===37) tabIdx=(tabIdx>0)?tabIdx-1:3;
+      if(k===39) tabIdx=(tabIdx<3)?tabIdx+1:0;
 
       renderTabs();
       renderTabPreview();
 
       if(k===13 || k===40){
         area="content";
-        focusIdx = 0;
+        focusIdx=0;
         updateFocus();
       }
       return;
     }
 
-    // CONTENT
     if(area==="content"){
-      var focusables = getFocusables();
-      var len = focusables.length;
+      var f=getFocusables();
+      var len=f.length;
 
-      // 0 deletes profile OR sets default bg
       if(k===48){
-        if(tabIdx===0){
-          setBackground(null);
-        }else if(len){
-          var el = focusables[focusIdx];
-          var kind = el.getAttribute("data-kind") || "";
-          var idx = parseInt(el.getAttribute("data-idx")||"-1",10);
-          if(kind==="m3uProfile") deleteM3UProfile(idx);
-          if(kind==="xcProfile") deleteXCProfile(idx);
-        }
-        updateFocus();
+        if(tabIdx===0) setBackground(null);
         return;
       }
 
-      // NAV
-      if(k===38){
-        if(focusIdx===0){ area="tabs"; updateFocus(); return; }
-        focusIdx = Math.max(0, focusIdx-1);
-        updateFocus();
-        return;
-      }
-      if(k===40){
-        if(len) focusIdx = Math.min(len-1, focusIdx+1);
-        updateFocus();
-        return;
-      }
-
-      // ✅ BG: 6-Spalten Navigation (Left/Right + Up/Down in rows)
       if(tabIdx===0){
-        var cols = 6;
+        var cols=6;
 
-        if(k===37){ // left
-          if(len) focusIdx = Math.max(0, focusIdx-1);
-          updateFocus();
-          return;
-        }
-        if(k===39){ // right
-          if(len) focusIdx = Math.min(len-1, focusIdx+1);
-          updateFocus();
-          return;
-        }
-        if(k===38){ // up row
-          var up = focusIdx - cols;
-          if(up >= 0){ focusIdx = up; updateFocus(); }
+        if(k===37){ if(len) focusIdx=Math.max(0,focusIdx-1); updateFocus(); return; }
+        if(k===39){ if(len) focusIdx=Math.min(len-1,focusIdx+1); updateFocus(); return; }
+        if(k===38){
+          var up=focusIdx-cols;
+          if(up>=0){ focusIdx=up; updateFocus(); }
           else { area="tabs"; updateFocus(); }
           return;
         }
-        if(k===40){ // down row
-          var dn = focusIdx + cols;
-          if(dn <= len-1){ focusIdx = dn; updateFocus(); }
+        if(k===40){
+          var dn=focusIdx+cols;
+          if(dn<=len-1){ focusIdx=dn; updateFocus(); }
           return;
         }
+      }else{
+        if(k===38){ if(focusIdx===0){ area="tabs"; updateFocus(); return; } focusIdx=Math.max(0,focusIdx-1); updateFocus(); return; }
+        if(k===40){ if(len) focusIdx=Math.min(len-1,focusIdx+1); updateFocus(); return; }
       }
 
-      // OK actions
       if(k===13 && len){
-        var el2 = focusables[focusIdx];
+        var el=f[focusIdx];
+        var kind=el.getAttribute("data-kind")||"";
+        var idx=parseInt(el.getAttribute("data-idx")||"-1",10);
 
-        if(el2.tagName==="INPUT"){ try{ el2.focus(); }catch(e){} return; }
-
-        var kind2 = el2.getAttribute("data-kind") || "";
-        var idx2 = parseInt(el2.getAttribute("data-idx")||"-1",10);
-
-        if(tabIdx===0 && kind2==="bg"){
-          if(bgItems[idx2]) setBackground(bgItems[idx2].raw);
+        if(kind==="bg" && bgItems[idx]){
+          setBackground(bgItems[idx].url);
           return;
         }
-
-        if(kind2==="m3uProfile") { activateM3UProfile(idx2); return; }
-        if(el2.id==="m3u-save") { saveM3UProfile(); return; }
-        if(el2.id==="m3u-clear"){
-          try{ $("m3u-name").value=""; $("m3u-url").value=activeM3U||""; }catch(e){}
-          updateFocus(); return;
+        if(kind==="mac"){
+          renderTabPreview();
+          return;
         }
-
-        if(kind2==="xcProfile") { activateXCProfile(idx2); return; }
-        if(el2.id==="xc-save") { saveXCProfile(); return; }
-        if(el2.id==="xc-clear"){
-          try{ $("xc-name").value=""; $("xc-url").value=""; $("xc-user").value=""; $("xc-pass").value=""; }catch(e){}
-          updateFocus(); return;
-        }
-
-        if(kind2==="mac"){ renderTabPreview(); return; }
       }
     }
-  });
-
-  // Click support (emulator)
-  document.addEventListener("click", function(ev){
-    var id = (ev.target && ev.target.id) ? ev.target.id : "";
-    if(id==="m3u-save") saveM3UProfile();
-    if(id==="m3u-clear"){ try{ $("m3u-name").value=""; $("m3u-url").value=activeM3U||""; }catch(e){} updateFocus(); }
-    if(id==="xc-save") saveXCProfile();
-    if(id==="xc-clear"){ try{ $("xc-name").value=""; $("xc-url").value=""; $("xc-user").value=""; $("xc-pass").value=""; }catch(e){} updateFocus(); }
   });
 </script>
 </body>
