@@ -2,10 +2,8 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Black IPTV – Blue Neon 2026</title>
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <title>Black IPTV – 2026 Fix</title>
   <script type="text/javascript" src="$WEBAPIS/webapis/webapis.js"></script>
-
   <style>
     :root{
       --main-blue:#0045ff; --neon-cyan:#00d2ff; --glass-blue:rgba(0,50,150,.3);
@@ -15,40 +13,31 @@
     body{
       width:1920px; height:1080px; margin:0; padding:0;
       background: var(--dynamic-bg); background-size: cover; background-position: center;
-      color:white; font-family:'Segoe UI',Arial,sans-serif; overflow:hidden;
-      transition: background-image 0.5s ease-in-out;
+      color:white; font-family: sans-serif; overflow:hidden;
     }
-
     header{ height:160px; padding:0 80px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(0,210,255,.1); }
-    .brand{ font-size:50px; font-weight:900; letter-spacing:-1px; }
-    .brand span{ color:var(--neon-cyan); font-style:italic; }
     #menu{ display:flex; gap:10px; }
     .item{ padding:15px 40px; font-size:32px; font-weight:bold; color:rgba(255,255,255,.4); border-radius:15px; }
-    .item.focused{ color:white; background:var(--main-blue); box-shadow:0 0 35px rgba(0,69,255,.6); transform:scale(1.08); }
+    .item.focused{ color:white; background:var(--main-blue); box-shadow:0 0 35px rgba(0,69,255,.6); transform:scale(1.05); }
 
-    main{ display:flex; height:920px; padding:40px 60px; gap:30px; }
+    main{ display:flex; height:800px; padding:40px 60px; gap:30px; }
     #setup-view{ display:none; flex:1; gap:30px; width:100%; }
-    .column{ background:var(--glass-blue); backdrop-filter:blur(15px); border-radius:30px; border:1px solid rgba(0,210,255,.2); display:flex; flex-direction:column; flex:1; overflow:hidden; }
-    .column-header{ padding:20px; font-size:16px; font-weight:800; color:var(--neon-cyan); text-transform:uppercase; letter-spacing:4px; border-bottom:1px solid rgba(0,210,255,.1); }
+    .column{ background:var(--glass-blue); backdrop-filter:blur(15px); border-radius:30px; border:1px solid rgba(0,210,255,0.2); flex:1; display:flex; flex-direction:column; }
+    .column-header{ padding:20px; font-size:18px; color:var(--neon-cyan); font-weight:bold; border-bottom:1px solid rgba(255,255,255,0.1); text-align:center; }
 
     .bg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 20px; }
-    .bg-btn { padding: 15px; background: rgba(255,255,255,0.05); border: 2px solid transparent; border-radius: 12px; text-align: center; font-size: 18px; }
-    .bg-btn.focused { border-color: var(--neon-cyan); background: var(--main-blue); }
+    .bg-btn, .btn { padding: 15px; background: rgba(255,255,255,0.05); border: 2px solid transparent; border-radius: 12px; text-align: center; color: white; font-weight: bold; }
+    .bg-btn.focused, .btn.focused, input.focused { border-color: var(--neon-cyan); background: var(--main-blue); transform: scale(1.02); }
 
-    input{ width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(0,210,255,0.2); padding:15px; color:white; font-size:18px; border-radius:12px; margin-bottom:10px; }
-    input.focused{ border-color:var(--neon-cyan); background:rgba(0,210,255,0.1); }
-    
-    .btn{ padding:15px; background:var(--main-blue); color:white; border-radius:12px; text-align:center; font-weight:bold; margin-bottom:10px; border: 2px solid transparent; }
-    .btn.focused{ border-color: white; box-shadow:0 0 20px rgba(0,69,255,0.5); transform: scale(1.02); }
-
-    .qr-box { background: white; padding: 10px; width: 140px; height: 140px; margin: 10px auto; border-radius: 10px; }
+    input { width:90%; margin: 10px auto; padding:15px; background:rgba(0,0,0,0.3); border:1px solid var(--neon-cyan); color:white; border-radius:10px; text-align:center; }
+    .qr-box { background: white; padding: 10px; width: 120px; height: 120px; margin: 10px auto; border-radius: 10px; }
     .qr-box img { width: 100%; height: 100%; }
   </style>
 </head>
 
 <body onload="init()">
 <header>
-  <div class="brand">BLACK<span>IPTV</span></div>
+  <div style="font-size:40px; font-weight:900;">BLACK<span style="color:var(--neon-cyan)">IPTV</span></div>
   <nav id="menu">
     <div id="i0" class="item">TV</div>
     <div id="i1" class="item">FILME</div>
@@ -57,117 +46,109 @@
   </nav>
 </header>
 
-<main id="main-root">
-  <div id="tv-view" style="display:flex; flex:1; justify-content:center; align-items:center;">TV Modus aktiv</div>
+<main>
+  <div id="tv-view" style="flex:1; display:flex; justify-content:center; align-items:center; font-size:30px;">Inhalte werden geladen...</div>
 
   <div id="setup-view">
-    <div class="column">
-      <div class="column-header">1) Design & MAC</div>
+    <div class="column" id="col0">
+      <div class="column-header">DESIGN</div>
       <div class="bg-grid">
-        <div id="bg1" class="bg-btn">Galatasaray</div>
-        <div id="bg2" class="bg-btn">Blue Neon</div>
-        <div id="bg3" class="bg-btn">Dark Mode</div>
-        <div id="bg4" class="bg-btn">Standard</div>
+        <div id="bg1" class="bg-btn">Gala</div>
+        <div id="bg2" class="bg-btn">Neon</div>
+        <div id="bg3" class="bg-btn">Dark</div>
+        <div id="bg4" class="bg-btn">Std</div>
       </div>
-      <div style="padding:20px; text-align:center;">
-        <div style="color:var(--neon-cyan); font-size:12px;">MAC-ADRESSE</div>
-        <div id="mac-value" style="font-size:20px; font-weight:bold;">Lade...</div>
-      </div>
+      <div id="mac-value" style="text-align:center; margin-top:20px; font-size:14px; color:var(--neon-cyan);">MAC: Lade...</div>
     </div>
 
-    <div class="column">
-      <div class="column-header">2) Handy M3U Upload</div>
-      <div style="padding:20px; text-align:center;">
-        <div class="qr-box">
-          <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://github.com/Artonstyle/IPTVBlack/edit/main/playlist.txt" alt="QR">
-        </div>
-        <p style="font-size:12px; color:var(--neon-cyan);">Scan zum Link einfügen</p>
-        <div id="btn-handy-sync" class="btn">VOM HANDY LADEN</div>
-        <input id="m3u-url" type="text" placeholder="Wird empfangen..." readonly>
+    <div class="column" id="col1">
+      <div class="column-header">M3U UPLOAD</div>
+      <div class="qr-box">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://github.com/Artonstyle/IPTVBlack/edit/main/playlist.txt">
       </div>
+      <div id="btn-sync" class="btn" style="margin: 0 20px;">VOM HANDY LADEN</div>
+      <input id="m3u-url" type="text" placeholder="URL erscheint hier..." readonly>
     </div>
 
-    <div class="column">
-      <div class="column-header">3) Xtream Login</div>
-      <div style="padding:20px;">
+    <div class="column" id="col2">
+      <div class="column-header">XTREAM LOGIN</div>
+      <div style="padding:10px; display:flex; flex-direction:column;">
         <input id="xc-url" type="text" placeholder="Server URL">
-        <input id="xc-user" type="text" placeholder="Nutzername">
-        <input id="xc-pass" type="password" placeholder="Passwort">
-        <div id="btn-login-xc" class="btn">LOGIN</div>
+        <input id="xc-user" type="text" placeholder="User">
+        <input id="xc-pass" type="password" placeholder="Pass">
+        <div id="btn-login" class="btn">LOGIN</div>
       </div>
     </div>
   </div>
 </main>
 
 <script>
-  var area = "menu", menuIdx = 3, setupCol = 0, setupIdx = [0,0,0];
   var $ = function(id){ return document.getElementById(id); };
+  var area = "menu", mIdx = 3, sCol = 0, sIdx = 0;
 
-  function changeBG(file) {
-    if(file === "none") {
-      document.body.style.setProperty('--dynamic-bg', "radial-gradient(circle at top right,#001a4d,#00050a)");
-    } else {
-      const url = "https://raw.githubusercontent.com/Artonstyle/IPTVBlack/main/hintergrund/" + file;
-      document.body.style.setProperty('--dynamic-bg', "linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('" + url + "')");
-    }
-    localStorage.setItem("selected_bg", file);
-  }
-
-  function syncFromHandy() {
-    const remoteUrl = "https://raw.githubusercontent.com/Artonstyle/IPTVBlack/main/playlist.txt?t=" + Math.random();
-    fetch(remoteUrl).then(r => r.text()).then(data => {
-      if(data.trim().startsWith("http")) {
-        $("m3u-url").value = data.trim();
-        alert("Link vom Handy empfangen!");
-      } else { alert("Kein Link in playlist.txt gefunden!"); }
-    }).catch(e => alert("GitHub Fehler"));
-  }
-
-  function setupFocusables(col) {
-    if(col === 0) return [{el:$("bg1"),f:"bild1.webp"},{el:$("bg2"),f:"bild2.webp"},{el:$("bg3"),f:"bild3.webp"},{el:$("bg4"),f:"none"}];
-    if(col === 1) return [{el:$("btn-handy-sync")},{el:$("m3u-url")}];
-    if(col === 2) return [{el:$("xc-url")},{el:$("xc-user")},{el:$("xc-pass")},{el:$("btn-login-xc")}];
+  // Diese Listen definieren genau, was nacheinander fokussiert wird
+  function getSetupList(col) {
+    if(col === 0) return [$("bg1"), $("bg2"), $("bg3"), $("bg4")];
+    if(col === 1) return [$("btn-sync"), $("m3u-url")];
+    if(col === 2) return [$("xc-url"), $("xc-user"), $("xc-pass"), $("btn-login")];
     return [];
   }
 
   function updateUI() {
     document.querySelectorAll(".item, .bg-btn, .btn, input").forEach(e => e.classList.remove("focused"));
+    
     if(area === "menu") {
-      $("i" + menuIdx).classList.add("focused");
-      $("setup-view").style.display = (menuIdx === 3) ? "flex" : "none";
-      $("tv-view").style.display = (menuIdx === 0) ? "flex" : "none";
+      $("i" + mIdx).classList.add("focused");
+      $("setup-view").style.display = (mIdx === 3) ? "flex" : "none";
+      $("tv-view").style.display = (mIdx === 3) ? "none" : "flex";
     } else {
-      var list = setupFocusables(setupCol);
-      if(list[setupIdx[setupCol]]) list[setupIdx[setupCol]].el.classList.add("focused");
+      var list = getSetupList(sCol);
+      if(list[sIdx]) list[sIdx].classList.add("focused");
     }
   }
 
   window.addEventListener("keydown", function(e) {
     var k = e.keyCode;
     if(area === "menu") {
-      if(k === 37 && menuIdx > 0) menuIdx--;
-      if(k === 39 && menuIdx < 3) menuIdx++;
-      if(k === 40 && menuIdx === 3) { area = "setup"; setupCol = 0; setupIdx = [0,0,0]; }
+      if(k === 37 && mIdx > 0) mIdx--; // Links
+      if(k === 39 && mIdx < 3) mIdx++; // Rechts
+      if(k === 40 && mIdx === 3) { area = "setup"; sCol = 0; sIdx = 0; } // Runter ins Setup
     } else {
-      var list = setupFocusables(setupCol);
-      if(k === 38) { if(setupIdx[setupCol] > 0) setupIdx[setupCol]--; else area = "menu"; }
-      if(k === 40 && setupIdx[setupCol] < list.length - 1) setupIdx[setupCol]++;
-      if(k === 37 && setupCol > 0) { setupCol--; setupIdx[setupCol] = 0; }
-      if(k === 39 && setupCol < 2) { setupCol++; setupIdx[setupCol] = 0; }
-      if(k === 13) {
-        var f = list[setupIdx[setupCol]];
-        if(f.f) changeBG(f.f);
-        if(f.el.id === "btn-handy-sync") syncFromHandy();
-        if(f.el.tagName === "INPUT") f.el.focus();
+      var list = getSetupList(sCol);
+      if(k === 38) { // Hoch
+        if(sIdx > 0) sIdx--; 
+        else { area = "menu"; }
+      }
+      if(k === 40 && sIdx < list.length - 1) sIdx++; // Runter
+      if(k === 39 && sCol < 2) { sCol++; sIdx = 0; } // Spalte rechts
+      if(k === 37 && sCol > 0) { sCol--; sIdx = 0; } // Spalte links
+      
+      if(k === 13) { // OK
+        if(sCol === 0) {
+           var imgs = ["bild1.webp", "bild2.webp", "bild3.webp", "none"];
+           changeBG(imgs[sIdx]);
+        }
+        if(list[sIdx].id === "btn-sync") syncHandy();
       }
     }
     updateUI();
   });
 
+  function changeBG(f) {
+    if(f === "none") document.body.style.backgroundImage = "none";
+    else {
+      var url = "https://raw.githubusercontent.com/Artonstyle/IPTVBlack/main/hintergrund/" + f;
+      document.body.style.backgroundImage = "linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)), url('"+url+"')";
+    }
+  }
+
+  function syncHandy() {
+    fetch("https://raw.githubusercontent.com/Artonstyle/IPTVBlack/main/playlist.txt?t="+Math.random())
+    .then(r => r.text()).then(d => { $("m3u-url").value = d.trim(); alert("Geladen!"); });
+  }
+
   function init() {
-    var saved = localStorage.getItem("selected_bg");
-    if(saved) changeBG(saved);
-    try { $("mac-value").innerText = webapis.network.getMac(); } catch(e){}
+    try { $("mac-value").innerText = "MAC: " + webapis.network.getMac(); } catch(e){}
     updateUI();
   }
 </script>
