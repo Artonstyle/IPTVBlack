@@ -2,138 +2,75 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <title>Black IPTV 2026 – Final Setup</title>
+  <title>Black IPTV 2026 – High Performance</title>
   <script type="text/javascript" src="$WEBAPIS/webapis/webapis.js"></script>
-
   <style>
-    :root{
-      --blue:#0045ff;
-      --cyan:#00d2ff;
-      --glass2:rgba(0,40,120,.25);
-      --muted:rgba(255,255,255,.65);
-      --danger:#ff4d4d;
+    :root {
+      --blue: #0045ff; --cyan: #00d2ff; --bg: radial-gradient(circle at top right, #001a4d, #00050a);
+      --glass: rgba(255, 255, 255, 0.05); --panel: rgba(0, 0, 0, 0.6);
     }
-    *{box-sizing:border-box; outline:none}
-    body{
-      width:1920px;height:1080px;margin:0;
-      background: radial-gradient(circle at top right, #001a4d, #00050a);
-      background-size:cover;background-position:center;
-      color:#fff;font-family: Arial, sans-serif; overflow:hidden;
+    * { box-sizing: border-box; outline: none; }
+    body {
+      width: 1920px; height: 1080px; margin: 0; background: var(--bg);
+      color: #fff; font-family: 'Segoe UI', Arial, sans-serif; overflow: hidden;
     }
-
-    header{
-      height:160px;
-      display:flex; justify-content:space-between; align-items:center;
-      padding:0 80px;
-      border-bottom:2px solid rgba(0,210,255,.15);
-    }
-    .brand{font-size:52px; font-weight:900; letter-spacing:-1px}
-    .brand span{color:var(--cyan); font-style:italic}
     
-    /* Uhrzeit im Header */
-    #header-clock { font-size: 40px; font-weight: 900; color: #fff; }
-
-    #menu{display:flex; gap:18px}
-    .menu-item{
-      padding:18px 46px;
-      font-size:34px;
-      font-weight:900;
-      color:rgba(255,255,255,.35);
-      border-radius:16px;
-      transition:.15s;
+    /* Header & Navigation */
+    header {
+      height: 140px; display: flex; justify-content: space-between; align-items: center;
+      padding: 0 80px; border-bottom: 1px solid rgba(0, 210, 255, 0.1);
     }
-    .menu-item.focused{
-      background:var(--blue);
-      color:#fff;
-      box-shadow:0 0 30px rgba(0,69,255,.6);
-      transform:scale(1.04);
+    .brand { font-size: 48px; font-weight: 900; }
+    .brand span { color: var(--cyan); }
+    #menu { display: flex; gap: 20px; }
+    .menu-item {
+      padding: 15px 40px; font-size: 30px; font-weight: 700; color: rgba(255,255,255,0.4);
+      border-radius: 12px; transition: 0.2s;
     }
+    .menu-item.focused { background: var(--blue); color: #fff; transform: scale(1.1); box-shadow: 0 0 20px rgba(0,69,255,0.5); }
 
-    main{height:920px; padding:40px 60px}
+    /* Main Container */
+    main { height: 940px; padding: 40px 60px; position: relative; }
+    .view-section { display: none; width: 100%; height: 100%; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-    .panel{
-      height:100%;
-      border-radius:32px;
-      background: var(--glass2);
-      border:1px solid rgba(0,210,255,.18);
-      backdrop-filter: blur(10px);
-      overflow:hidden;
-      display:flex;
-      flex-direction:column;
+    /* TV / Live View */
+    #tv-view { display: none; gap: 20px; }
+    .list-col { width: 450px; background: var(--panel); border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.1); }
+    .list-item {
+      padding: 18px; margin-bottom: 8px; border-radius: 10px; font-size: 24px;
+      background: rgba(255,255,255,0.03); border-left: 5px solid transparent;
     }
+    .list-item.focused { background: var(--blue); border-left-color: var(--cyan); transform: translateX(10px); }
+    #video-container { flex: 1; position: relative; border-radius: 20px; overflow: hidden; background: #000; border: 2px solid var(--cyan); }
 
-    #tv-view, #vod-view, #setup-view { height:100%; display:none; }
-    #setup-view{ display:flex; flex-direction:column; gap:22px; padding:22px; }
-
-    .tabs{
-      display:flex; gap:14px;
-      padding:10px;
-      border-radius:22px;
-      background: rgba(0,0,0,.25);
-      border:1px solid rgba(0,210,255,.16);
+    /* Grid Layout für VOD (Filme/Serien) - 6 Spalten, 5 Reihen */
+    .grid-container {
+      display: grid; grid-template-columns: repeat(6, 1fr); gap: 25px;
+      padding: 10px; overflow-y: hidden; width: 100%;
     }
-    .tab{
-      padding:14px 24px;
-      font-size:22px;
-      font-weight:900;
-      color:rgba(255,255,255,.45);
-      border-radius:16px;
-      transition:.12s;
-      background: rgba(0,0,0,.15);
-      border:1px solid rgba(0,210,255,.10);
+    .tile {
+      height: 380px; background: var(--glass); border-radius: 15px; position: relative;
+      overflow: hidden; border: 2px solid transparent; transition: 0.2s;
     }
-    .tab.focused{
-      color:#fff;
-      background: var(--blue);
-      border-color: rgba(255,255,255,.15);
-      box-shadow:0 0 18px rgba(0,69,255,.35);
-      transform:scale(1.02);
+    .tile img { width: 100%; height: 100%; object-fit: cover; }
+    .tile.focused { border-color: var(--cyan); transform: scale(1.05); z-index: 10; box-shadow: 0 0 30px rgba(0,210,255,0.4); }
+    .tile-label {
+      position: absolute; bottom: 0; width: 100%; padding: 15px;
+      background: linear-gradient(transparent, rgba(0,0,0,0.9)); font-size: 18px; font-weight: bold;
     }
 
-    .content-col{
-      flex:1;
-      background: rgba(0,0,0,.22);
-      border:1px solid rgba(0,210,255,.14);
-      border-radius:26px;
-      overflow:hidden;
-      display:flex;
-      flex-direction:column;
-    }
-    .content-header{
-      padding:18px 20px;
-      color:var(--cyan);
-      font-weight:900;
-      letter-spacing:3px;
-      font-size:14px;
-      text-transform:uppercase;
-      border-bottom:1px solid rgba(0,210,255,.10);
-    }
-    .content-body{ flex:1; overflow-y:auto; padding:16px; }
+    /* Setup View */
+    #setup-view { display: none; flex-direction: column; gap: 20px; }
+    .setup-tabs { display: flex; gap: 15px; margin-bottom: 20px; }
+    .tab { padding: 15px 30px; background: var(--glass); border-radius: 10px; font-size: 22px; }
+    .tab.focused { background: var(--blue); }
 
-    .card{
-      border-radius:18px;
-      border:1px solid rgba(0,210,255,.14);
-      background: rgba(0,0,0,.22);
-      padding:16px;
-      margin-bottom:14px;
-      color:rgba(255,255,255,.90);
+    /* Fullscreen Player */
+    #fullscreen-player {
+      display: none; position: fixed; top: 0; left: 0; width: 1920px; height: 1080px;
+      background: #000; z-index: 9999;
     }
-    .card.focused{
-      border-color: rgba(0,210,255,.65);
-      background: rgba(0,69,255,.18);
-    }
-    .card-title{ font-weight:900; font-size:26px; }
-    .card-sub{ margin-top:8px; color:rgba(255,255,255,.60); font-size:20px; }
-
-    .grid{ display:grid; grid-template-columns: repeat(6, 1fr); gap:12px; }
-    .gitem{ height:120px; border-radius:16px; border:1px solid rgba(0,210,255,.14); background: rgba(0,0,0,.22); position:relative; overflow:hidden;}
-    .gitem.focused{ border-color: rgba(0,210,255,.70); transform: scale(1.03); }
-    .gthumb{ width:100%; height:100%; object-fit:cover; }
-
-    .input{ width:100%; padding:18px 16px; margin-top:10px; border-radius:14px; border:1px solid rgba(0,210,255,.22); background: rgba(0,0,0,.28); color:#fff; font-size:22px; }
-    .btnrow{ display:flex; gap:12px; margin-top:14px; }
-    .btn{ flex:1; padding:16px 14px; text-align:center; border-radius:14px; border:1px solid rgba(0,210,255,.22); background: rgba(0,69,255,.20); font-weight:900; font-size:20px; }
-    .btn.focused{ background: var(--blue); }
   </style>
 </head>
 
@@ -146,180 +83,160 @@
       <div id="m2" class="menu-item">SERIEN</div>
       <div id="m3" class="menu-item">EINSTELLUNG</div>
     </nav>
-    <div id="header-clock">--:--</div>
+    <div id="clock" style="font-size: 35px; font-weight: bold;">00:00</div>
   </header>
 
   <main>
-    <div class="panel">
-      <div id="tv-view" style="display:none; justify-content:center; align-items:center; height:100%; font-size:40px;">TV Modus</div>
-      <div id="vod-view" style="display:none; justify-content:center; align-items:center; height:100%; font-size:40px;">VOD Modus</div>
+    <div id="tv-view" class="view-section">
+      <div class="list-col" id="channel-list">
+        <h2 style="color:var(--cyan)">SENDER</h2>
+        <div id="ch-container"></div>
+      </div>
+      <div id="video-container">
+          <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:var(--cyan)">VORSCHAU</div>
+      </div>
+    </div>
 
-      <div id="setup-view">
-        <div class="tabs">
-          <div id="t0" class="tab">HINTERGRUND</div>
-          <div id="t1" class="tab">M3U PROFILE</div>
-          <div id="t2" class="tab">XTREAM PROFILE</div>
-          <div id="t3" class="tab">MAC ADRESSE</div>
-        </div>
+    <div id="vod-view" class="view-section">
+      <div id="movie-grid" class="grid-container"></div>
+    </div>
 
-        <div class="content-col">
-          <div id="content-title" class="content-header">HINTERGRUND</div>
-          <div id="content-body" class="content-body"></div>
-        </div>
+    <div id="setup-view" class="view-section">
+      <div class="setup-tabs">
+        <div id="t0" class="tab">HINTERGRUND</div>
+        <div id="t1" class="tab">PROFIL</div>
+        <div id="t2" class="tab">MAC ADRESSE</div>
+      </div>
+      <div id="setup-content" style="background:var(--panel); flex:1; border-radius:20px; padding:40px;">
+          <div id="mac-display" style="font-size:40px; color:var(--cyan)">MAC: lade...</div>
       </div>
     </div>
   </main>
 
+  <div id="fullscreen-player"></div>
+
 <script>
-  var GH_OWNER = "Artonstyle", GH_REPO = "IPTVBlack", GH_BG_DIR = "hintergrund";
-  var area = "menu", menuIdx = 3, tabIdx = 0, focusIdx = 0;
-  var bgItems = [], m3uProfiles = [], xcProfiles = [], activeM3U = "", activeXC = "";
-  var currentMac = "lade…";
+  var area = "menu", mIdx = 0, tIdx = 0, gIdx = 0;
+  var rowLen = 6; // 6 Kacheln pro Reihe
+  var currentView = "tv";
 
-  function $(id){ return document.getElementById(id); }
-  function esc(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  function $(id) { return document.getElementById(id); }
 
-  function init(){
-    // Key Registration
+  function init() {
+    // Tasten registrieren [cite: 10, 11]
     try {
-      ["Up","Down","Left","Right","Enter","Back","0","1","2","3","4","5","6","7","8","9"]
-      .forEach(function(k){ tizen.tvinputdevice.registerKey(k); });
+      ["Up","Down","Left","Right","Enter","Back"].forEach(k => tizen.tvinputdevice.registerKey(k));
     } catch(e){}
 
-    // Focus Trick 
-    document.body.focus();
-    setInterval(function(){ document.body.focus(); }, 500);
-
-    // Uhrzeit Start 
-    updateTime();
     setInterval(updateTime, 1000);
-
-    // MAC Laden 
     loadMac();
-
-    // Init Logic
-    m3uProfiles = JSON.parse(localStorage.getItem("iptv_m3u_profiles") || "[]");
-    xcProfiles = JSON.parse(localStorage.getItem("iptv_xc_profiles") || "[]");
-    activeM3U = localStorage.getItem("iptv_active_m3u") || "";
-    activeXC = localStorage.getItem("iptv_active_xc") || "";
-
-    renderMenu();
-    renderTabs();
-    renderTabPreview();
-    loadBackgroundsFromGitHub();
+    renderGrids();
+    renderChannels();
+    updateUI();
   }
 
-  // Echte Uhrzeit Funktion 
-  function updateTime(){
+  function updateTime() {
     var d = new Date();
-    var h = d.getHours(), m = d.getMinutes();
-    var timeStr = (h<10?"0":"")+h+":"+(m<10?"0":"")+m;
-    $("header-clock").innerText = timeStr;
+    $("clock").innerText = (d.getHours()<10?"0":"") + d.getHours() + ":" + (d.getMinutes()<10?"0":"") + d.getMinutes();
   }
 
-  // Echte MAC Funktion [cite: 6, 7, 8]
-  function loadMac(){
+  function loadMac() {
     try {
-      tizen.systeminfo.getPropertyValue("WIFI_NETWORK", function(w){
-        if(w.macAddress) { currentMac = w.macAddress.toUpperCase(); updateMACDisplay(); }
-        else { loadLan(); }
-      }, loadLan);
-    } catch(e){ loadLan(); }
+      tizen.systeminfo.getPropertyValue("WIFI_NETWORK", w => {
+        if(w.macAddress) $("mac-display").innerText = "MAC: " + w.macAddress.toUpperCase();
+      }, () => {
+        tizen.systeminfo.getPropertyValue("ETHERNET_NETWORK", l => {
+          $("mac-display").innerText = "MAC: " + (l.macAddress || "NICHT VERFÜGBAR");
+        });
+      });
+    } catch(e) { $("mac-display").innerText = "MAC: NICHT VERFÜGBAR"; }
+  }
 
-    function loadLan(){
-      try {
-        tizen.systeminfo.getPropertyValue("ETHERNET_NETWORK", function(l){
-          currentMac = l.macAddress ? l.macAddress.toUpperCase() : "NICHT VERFÜGBAR";
-          updateMACDisplay();
-        }, function(){ currentMac = "NICHT VERFÜGBAR"; updateMACDisplay(); });
-      } catch(e){ currentMac = "NICHT VERFÜGBAR"; updateMACDisplay(); }
+  function renderGrids() {
+    let html = "";
+    for(let i=0; i<30; i++) { // 6 Spalten * 5 Reihen = 30 Kacheln
+      html += `<div id="g${i}" class="tile">
+                <img src="https://via.placeholder.com/300x450/00050a/00d2ff?text=Film+${i+1}">
+                <div class="tile-label">Movie Title ${i+1}</div>
+              </div>`;
+    }
+    $("movie-grid").innerHTML = html;
+  }
+
+  function renderChannels() {
+    let html = "";
+    for(let i=0; i<10; i++) {
+      html += `<div id="ch${i}" class="list-item">Channel Name ${i+1}</div>`;
+    }
+    $("ch-container").innerHTML = html;
+  }
+
+  function updateUI() {
+    // Reset Focus
+    document.querySelectorAll('.focused').forEach(el => el.classList.remove('focused'));
+    
+    // View Management
+    $("tv-view").style.display = (mIdx === 0) ? "flex" : "none";
+    $("vod-view").style.display = (mIdx === 1 || mIdx === 2) ? "block" : "none";
+    $("setup-view").style.display = (mIdx === 3) ? "flex" : "none";
+
+    // Focus Logic
+    if(area === "menu") {
+      $("m" + mIdx).classList.add("focused");
+    } else if(area === "grid") {
+      $("g" + gIdx).classList.add("focused");
+    } else if(area === "list") {
+      $("ch" + gIdx).classList.add("focused");
+      // Simulierter Hover-Start [Anfrage]
+      console.log("Hover-Play für Kanal: " + gIdx);
+    } else if(area === "tabs") {
+      $("t" + tIdx).classList.add("focused");
     }
   }
 
-  function updateMACDisplay(){
-    if(tabIdx === 3) renderMACTab();
-  }
-
-  function renderTabPreview(){
-    var titles = ["HINTERGRUND","M3U PROFILE","XTREAM PROFILE","MAC ADRESSE"];
-    $("content-title").innerText = titles[tabIdx];
-    focusIdx = 0;
-    if(tabIdx===0) renderBGTab();
-    else if(tabIdx===1) renderM3UTab();
-    else if(tabIdx===2) renderXCTab();
-    else renderMACTab();
-    updateFocus();
-  }
-
-  function renderMACTab(){
-    $("content-body").innerHTML = 
-      '<div class="card profile focusable" data-kind="mac">' +
-        '<div class="card-title">DEINE GERÄTE-ID (MAC)</div>' +
-        '<div class="card-sub" style="font-size:32px; color:var(--cyan);">' + esc(currentMac) + '</div>' +
-        '<div class="card-sub">Nutze diese Adresse für dein IPTV Portal.</div>' +
-      '</div>';
-  }
-
-  function renderBGTab(){
-    var host = $("content-body");
-    var html = '<div class="grid">';
-    for(var i=0;i<bgItems.length;i++){
-      html += '<div class="gitem focusable" data-kind="bg" data-idx="'+i+'"><img class="gthumb" src="'+bgItems[i].raw+'"/></div>';
+  document.addEventListener("keydown", function(e) {
+    let k = e.keyCode;
+    
+    if(area === "menu") {
+      if(k === 37) mIdx = (mIdx > 0) ? mIdx - 1 : 3;
+      if(k === 39) mIdx = (mIdx < 3) ? mIdx + 1 : 0;
+      if(k === 40 || k === 13) area = (mIdx === 0) ? "list" : (mIdx < 3 ? "grid" : "tabs");
+    } 
+    else if(area === "grid") {
+      if(k === 38) { if(gIdx < rowLen) area = "menu"; else gIdx -= rowLen; }
+      if(k === 40) { if(gIdx < 24) gIdx += rowLen; }
+      if(k === 37) { if(gIdx % rowLen !== 0) gIdx--; }
+      if(k === 39) { if(gIdx % rowLen !== rowLen - 1) gIdx++; }
+      if(k === 13) toggleFullscreen();
     }
-    html += '</div>';
-    host.innerHTML = html;
-  }
-
-  function renderM3UTab(){
-    $("content-body").innerHTML = '<div class="card">M3U Profile kommen hier (Demo)</div>';
-  }
-
-  function renderXCTab(){
-    $("content-body").innerHTML = '<div class="card">Xtream Profile kommen hier (Demo)</div>';
-  }
-
-  function loadBackgroundsFromGitHub(){
-    var url = "https://api.github.com/repos/"+GH_OWNER+"/"+GH_REPO+"/contents/"+GH_BG_DIR;
-    fetch(url).then(r => r.json()).then(arr => {
-      if(!Array.isArray(arr)) return;
-      bgItems = arr.filter(it => it.type === "file").map(it => ({
-        name: it.name,
-        raw: "https://raw.githubusercontent.com/"+GH_OWNER+"/"+GH_REPO+"/main/"+GH_BG_DIR+"/"+it.name
-      }));
-      if(tabIdx===0) renderBGTab();
-    });
-  }
-
-  function updateFocus(){
-    for(var i=0;i<4;i++) $("m"+i).classList.toggle("focused", area==="menu" && i===menuIdx);
-    for(var t=0;t<4;t++) $("t"+t).classList.toggle("focused", area==="tabs" && t===tabIdx);
-    var f = $("content-body").querySelectorAll(".focusable");
-    f.forEach((el, i) => el.classList.toggle("focused", area==="content" && i===focusIdx));
-  }
-
-  document.addEventListener("keydown", function(e){
-    var k = e.keyCode;
-    if(k===10009 || k===27){ // Back
-      if(area==="content") area="tabs";
-      else if(area==="tabs") area="menu";
-      updateFocus(); return;
+    else if(area === "list") {
+      if(k === 38) { if(gIdx === 0) area = "menu"; else gIdx--; }
+      if(k === 40) { if(gIdx < 9) gIdx++; }
+      if(k === 13) toggleFullscreen();
     }
-    if(area==="menu"){
-      if(k===37) menuIdx = (menuIdx>0)?menuIdx-1:3;
-      if(k===39) menuIdx = (menuIdx<3)?menuIdx+1:0;
-      if(k===13 || k===40) { area="tabs"; if(menuIdx<3) { $("tv-view").style.display = "flex"; $("setup-view").style.display="none"; } }
-    } else if(area==="tabs"){
-      if(k===37) tabIdx = (tabIdx>0)?tabIdx-1:3;
-      if(k===39) tabIdx = (tabIdx<3)?tabIdx+1:0;
-      renderTabPreview();
-      if(k===13 || k===40) area="content";
-    } else if(area==="content"){
-      var f = $("content-body").querySelectorAll(".focusable");
-      if(k===38) { if(focusIdx===0) area="tabs"; else focusIdx--; }
-      if(k===40 && focusIdx<f.length-1) focusIdx++;
+    else if(area === "tabs") {
+        if(k === 38) area = "menu";
+        if(k === 37) tIdx = (tIdx > 0) ? tIdx - 1 : 2;
+        if(k === 39) tIdx = (tIdx < 2) ? tIdx + 1 : 0;
     }
-    updateFocus();
+
+    if(k === 10009 || k === 27) { // Back Key
+      if(area !== "menu") area = "menu";
+      else tizen.application.getCurrentApplication().exit();
+    }
+
+    updateUI();
   });
+
+  function toggleFullscreen() {
+    let p = $("fullscreen-player");
+    if(p.style.display === "block") {
+        p.style.display = "none";
+    } else {
+        p.style.display = "block";
+        p.innerHTML = "<h1 style='color:white; text-align:center; margin-top:20%;'>VOLLBILD-PLAYER AKTIV</h1><p style='text-align:center'>Back-Taste zum Schließen</p>";
+    }
+  }
 </script>
 </body>
 </html>
