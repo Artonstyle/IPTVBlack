@@ -2,46 +2,78 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Black IPTV 2026</title>
+  <title>Black IPTV 2026 - Pro</title>
   <script type="text/javascript" src="$WEBAPIS/webapis/webapis.js"></script>
   <script src="main.js"></script>
   <style>
-    :root { --blue: #0045ff; --cyan: #00d2ff; --bg: radial-gradient(circle at top right, #001a4d, #00050a); }
+    :root { 
+      --blue: #0045ff; 
+      --cyan: #00d2ff; 
+      --bg: radial-gradient(circle at top right, #001a4d, #00050a); 
+      --panel: rgba(0,0,0,0.7);
+    }
+    
     body { 
       width: 1920px; height: 1080px; margin: 0; 
       background: var(--bg); background-size: cover; background-position: center; 
-      color: white; font-family: Arial, sans-serif; overflow: hidden; 
+      color: white; font-family: 'Segoe UI', Arial, sans-serif; overflow: hidden; 
     }
-    header { height: 160px; display: flex; justify-content: space-between; align-items: center; padding: 0 80px; border-bottom: 2px solid rgba(0,210,255,0.1); }
-    #menu { display: flex; gap: 20px; }
-    .item { padding: 20px 40px; font-size: 35px; font-weight: bold; color: rgba(255,255,255,.3); border-radius: 15px; }
-    .focused { background: var(--blue) !important; color: white !important; transform: scale(1.05); box-shadow: 0 0 30px var(--blue); }
 
-    /* Uhrzeit & Datum - Fest positioniert für Speed */
-    #clock-box { text-align: right; width: 450px; }
-    #time { font-size: 65px; font-weight: bold; line-height: 1; }
-    #date { font-size: 22px; color: var(--cyan); margin-top: 5px; }
-
-    main { display: flex; height: 920px; padding: 40px; gap: 20px; }
+    /* HEADER */
+    header { 
+      height: 160px; display: flex; justify-content: space-between; align-items: center; 
+      padding: 0 80px; border-bottom: 2px solid rgba(0,210,255,0.1); 
+      background: rgba(0,0,0,0.2);
+    }
+    #menu { display: flex; gap: 15px; }
+    .item { padding: 15px 35px; font-size: 32px; font-weight: bold; color: rgba(255,255,255,.3); border-radius: 12px; transition: 0.3s; }
     
-    /* Ansichten */
-    #tv-view { display: flex; width: 100%; gap: 20px; display: none; } /* Standardmäßig aus */
-    .tv-column { background: rgba(0,0,0,0.6); border-radius: 20px; border: 1px solid rgba(0,210,255,0.2); padding: 20px; }
-    #cat-list { width: 400px; }
-    #chan-list { width: 500px; }
-    #mini-player { flex: 1; display: flex; flex-direction: column; gap: 15px; }
-    #video-window { width: 100%; height: 450px; background: #000; border: 2px solid var(--cyan); border-radius: 15px; }
+    /* UHRZEIT */
+    #clock-box { text-align: right; }
+    #time { font-size: 60px; font-weight: bold; line-height: 1; }
+    #date { font-size: 22px; color: var(--cyan); margin-top: 5px; text-transform: uppercase; }
 
+    /* MAIN BEREICH */
+    main { display: flex; height: 920px; padding: 30px; gap: 20px; box-sizing: border-box; }
+
+    /* TV ANSICHT (3 SPALTEN) */
+    #tv-view { display: flex; width: 100%; gap: 20px; }
+    .tv-column { background: var(--panel); border-radius: 20px; border: 1px solid rgba(0,210,255,0.2); display: flex; flex-direction: column; }
+    #cat-list { width: 400px; padding: 20px; }
+    #chan-list { width: 500px; padding: 20px; }
+    #mini-player { flex: 1; padding: 0; background: transparent; border: none; }
+    
+    .list-container { overflow-y: hidden; flex: 1; }
+    .list-item { 
+      padding: 18px 25px; margin: 8px 0; background: rgba(255,255,255,0.05); 
+      border-radius: 10px; font-size: 26px; border-left: 6px solid transparent;
+      transition: 0.2s;
+    }
+    
+    /* SETUP ANSICHT */
     #setup-view { display: none; width: 100%; gap: 30px; }
-    .column { background: rgba(0,0,0,0.7); border: 2px solid var(--cyan); border-radius: 30px; flex: 1; padding: 30px; display: flex; flex-direction: column; align-items: center; }
-    .btn { width: 90%; padding: 20px; margin: 10px 0; background: rgba(255,255,255,0.08); border: 3px solid transparent; border-radius: 15px; text-align: center; font-size: 24px; }
+    .column { background: var(--panel); border: 2px solid var(--cyan); border-radius: 30px; flex: 1; padding: 40px; display: flex; flex-direction: column; align-items: center; }
+    .btn { width: 90%; padding: 22px; margin: 12px 0; background: rgba(255,255,255,0.08); border: 3px solid transparent; border-radius: 15px; text-align: center; font-size: 26px; }
+    
+    /* FOKUS-STEUERUNG */
+    .focused { 
+      background: var(--blue) !important; 
+      color: white !important; 
+      border-left-color: var(--cyan) !important;
+      transform: scale(1.03); 
+      box-shadow: 0 0 30px rgba(0,69,255,0.5); 
+    }
+
+    /* TYPOGRAPHIE */
+    h2 { color: var(--cyan); font-size: 30px; margin: 0 0 20px 0; border-bottom: 1px solid rgba(0,210,255,0.3); padding-bottom: 10px; width: 100%; }
+    #video-window { width: 100%; height: 480px; background: #000; border: 2px solid var(--cyan); border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
     input { width: 90%; padding: 20px; margin: 20px 0; background: #111; border: 1px solid var(--cyan); color: white; font-size: 22px; border-radius: 10px; text-align: center; }
   </style>
 </head>
 
 <body>
   <header>
-    <div style="font-size: 50px; font-weight: bold;">BLACK<span style="color:var(--cyan)">IPTV</span></div>
+    <div style="font-size: 45px; font-weight: bold; letter-spacing: 2px;">BLACK<span style="color:var(--cyan)">IPTV</span></div>
     <nav id="menu">
       <div id="i0" class="item">TV</div>
       <div id="i1" class="item">FILME</div>
@@ -56,44 +88,73 @@
 
   <main>
     <div id="tv-view">
-        <div id="cat-list" class="tv-column"><h2>Kategorien</h2></div>
-        <div id="chan-list" class="tv-column"><h2>Sender</h2></div>
-        <div id="mini-player" class="tv-column"><div id="video-window"></div><div style="font-size:30px">Live TV</div></div>
+        <div id="cat-list" class="tv-column">
+            <h2>KATEGORIEN</h2>
+            <div class="list-container">
+                <div class="list-item">Alle Sender</div>
+                <div class="list-item">Sport</div>
+                <div class="list-item">Kino & Event</div>
+                <div class="list-item">Dokumentation</div>
+                <div class="list-item">Kinder</div>
+                <div class="list-item">Nachrichten</div>
+            </div>
+        </div>
+        <div id="chan-list" class="tv-column">
+            <h2>SENDER</h2>
+            <div class="list-container">
+                <div class="list-item">Sky Sport 1 HD</div>
+                <div class="list-item">DAZN 1 HD</div>
+                <div class="list-item">HBO Originals</div>
+                <div class="list-item">National Geographic</div>
+                <div class="list-item">Disney Channel</div>
+                <div class="list-item">Eurosport 1</div>
+            </div>
+        </div>
+        <div id="mini-player">
+            <div id="video-window"></div>
+            <div style="padding: 30px;">
+                <h1 id="current-channel" style="margin:0; font-size: 45px;">Live Vorschau</h1>
+                <p style="color: var(--cyan); font-size: 24px;">Wähle einen Sender aus der Liste</p>
+            </div>
+        </div>
     </div>
     
     <div id="setup-view">
       <div class="column">
-        <h2 style="color:var(--cyan)">DESIGN</h2>
+        <h2>DESIGN WÄHLEN</h2>
         <div id="b1" class="btn">Galatasaray</div>
         <div id="b2" class="btn">Blue Neon</div>
         <div id="b3" class="btn">Albanien 1</div>
         <div id="b4" class="btn">Albanien 2</div>
       </div>
       <div class="column">
-        <h2 style="color:var(--cyan)">HANDY UPLOAD</h2>
-        <div id="b5" class="btn" style="border-color:var(--cyan)">LINK LADEN</div>
-        <input id="url-display" type="text" placeholder="Kein Link" readonly>
-        <div id="status" style="color:var(--cyan); font-size:24px;">Bereit</div>
-        <div id="mac-info" style="margin-top:40px; opacity:0.5;">MAC: --:--</div>
+        <h2>HANDY UPLOAD</h2>
+        <div id="b5" class="btn" style="border-color:var(--cyan)">PLAYLIST LADEN</div>
+        <input id="url-display" type="text" placeholder="Kein Link vorhanden" readonly>
+        <div id="status" style="color:var(--cyan); font-size:24px; margin-top:10px;">Bereit</div>
+        <div id="mac-info" style="margin-top:auto; font-size:22px; opacity:0.5; background:rgba(0,0,0,0.3); padding:10px 20px; border-radius:10px;">MAC: --:--:--:--:--:--</div>
       </div>
     </div>
   </main>
 
 <script>
-  // 1. SCHNELLE UHR (Läuft eigenständig)
+  // 1. UHRZEIT FUNKTION (2026)
   function startClock() {
     const update = () => {
         const nun = new Date();
-        document.getElementById("time").innerText = nun.toLocaleTimeString('de-DE', {hour: '2-digit', minute:'2-digit'});
+        const h = String(nun.getHours()).padStart(2, '0');
+        const m = String(nun.getMinutes()).padStart(2, '0');
+        document.getElementById("time").innerText = h + ":" + m;
+
         const tage = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
         const monate = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
         document.getElementById("date").innerText = tage[nun.getDay()] + ", " + nun.getDate() + ". " + monate[nun.getMonth()] + " 2026";
     };
     update();
-    setInterval(update, 10000); // Nur alle 10 Sek. prüfen spart CPU
+    setInterval(update, 10000);
   }
 
-  // 2. SETUP AKTIONEN
+  // 2. SETUP HANDLING
   window.handleSetupOK = function(idx) {
     if (idx === 1) setBG("bild1.webp");
     else if (idx === 2) setBG("bild2.webp");
@@ -104,31 +165,42 @@
 
   function setBG(img) {
     document.body.style.backgroundImage = "linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://raw.githubusercontent.com/Artonstyle/IPTVBlack/main/hintergrund/" + img + "')";
+    document.getElementById("status").innerText = "Hintergrund aktualisiert!";
   }
 
   function loadHandy() {
-    document.getElementById("status").innerText = "Lade...";
+    document.getElementById("status").innerText = "Synchronisiere...";
     fetch("https://raw.githubusercontent.com/Artonstyle/IPTVBlack/main/playlist.txt?t=" + Date.now())
       .then(r => r.text()).then(t => {
         document.getElementById("url-display").value = t.trim();
-        document.getElementById("status").innerText = "GELADEN ✓";
+        document.getElementById("status").innerText = "Playlist geladen ✓";
       });
   }
 
-  // 3. ANSICHTEN SCHALTEN (Wird von main.js aufgerufen)
-  // Wir überschreiben die update-Funktion der main.js für die Ansichten
+  // 3. START INITIALISIERUNG
   window.onload = function() {
     startClock();
+    
+    // Verknüpfung mit main.js
     if (window.update) {
         const originalUpdate = window.update;
         window.update = function() {
             originalUpdate();
+            // Ansichten umschalten basierend auf Menü-Index
             document.getElementById("tv-view").style.display = (window.mIdx === 0) ? "flex" : "none";
             document.getElementById("setup-view").style.display = (window.mIdx === 3) ? "flex" : "none";
         };
         window.update();
     }
-    try { webapis.network.getMac(m => document.getElementById("mac-info").innerText = "MAC: " + m); } catch(e) {}
+
+    // MAC Adresse abrufen
+    try {
+      webapis.network.getMac(m => {
+          document.getElementById("mac-info").innerText = "MAC: " + m.toUpperCase();
+      });
+    } catch(e) {
+      document.getElementById("mac-info").innerText = "MAC: 00:B1:AC:20:26:FF";
+    }
   };
 </script>
 </body>
