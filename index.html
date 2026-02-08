@@ -90,6 +90,8 @@
       <div id="bg-list" class="list-wrap"></div>
 
       <div id="mac" class="status" style="margin-top:10px;">MAC: Lade…</div>
+      <div id="bg-status" class="status"></div>
+
       <div class="hint">
         Navigation: ←/→ Menü • ↓ ins Setup • ↑ zurück • OK auswählen • Back = Zurück
       </div>
@@ -118,8 +120,14 @@
   // ---------------------------
   // CONFIG (dein Repo)
   // ---------------------------
-  var REPO_RAW_BASE = "https://raw.githubusercontent.com/Artonstyle/IPTVBlack/main";
-  var BG_LIST_URL   = REPO_RAW_BASE + "/hintergrund/list.txt?t=" + Date.now();
+  var OWNER = "Artonstyle";
+  var REPO  = "IPTVBlack";
+  var BRANCH = "main";
+  var BG_FOLDER = "hintergrund";
+  var GITHUB_CONTENTS_URL =
+    "https://api.github.com/repos/" + OWNER + "/" + REPO + "/contents/" + BG_FOLDER + "?ref=" + BRANCH + "&t=" + Date.now();
+
+  var PLAYLIST_URL = "https://raw.githubusercontent.com/" + OWNER + "/" + REPO + "/" + BRANCH + "/playlist.txt?t=" + Date.now();
 
   // ---------------------------
   // State
@@ -127,8 +135,10 @@
   var area = "menu";     // menu | setup
   var mIdx = 0;          // 0..3
   var setupCol = 0;      // 0=design, 1=upload
-  var bgIdx = 0;         // index in bgButtons
-  var bgButtons = [];    // array of {type:'img'|'none'|'auto', label, file}
+  var bgIdx = 0;
+
+  // bgButtons: {type:'auto'|'img'|'none', label, url}
+  var bgButtons = [];
 
   var slideshowTimer = null;
   var slideshowIdx = 0;
@@ -136,9 +146,14 @@
   function $(id){ return document.getElementById(id); }
 
   function setStatus(msg){ $("status").innerText = msg || ""; }
+  function setBgStatus(msg){ $("bg-status").innerText = msg || ""; }
 
   function safeScroll(el){
     try{ el && el.scrollIntoView({block:"center"}); }catch(e){}
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
   }
 
   // ---------------------------
@@ -153,8 +168,10 @@
     host.innerHTML = html;
   }
 
-  function escapeHtml(s){
-    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  function clampBgIdx(i){
+    if(i<0) return 0;
+    if(i>bgButtons.length-1) return bgButtons.length-1;
+    return i;
   }
 
   function update(){
@@ -189,14 +206,19 @@
     if(slideshowTimer){ clearInterval(slideshowTimer); slideshowTimer = null; }
   }
 
-  function setBGFromFile(file){
+  function setBGUrl(url){
     stopSlideshow();
-    localStorage.setItem("bg_mode", "file");
-    localStorage.setItem("bg_file", file);
+    localStorage.setItem("bg_mode", "url");
+    localStorage.setItem("bg_url", url || "");
 
-    var url = REPO_RAW_BASE + "/hintergrund/" + file + "?t=" + Date.now();
+    if(!url){
+      setBGNone();
+      return;
+    }
+
+    var u = url + (url.indexOf("?")>-1 ? "&" : "?") + "t=" + Date.now();
     document.body.style.backgroundImage =
-      "linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url('" + url + "')";
+      "linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url('" + u + "')";
     document.body.style.backgroundSize = "cover";
     document.body.style.backgroundPosition = "center";
   }
@@ -204,7 +226,7 @@
   function setBGNone(){
     stopSlideshow();
     localStorage.setItem("bg_mode", "none");
-    localStorage.removeItem("bg_file");
+    localStorage.removeItem("bg_url");
 
     document.body.style.backgroundImage = "";
     document.body.style.background = "var(--bg)";
@@ -213,103 +235,132 @@
   function startSlideshow(){
     stopSlideshow();
     localStorage.setItem("bg_mode", "auto");
-    localStorage.removeItem("bg_file");
+    localStorage.removeItem("bg_url");
 
-    // nur echte bilder in slideshow
-    var images = bgButtons.filter(function(x){ return x.type==="img"; });
+    var images = bgButtons.filter(function(x){ return x.type==="img" && x.url; });
     if(!images.length){
       setBGNone();
       return;
     }
 
-    // start index aus storage oder 0
     slideshowIdx = parseInt(localStorage.getItem("bg_auto_idx") || "0", 10);
     if(isNaN(slideshowIdx) || slideshowIdx<0 || slideshowIdx>=images.length) slideshowIdx = 0;
 
     function apply(){
-      var f = images[slideshowIdx].file;
-      var url = REPO_RAW_BASE + "/hintergrund/" + f + "?t=" + Date.now();
-      document.body.style.backgroundImage =
-        "linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url('" + url + "')";
-      document.body.style.backgroundSize = "cover";
-      document.body.style.backgroundPosition = "center";
+      var u = images[slideshowIdx].url;
+      setBGUrl(u); // speichert mode=url, aber wir wollen mode=auto behalten:
+      localStorage.setItem("bg_mode","auto");
       localStorage.setItem("bg_auto_idx", String(slideshowIdx));
       slideshowIdx = (slideshowIdx + 1) % images.length;
     }
 
     apply();
-    // alle 12 Sekunden wechseln (kannst du ändern)
+    // alle 12 Sekunden wechseln
     slideshowTimer = setInterval(apply, 12000);
   }
 
   function applySavedBackground(){
     var mode = localStorage.getItem("bg_mode") || "none";
-    var file = localStorage.getItem("bg_file") || "";
+    var url  = localStorage.getItem("bg_url") || "";
 
     if(mode==="auto"){
       startSlideshow();
       return;
     }
-    if(mode==="file" && file){
-      setBGFromFile(file);
+    if(mode==="url" && url){
+      setBGUrl(url);
       return;
     }
     setBGNone();
   }
 
+  function activateBgSelection(){
+    var b = bgButtons[bgIdx];
+    if(!b) return;
+
+    if(b.type==="auto"){ startSlideshow(); return; }
+    if(b.type==="none"){ setBGNone(); return; }
+    if(b.type==="img"){ setBGUrl(b.url); return; }
+  }
+
   // ---------------------------
-  // Load background list from GitHub
+  // AUTO load images from GitHub folder (OHNE list.txt)
   // ---------------------------
-  function loadBackgroundList(){
-    // Default buttons (falls list.txt fehlt)
+  function isImageName(name){
+    name = (name || "").toLowerCase();
+    return (
+      name.endsWith(".png") || name.endsWith(".jpg") || name.endsWith(".jpeg") ||
+      name.endsWith(".webp") || name.endsWith(".gif")
+    );
+  }
+
+  function loadBackgroundsFromGitHub(){
+    setBgStatus("Lade Designs…");
+
+    // fallback (wenn API blockiert/timeout)
     bgButtons = [
-      {type:"auto", label:"AUTO SLIDESHOW", file:""},
-      {type:"img",  label:"bild1.webp", file:"bild1.webp"},
-      {type:"img",  label:"bild2.webp", file:"bild2.webp"},
-      {type:"none", label:"STANDARD", file:""}
+      {type:"auto", label:"AUTO SLIDESHOW", url:""},
+      {type:"none", label:"STANDARD", url:""}
     ];
     renderBgList();
 
     var xhr = new XMLHttpRequest();
-    xhr.open("GET", BG_LIST_URL, true);
+    xhr.open("GET", GITHUB_CONTENTS_URL, true);
     xhr.timeout = 15000;
 
     xhr.onreadystatechange = function(){
       if(xhr.readyState !== 4) return;
-      if(xhr.status === 200){
-        var lines = (xhr.responseText || "")
-          .split(/\r?\n/)
-          .map(function(x){ return (x||"").trim(); })
-          .filter(function(x){ return !!x; });
 
-        // baue buttons: AUTO + alle bilder + STANDARD
-        var list = [{type:"auto", label:"AUTO SLIDESHOW", file:""}];
-        for(var i=0;i<lines.length;i++){
-          list.push({type:"img", label:lines[i], file:lines[i]});
+      if(xhr.status === 200){
+        var arr;
+        try{ arr = JSON.parse(xhr.responseText || "[]"); }catch(e){ arr = []; }
+
+        // arr enthält Dateien im Ordner
+        var images = [];
+        for(var i=0;i<arr.length;i++){
+          var it = arr[i];
+          if(!it || it.type !== "file") continue;
+          if(!isImageName(it.name)) continue;
+
+          // GitHub API liefert download_url (raw)
+          if(it.download_url){
+            images.push({ name: it.name, url: it.download_url });
+          }
         }
-        list.push({type:"none", label:"STANDARD", file:""});
+
+        // sort nach name
+        images.sort(function(a,b){
+          return a.name.localeCompare(b.name);
+        });
+
+        // build buttons
+        var list = [{type:"auto", label:"AUTO SLIDESHOW", url:""}];
+        for(var j=0;j<images.length;j++){
+          list.push({type:"img", label: images[j].name, url: images[j].url});
+        }
+        list.push({type:"none", label:"STANDARD", url:""});
 
         bgButtons = list;
         renderBgList();
-
-        // Fokus wieder korrekt setzen
         bgIdx = clampBgIdx(bgIdx);
 
-        // gespeicherten BG anwenden
+        setBgStatus(images.length ? ("Designs gefunden: " + images.length) : "Keine Bilder im Hintergrund-Ordner gefunden");
         applySavedBackground();
         update();
       }else{
-        // list.txt fehlt -> fallback bleibt
+        setBgStatus("Design-Ordner konnte nicht geladen werden (HTTP " + xhr.status + ")");
         applySavedBackground();
         update();
       }
     };
 
     xhr.ontimeout = function(){
+      setBgStatus("Timeout beim Laden der Designs");
       applySavedBackground();
       update();
     };
     xhr.onerror = function(){
+      setBgStatus("Netzwerkfehler beim Laden der Designs");
       applySavedBackground();
       update();
     };
@@ -317,21 +368,14 @@
     xhr.send();
   }
 
-  function clampBgIdx(i){
-    if(i<0) return 0;
-    if(i>bgButtons.length-1) return bgButtons.length-1;
-    return i;
-  }
-
   // ---------------------------
   // Handy link load
   // ---------------------------
   function loadHandy(){
     setStatus("Lade Link…");
-    var url = REPO_RAW_BASE + "/playlist.txt?t=" + Date.now();
 
     var xhr = new XMLHttpRequest();
-    xhr.open("GET", url, true);
+    xhr.open("GET", PLAYLIST_URL, true);
     xhr.timeout = 15000;
 
     xhr.onreadystatechange = function(){
@@ -401,24 +445,6 @@
     }catch(e){}
   }
 
-  function activateBgSelection(){
-    var b = bgButtons[bgIdx];
-    if(!b) return;
-
-    if(b.type==="auto"){
-      startSlideshow();
-      return;
-    }
-    if(b.type==="none"){
-      setBGNone();
-      return;
-    }
-    if(b.type==="img"){
-      setBGFromFile(b.file);
-      return;
-    }
-  }
-
   document.addEventListener("keydown", function(e){
     var k = e.keyCode;
 
@@ -481,7 +507,9 @@
   function init(){
     registerKeys();
     fetchMacAddress();
-    loadBackgroundList(); // lädt list.txt automatisch
+
+    // ✅ hier wird jetzt automatisch der Ordner /hintergrund gelistet:
+    loadBackgroundsFromGitHub();
 
     area = "menu";
     mIdx = 0;
