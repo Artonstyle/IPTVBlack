@@ -12,25 +12,30 @@
       background: var(--bg); background-size: cover; background-position: center; 
       color: white; font-family: Arial, sans-serif; overflow: hidden; 
     }
-    header { height: 160px; display: flex; justify-content: space-between; align-items: center; padding: 0 80px; border-bottom: 2px solid rgba(0,210,255,0.2); }
+    header { 
+      height: 160px; display: flex; justify-content: space-between; align-items: center; 
+      padding: 0 80px; border-bottom: 2px solid rgba(0,210,255,0.1); 
+    }
     #menu { display: flex; gap: 20px; }
     .item { padding: 20px 40px; font-size: 35px; font-weight: bold; color: rgba(255,255,255,.45); border-radius: 15px; }
     .focused { background: var(--blue) !important; color: white !important; transform: scale(1.05); box-shadow: 0 0 30px var(--blue); }
 
-    main { display: flex; height: 920px; padding: 50px; gap: 30px; }
-    #tv-content { font-size: 40px; margin: auto; }
+    /* Uhrzeit Styling */
+    #clock-box { text-align: right; }
+    #time { font-size: 50px; font-weight: bold; color: white; }
+    #date { font-size: 24px; color: var(--cyan); text-transform: uppercase; }
+
+    main { display: flex; height: 920px; padding: 40px; gap: 20px; }
     
+    /* Vorbereitung für die 3 Spalten (Kategorie, Sender, Player) */
+    .tv-column { background: rgba(0,0,0,0.6); border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); display: none; }
+    #cat-list { width: 400px; }
+    #chan-list { width: 500px; }
+    #mini-player { flex: 1; display: flex; flex-direction: column; background: transparent; border: none; }
+    #video-window { width: 100%; aspect-ratio: 16/9; background: #000; border: 2px solid var(--cyan); border-radius: 15px; }
+
     #setup-view { display: none; width: 100%; gap: 30px; }
-    .column { 
-      background: rgba(0,0,0,0.6); 
-      border: 2px solid rgba(0,210,255,0.6); 
-      border-radius: 30px; 
-      flex: 1; 
-      padding: 30px; 
-      display: flex; 
-      flex-direction: column; 
-      align-items: center; 
-    }
+    .column { background: rgba(0,0,0,0.7); border: 2px solid var(--cyan); border-radius: 30px; flex: 1; padding: 30px; display: flex; flex-direction: column; align-items: center; }
     .btn { width: 90%; padding: 20px; margin: 10px 0; background: rgba(255,255,255,0.08); border: 3px solid transparent; border-radius: 15px; text-align: center; font-size: 24px; color: white; }
     h2 { color: var(--cyan); margin-bottom: 20px; }
   </style>
@@ -45,10 +50,21 @@
       <div id="i2" class="item">SERIEN</div>
       <div id="i3" class="item">EINSTELLUNG</div>
     </nav>
+    <div id="clock-box">
+        <div id="time">00:00</div>
+        <div id="date">01. JANUAR 2026</div>
+    </div>
   </header>
 
   <main>
-    <div id="tv-content">Willkommen</div>
+    <div id="tv-view" style="display: flex; width: 100%; gap: 20px;">
+        <div id="cat-list" class="tv-column" style="display: block; padding: 20px;">Kategorien...</div>
+        <div id="chan-list" class="tv-column" style="display: block; padding: 20px;">Senderliste...</div>
+        <div id="mini-player" class="tv-column" style="display: flex;">
+            <div id="video-window"></div>
+            <div id="channel-info" style="padding: 20px; font-size: 30px;">Vorschau</div>
+        </div>
+    </div>
     
     <div id="setup-view">
       <div class="column">
@@ -59,7 +75,6 @@
         <div id="b4" class="btn">Albanien 2</div>
         <div id="b5" class="btn" style="border-color:var(--cyan); margin-top:40px;">LINK VOM HANDY LADEN</div>
       </div>
-
       <div class="column">
         <h2>INFO & SYNC</h2>
         <div id="mac-info" style="font-size:24px; margin-bottom:20px;">MAC: Lade...</div>
@@ -69,7 +84,21 @@
   </main>
 
 <script>
-  // Zuordnung der IDs zu den Dateinamen
+  // 1. UHRZEIT & DATUM FUNKTION
+  function updateClock() {
+    const nun = new Date();
+    const stunden = String(nun.getHours()).padStart(2, '0');
+    const minuten = String(nun.getMinutes()).padStart(2, '0');
+    
+    const tage = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
+    const monate = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
+    
+    document.getElementById("time").innerText = stunden + ":" + minuten;
+    document.getElementById("date").innerText = tage[nun.getDay()] + ", " + nun.getDate() + ". " + monate[nun.getMonth()] + " 2026";
+  }
+  setInterval(updateClock, 1000); // Jede Sekunde prüfen
+
+  // 2. FERNBEDIENUNGS-AKTIONEN
   window.handleSetupOK = function(index) {
     if (index === 1) setBG("bild1.webp");
     else if (index === 2) setBG("bild2.webp");
@@ -81,24 +110,36 @@
   function setBG(imgName) {
     const url = "https://raw.githubusercontent.com/Artonstyle/IPTVBlack/main/hintergrund/" + imgName + "?t=" + Date.now();
     document.body.style.backgroundImage = "linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('" + url + "')";
-    document.getElementById("status").innerText = "Hintergrund geändert!";
   }
 
   function loadHandy() {
-    document.getElementById("status").innerText = "Lade Link...";
+    document.getElementById("status").innerText = "Lade...";
     fetch("https://raw.githubusercontent.com/Artonstyle/IPTVBlack/main/playlist.txt?t=" + Date.now())
       .then(r => r.text()).then(t => {
-        document.getElementById("status").innerText = "Link geladen!";
+        document.getElementById("status").innerText = "Sync OK!";
       }).catch(() => {
         document.getElementById("status").innerText = "Fehler!";
       });
   }
 
+  // 3. START
   window.onload = function() {
+    updateClock();
+    // Sichtbarkeit basierend auf Menü initialisieren
+    if (typeof update === "function") update();
+    
+    // In der main.js müssen wir noch sicherstellen, dass tv-view auch geschaltet wird
+    // Das machen wir hier direkt als Ergänzung:
+    const originalUpdate = window.update;
+    window.update = function() {
+        if(originalUpdate) originalUpdate();
+        const mIdx = window.mIdx; // Zugriff auf Variable aus main.js
+        document.getElementById("tv-view").style.display = (mIdx === 0) ? "flex" : "none";
+    };
+    
     try {
       webapis.network.getMac(m => document.getElementById("mac-info").innerText = "MAC: " + m);
     } catch(e) {}
-    if (typeof update === "function") update();
   };
 </script>
 </body>
