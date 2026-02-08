@@ -2,35 +2,22 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Black IPTV 2026 - Test-Modus</title>
-  
+  <title>Black IPTV 2026</title>
   <script type="text/javascript" src="$WEBAPIS/webapis/webapis.js"></script>
-  
   <script src="main.js"></script>
-
   <style>
-    :root { --blue: #0045ff; --cyan: #00d2ff; }
-    body {
-      width: 1920px; height: 1080px; margin: 0; background: #050505;
-      color: white; font-family: Arial, sans-serif; overflow: hidden;
-      background-size: cover; background-position: center;
-    }
+    :root { --blue: #0045ff; --cyan: #00d2ff; --bg: radial-gradient(circle at top right, #001a4d, #00050a); }
+    body { width: 1920px; height: 1080px; margin: 0; background: var(--bg); background-size: cover; background-position: center; color: white; font-family: Arial, sans-serif; overflow: hidden; }
     header { height: 160px; display: flex; justify-content: space-between; align-items: center; padding: 0 80px; border-bottom: 2px solid rgba(0,210,255,0.2); }
     #menu { display: flex; gap: 20px; }
-    .item { padding: 20px 40px; font-size: 35px; font-weight: bold; color: #444; border-radius: 15px; }
-    
-    /* Fokus-Klasse (wird von main.js gesteuert) */
+    .item { padding: 20px 40px; font-size: 35px; font-weight: bold; color: rgba(255,255,255,.45); border-radius: 15px; }
     .focused { background: var(--blue) !important; color: white !important; transform: scale(1.05); box-shadow: 0 0 30px var(--blue); }
-
     main { display: flex; height: 920px; padding: 50px; }
-    #tv-content { font-size: 50px; margin: auto; color: var(--cyan); }
-    #setup-view { display: none; width: 100%; gap: 30px; justify-content: center; align-items: center; }
-    
-    .column { background: rgba(255,255,255,0.05); border-radius: 30px; padding: 40px; text-align: center; width: 600px; border: 1px solid #222; }
-    .btn { padding: 25px; margin: 15px 0; background: #1a1a1a; border-radius: 15px; font-size: 26px; border: 3px solid transparent; }
+    #setup-view { display: none; width: 100%; gap: 30px; }
+    .column { background: rgba(0,0,0,0.6); border: 2px solid rgba(0,210,255,0.6); border-radius: 30px; flex: 1; padding: 30px; display: flex; flex-direction: column; align-items: center; overflow-y: auto; }
+    .btn { width: 90%; padding: 20px; margin: 10px 0; background: rgba(255,255,255,0.08); border: 3px solid transparent; border-radius: 15px; text-align: center; font-size: 24px; color: white; }
   </style>
 </head>
-
 <body>
   <header>
     <div style="font-size: 50px; font-weight: bold;">BLACK<span style="color:var(--cyan)">IPTV</span></div>
@@ -43,41 +30,63 @@
   </header>
 
   <main>
-    <div id="tv-content">Bereich: Fernsehen</div>
-
+    <div id="tv-content" style="font-size:40px; margin:auto;">Willkommen</div>
     <div id="setup-view">
+      <div class="column" id="design-container">
+        </div>
       <div class="column">
-        <h2 style="color:var(--cyan)">DESIGN</h2>
-        <div id="b1" class="btn">Hintergrund 1</div>
-        <div id="b2" class="btn">Hintergrund 2</div>
-        <div id="b3" class="btn">Standard</div>
-        <div id="b4" class="btn">LINK LADEN</div>
+        <h2 style="color:var(--cyan)">INFO</h2>
+        <div id="mac-info" style="font-size:24px; margin-bottom:20px;">MAC: Lade...</div>
+        <input id="url-box" type="text" style="width:90%; padding:20px; background:#111; border:1px solid var(--cyan); color:white; border-radius:10px;" readonly placeholder="Link erscheint hier">
+        <div id="status" style="margin-top:10px; color:var(--cyan)"></div>
       </div>
     </div>
   </main>
 
 <script>
-  // DIESE FUNKTIONEN WERDEN VON DER MAIN.JS AUFGERUFEN
-  
+  // HIER EINFACH NAMEN ERGÄNZEN
+  const MEINE_BILDER = [
+    "bild1.webp",
+    "bild2.webp",
+    "Albania.png",
+    "Albania2.jpg"
+  ];
+
+  function renderSetup() {
+    let container = document.getElementById("design-container");
+    let html = '<h2 style="color:var(--cyan)">DESIGN</h2>';
+    MEINE_BILDER.forEach((datei, i) => {
+        html += `<div id="b${i+1}" class="btn">${datei.split('.')[0]}</div>`;
+    });
+    html += `<div id="b${MEINE_BILDER.length + 1}" class="btn" style="border-color:var(--cyan)">LINK VOM HANDY LADEN</div>`;
+    container.innerHTML = html;
+  }
+
   window.handleSetupOK = function(index) {
-      if (index === 1) setBG("bild1.webp");
-      if (index === 2) setBG("bild2.webp");
-      if (index === 3) setBG("none");
-      if (index === 4) alert("Lade Link vom Handy...");
+    if (index <= MEINE_BILDER.length) {
+        setBG(MEINE_BILDER[index - 1]);
+    } else {
+        loadHandy();
+    }
   };
 
   function setBG(img) {
-      if (img === "none") {
-          document.body.style.backgroundImage = "none";
-      } else {
-          var url = "https://raw.githubusercontent.com/Artonstyle/IPTVBlack/main/hintergrund/" + img + "?t=" + Date.now();
-          document.body.style.backgroundImage = "linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('" + url + "')";
-      }
+    var url = "https://raw.githubusercontent.com/Artonstyle/IPTVBlack/main/hintergrund/" + img + "?t=" + Date.now();
+    document.body.style.backgroundImage = "linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('" + url + "')";
   }
 
-  // MAC Adresse beim Start laden (nur als Info)
-  window.addEventListener("load", function() {
-      console.log("App 2026 gestartet und main.js geladen.");
+  function loadHandy() {
+    document.getElementById("status").innerText = "Lade...";
+    fetch("https://raw.githubusercontent.com/Artonstyle/IPTVBlack/main/playlist.txt?t=" + Date.now())
+      .then(r => r.text()).then(t => {
+        document.getElementById("url-box").value = t.trim();
+        document.getElementById("status").innerText = "Erfolg!";
+      });
+  }
+
+  window.addEventListener("DOMContentLoaded", () => {
+    renderSetup();
+    try { webapis.network.getMac(m => document.getElementById("mac-info").innerText = "MAC: " + m); } catch(e){}
   });
 </script>
 </body>
