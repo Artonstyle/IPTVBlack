@@ -4,9 +4,7 @@
   <meta charset="UTF-8">
   <title>Black IPTV 2026</title>
   <script type="text/javascript" src="$WEBAPIS/webapis/webapis.js"></script>
-  
   <script src="main.js"></script>
-
   <style>
     :root { --blue: #0045ff; --cyan: #00d2ff; --bg: radial-gradient(circle at top right, #001a4d, #00050a); }
     body { 
@@ -17,14 +15,26 @@
     header { height: 160px; display: flex; justify-content: space-between; align-items: center; padding: 0 80px; border-bottom: 2px solid rgba(0,210,255,0.2); }
     #menu { display: flex; gap: 20px; }
     .item { padding: 20px 40px; font-size: 35px; font-weight: bold; color: rgba(255,255,255,.45); border-radius: 15px; }
-    
-    /* Fokus-Klasse für Fernbedienung */
     .focused { background: var(--blue) !important; color: white !important; transform: scale(1.05); box-shadow: 0 0 30px var(--blue); }
 
-    main { display: flex; height: 920px; padding: 50px; }
+    main { display: flex; height: 920px; padding: 50px; gap: 30px; }
+    #tv-content { font-size: 40px; margin: auto; }
+    
+    /* Setup Ansicht */
     #setup-view { display: none; width: 100%; gap: 30px; }
-    .column { background: rgba(0,0,0,0.6); border: 2px solid rgba(0,210,255,0.6); border-radius: 30px; flex: 1; padding: 30px; display: flex; flex-direction: column; align-items: center; overflow-y: auto; }
+    .column { 
+      background: rgba(0,0,0,0.6); 
+      border: 2px solid rgba(0,210,255,0.6); 
+      border-radius: 30px; 
+      flex: 1; 
+      padding: 30px; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      min-height: 600px; /* Damit die Spalte immer sichtbar ist */
+    }
     .btn { width: 90%; padding: 20px; margin: 10px 0; background: rgba(255,255,255,0.08); border: 3px solid transparent; border-radius: 15px; text-align: center; font-size: 24px; color: white; }
+    h2 { color: var(--cyan); margin-bottom: 20px; }
   </style>
 </head>
 
@@ -40,23 +50,26 @@
   </header>
 
   <main>
-    <div id="tv-content" style="font-size:40px; margin:auto;">Willkommen</div>
+    <div id="tv-content">Willkommen</div>
     
     <div id="setup-view">
-      <div class="column" id="design-container">
-        </div>
       <div class="column">
-        <h2 style="color:var(--cyan)">INFO & SYNC</h2>
+        <h2>DESIGN</h2>
+        <div id="design-container" style="width:100%; display:flex; flex-direction:column; align-items:center;">
+            <div class="btn">Lade Designs...</div>
+        </div>
+      </div>
+
+      <div class="column">
+        <h2>INFO & SYNC</h2>
         <div id="mac-info" style="font-size:24px; margin-bottom:20px;">MAC: Lade...</div>
-        <div id="status" style="margin-top:10px; color:var(--cyan); font-size:20px;"></div>
+        <div id="status" style="margin-top:10px; color:var(--cyan); font-size:24px;">Bereit</div>
       </div>
     </div>
   </main>
 
 <script>
-  /* 1. HIER DEINE DATEINAMEN VON GITHUB EINTRAGEN 
-     Achte exakt auf Groß/Kleinschreibung!
-  */
+  // WICHTIG: Prüfe hier, ob die Dateinamen EXAKT wie bei GitHub heißen!
   const MEINE_BILDER = [
     "bild1.webp",
     "bild2.webp",
@@ -64,66 +77,57 @@
     "Albania2.jpg"
   ];
 
-  // 2. Erzeugt die Buttons b1, b2, b3... automatisch
   function renderSetup() {
-    let container = document.getElementById("design-container");
-    let html = '<h2 style="color:var(--cyan)">DESIGN WÄHLEN</h2>';
-    
+    const container = document.getElementById("design-container");
+    if (!container) return;
+
+    let html = "";
     MEINE_BILDER.forEach((datei, i) => {
-        // Wir nehmen den Dateinamen ohne Endung als Button-Text
-        let anzeigename = datei.split('.')[0];
-        html += `<div id="b${i+1}" class="btn">${anzeigename}</div>`;
+        let name = datei.split('.')[0]; // Nimmt den Namen vor dem Punkt
+        html += `<div id="b${i+1}" class="btn">${name}</div>`;
     });
     
-    // Letzter Button für Link laden
-    let linkBtnIdx = MEINE_BILDER.length + 1;
-    html += `<div id="b${linkBtnIdx}" class="btn" style="border-color:var(--cyan)">LINK VOM HANDY LADEN</div>`;
+    // Der "Link Laden" Button bekommt die nächste freie ID
+    let linkIdx = MEINE_BILDER.length + 1;
+    html += `<div id="b${linkIdx}" class="btn" style="border-color:var(--cyan); margin-top:40px;">LINK VOM HANDY LADEN</div>`;
     
     container.innerHTML = html;
+    
+    // Nach dem Rendern muss die main.js den Fokus eventuell neu setzen
+    if (typeof update === "function") update();
   }
 
-  // 3. Diese Funktion wird von der main.js aufgerufen
   window.handleSetupOK = function(index) {
     if (index <= MEINE_BILDER.length) {
-        // Bild auswählen
         setBG(MEINE_BILDER[index - 1]);
-    } else {
-        // Den letzten Button (Link laden) ausführen
+    } else if (index === MEINE_BILDER.length + 1) {
         loadHandy();
     }
   };
 
-  // 4. Den Hintergrund tatsächlich am TV ändern
   function setBG(imgName) {
-    // Der Pfad zu deinem Github-Ordner
-    var pfad = "https://raw.githubusercontent.com/Artonstyle/IPTVBlack/main/hintergrund/";
-    var url = pfad + imgName + "?t=" + Date.now();
-    
+    const url = "https://raw.githubusercontent.com/Artonstyle/IPTVBlack/main/hintergrund/" + imgName + "?t=" + Date.now();
     document.body.style.backgroundImage = "linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('" + url + "')";
-    document.getElementById("status").innerText = "Design geändert: " + imgName;
+    document.getElementById("status").innerText = "Bild geladen!";
   }
 
   function loadHandy() {
-    document.getElementById("status").innerText = "Synchronisiere...";
+    document.getElementById("status").innerText = "Lade Link...";
     fetch("https://raw.githubusercontent.com/Artonstyle/IPTVBlack/main/playlist.txt?t=" + Date.now())
       .then(r => r.text()).then(t => {
-        document.getElementById("status").innerText = "Playlist geladen!";
-        console.log("Link:", t);
-      }).catch(e => {
-        document.getElementById("status").innerText = "Fehler beim Laden";
+        document.getElementById("status").innerText = "Link synchronisiert!";
+      }).catch(() => {
+        document.getElementById("status").innerText = "Fehler!";
       });
   }
 
-  // Startvorgang
-  window.addEventListener("DOMContentLoaded", () => {
+  // Diese Funktion startet alles
+  window.onload = function() {
     renderSetup();
-    // MAC Adresse abrufen
-    try { 
-      webapis.network.getMac(m => document.getElementById("mac-info").innerText = "MAC: " + m); 
-    } catch(e) { 
-      document.getElementById("mac-info").innerText = "MAC: Modus Simulation"; 
-    }
-  });
+    try {
+      webapis.network.getMac(m => document.getElementById("mac-info").innerText = "MAC: " + m);
+    } catch(e) {}
+  };
 </script>
 </body>
 </html>
