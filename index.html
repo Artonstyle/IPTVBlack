@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Black IPTV 2026 - Tizen Pro</title>
+  <title>Black IPTV 2026</title>
   <script type="text/javascript" src="$WEBAPIS/webapis/webapis.js"></script>
   <script src="main.js"></script>
   <style>
@@ -53,7 +53,7 @@
     </nav>
     <div id="clock-box">
         <div id="time">--:--</div>
-        <div id="date">Lädt...</div>
+        <div id="date">08. Februar 2026</div>
     </div>
   </header>
 
@@ -94,34 +94,52 @@
   </main>
 
 <script>
-  // 1. ECHTE TIZEN UHRZEIT 
+  // 1. UHRZEIT FUNKTION (Wie in deiner Diagnose-Datei)
   function updateTime() {
     var d = new Date();
     var h = d.getHours(), m = d.getMinutes();
-    document.getElementById("time").innerText = (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m;
+    document.getElementById("time").innerText = (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m; [cite: 5]
     
     var tage = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
     var monate = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
     document.getElementById("date").innerText = tage[d.getDay()] + ", " + d.getDate() + ". " + monate[d.getMonth()] + " 2026";
   }
 
-  // 2. ECHTE TIZEN MAC-ADRESSE (WIFI & LAN) 
+  // 2. MAC ADRESSE FUNKTION (Kombiniert beide Methoden)
   function loadMac() {
     var macEl = document.getElementById("mac-info");
-    try {
-      tizen.systeminfo.getPropertyValue("WIFI_NETWORK", function(w) {
-        if(w.macAddress) macEl.innerText = "MAC: " + w.macAddress.toUpperCase();
-        else loadLan();
-      }, loadLan);
-    } catch(e) { loadLan(); }
+    
+    // Methode A: Tizen SystemInfo (aus deiner TXT)
+    function tryTizen() {
+      try {
+        tizen.systeminfo.getPropertyValue("WIFI_NETWORK", function(w) {
+          if(w.macAddress) { macEl.innerText = "MAC: " + w.macAddress.toUpperCase(); } [cite: 6]
+          else { tryLan(); }
+        }, tryLan);
+      } catch(e) { tryLan(); }
+    }
 
-    function loadLan() {
+    function tryLan() {
       try {
         tizen.systeminfo.getPropertyValue("ETHERNET_NETWORK", function(l) {
-          macEl.innerText = "MAC: " + (l.macAddress ? l.macAddress.toUpperCase() : "NICHT VERFÜGBAR");
-        }, function() { macEl.innerText = "MAC: NICHT VERFÜGBAR"; });
+          if(l.macAddress) { macEl.innerText = "MAC: " + l.macAddress.toUpperCase(); } [cite: 7]
+          else { tryWebAPI(); }
+        }, tryWebAPI);
+      } catch(e) { tryWebAPI(); }
+    }
+
+    // Methode B: Samsung WebAPI (Alternative)
+    function tryWebAPI() {
+      try {
+        if(window.webapis && webapis.network) {
+          webapis.network.getMac(function(m) {
+            macEl.innerText = "MAC: " + m.toUpperCase();
+          }, function() { macEl.innerText = "MAC: NICHT VERFÜGBAR"; });
+        }
       } catch(e) { macEl.innerText = "MAC: NICHT VERFÜGBAR"; }
     }
+
+    tryTizen();
   }
 
   // 3. SETUP AKTIONEN
@@ -135,14 +153,16 @@
     }
   }
 
-  // START FUNKTION [cite: 2, 3, 5]
+  // INITIALISIERUNG
   function initApp() {
     document.body.focus();
-    setInterval(function() { document.body.focus(); }, 500); // Focus-Trick 
+    setInterval(function() { document.body.focus(); }, 500); [cite: 3]
     
     updateTime();
-    setInterval(updateTime, 1000); // Uhr-Update 
-    loadMac(); // MAC-Laden 
+    setInterval(updateTime, 1000); [cite: 3]
+    
+    // Wir geben dem TV 1 Sekunde Zeit, bevor wir die MAC abfragen
+    setTimeout(loadMac, 1000);
 
     if (window.update) {
       const oldUpdate = window.update;
