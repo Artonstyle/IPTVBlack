@@ -2,150 +2,492 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Black IPTV 2026 - Pro</title>
+  <title>Black IPTV 2026 (Tizen)</title>
   <script type="text/javascript" src="$WEBAPIS/webapis/webapis.js"></script>
-  <script src="main.js"></script>
-  <style>
-    :root { 
-      --blue: #0045ff; --cyan: #00d2ff; --bg: radial-gradient(circle at top right, #001a4d, #00050a); 
-      --panel: rgba(0,0,0,0.7);
-    }
-    body { 
-      width: 1920px; height: 1080px; margin: 0; 
-      background: var(--bg); background-size: cover; background-position: center; 
-      color: white; font-family: Arial, sans-serif; overflow: hidden; 
-    }
-    header { height: 160px; display: flex; justify-content: space-between; align-items: center; padding: 0 80px; border-bottom: 2px solid rgba(0,210,255,0.1); }
-    #menu { display: flex; gap: 15px; }
-    .item { padding: 15px 35px; font-size: 32px; font-weight: bold; color: rgba(255,255,255,.3); border-radius: 12px; }
-    
-    #clock-box { text-align: right; min-width: 450px; }
-    #time { font-size: 75px; font-weight: bold; line-height: 1; color: white; }
-    #date { font-size: 24px; color: var(--cyan); margin-top: 5px; font-weight: bold; text-transform: uppercase; }
 
-    main { display: flex; height: 920px; padding: 30px; gap: 20px; box-sizing: border-box; }
-    #tv-view { display: flex; width: 100%; gap: 20px; }
-    .tv-column { background: var(--panel); border-radius: 20px; border: 1px solid rgba(0,210,255,0.2); display: flex; flex-direction: column; overflow: hidden; }
-    
-    #setup-view { display: none; width: 100%; gap: 30px; }
-    .column { background: var(--panel); border: 2px solid var(--cyan); border-radius: 30px; flex: 1; padding: 40px; display: flex; flex-direction: column; align-items: center; }
-    .btn { width: 90%; padding: 22px; margin: 12px 0; background: rgba(255,255,255,0.08); border: 3px solid transparent; border-radius: 15px; text-align: center; font-size: 26px; color: white; }
-    
-    .focused { background: var(--blue) !important; color: white !important; border-left-color: var(--cyan) !important; transform: scale(1.02); }
-    #mac-box { margin-top: auto; background: rgba(0,210,255,0.1); padding: 15px 40px; border: 1px solid var(--cyan); border-radius: 15px; }
+  <style>
+    :root { --blue:#0045ff; --cyan:#00d2ff; --bg: radial-gradient(circle at top right,#001a4d,#00050a); }
+    * { box-sizing:border-box; outline:none; }
+    body{
+      width:1920px;height:1080px;margin:0;
+      background: var(--bg);
+      background-size:cover;background-position:center;
+      color:#fff;font-family:Arial,sans-serif;overflow:hidden;
+    }
+    header{
+      height:160px;display:flex;justify-content:space-between;align-items:center;
+      padding:0 80px;border-bottom:2px solid rgba(0,210,255,.2);
+    }
+    #menu{display:flex;gap:20px}
+    .item{
+      padding:20px 40px;font-size:35px;font-weight:bold;
+      color:rgba(255,255,255,.45);border-radius:15px;transition:.12s;
+    }
+    .item.focused{
+      color:white;background:var(--blue);
+      box-shadow:0 0 30px rgba(0,69,255,.8);transform:scale(1.05);
+    }
+
+    main{display:flex;height:920px;padding:50px;gap:30px}
+    #tv-content{font-size:40px;margin:auto;opacity:.9}
+
+    #setup-view{display:none;width:100%;gap:30px}
+    .column{
+      background:rgba(0,0,0,.6);
+      border:2px solid rgba(0,210,255,.6);
+      border-radius:30px;flex:1;padding:30px;
+      display:flex;flex-direction:column;align-items:center;
+      overflow:hidden;
+    }
+
+    .list-wrap{
+      width:100%;flex:1;overflow-y:auto;padding:10px 0;
+    }
+    .list-wrap::-webkit-scrollbar{width:0}
+
+    .bg-btn,.btn{
+      width:90%;padding:20px;margin:10px auto;
+      background:rgba(255,255,255,.08);
+      border:3px solid transparent;border-radius:15px;
+      text-align:center;font-size:24px;color:#fff;transition:.12s;
+    }
+    .bg-btn.focused,.btn.focused,input.focused{
+      border-color:#fff;background:rgba(0,69,255,.6);
+      box-shadow:0 0 18px rgba(0,69,255,.35);transform:scale(1.02);
+    }
+
+    input{
+      width:90%;padding:20px;margin:10px 0;
+      background:#222;border:1px solid var(--cyan);
+      color:white;font-size:20px;border-radius:10px;
+    }
+
+    .qr{background:#fff;padding:10px;margin:20px;border-radius:10px}
+    .status{width:90%;margin-top:12px;color:var(--cyan);font-size:18px;text-align:center;min-height:24px}
+    .hint{width:90%;margin-top:14px;color:rgba(255,255,255,.6);font-size:18px;line-height:1.35;text-align:center}
   </style>
 </head>
 
-<body onload="initApp()" tabindex="0">
-  <header>
-    <div style="font-size: 45px; font-weight: bold;">BLACK<span style="color:var(--cyan)">IPTV</span></div>
-    <nav id="menu">
-      <div id="i0" class="item">TV</div>
-      <div id="i1" class="item">FILME</div>
-      <div id="i2" class="item">SERIEN</div>
-      <div id="i3" class="item">EINSTELLUNG</div>
-    </nav>
-    <div id="clock-box">
-        <div id="time">--:--</div>
-        <div id="date">Lädt...</div>
-    </div>
-  </header>
+<body onload="init()">
+<header>
+  <div style="font-size:50px;font-weight:bold;">BLACK<span style="color:var(--cyan)">IPTV</span></div>
+  <nav id="menu">
+    <div id="i0" class="item">TV</div>
+    <div id="i1" class="item">FILME</div>
+    <div id="i2" class="item">SERIEN</div>
+    <div id="i3" class="item">EINSTELLUNG</div>
+  </nav>
+</header>
 
-  <main>
-    <div id="tv-view">
-        <div id="cat-list" class="tv-column" style="width:400px"><h2>Kategorien</h2></div>
-        <div id="chan-list" class="tv-column" style="width:500px"><h2>Sender</h2></div>
-        <div style="flex:1"><div style="height:450px; background:#000; border:2px solid var(--cyan); border-radius:20px;"></div></div>
-    </div>
-    
-    <div id="setup-view">
-      <div class="column">
-        <h2>DESIGN</h2>
-        <div id="b1" class="btn">Galatasaray</div>
-        <div id="b2" class="btn">Blue Neon</div>
-        <div id="b3" class="btn">Albanien 1</div>
-        <div id="b4" class="btn">Albanien 2</div>
-      </div>
-      <div class="column">
-        <h2>INFO & STATUS</h2>
-        <div id="b5" class="btn">LINK LADEN</div>
-        <div id="mac-box">
-            <div id="mac-info" style="font-size:35px; font-weight:bold;">MAC: lade...</div>
-        </div>
+<main>
+  <div id="tv-content">Willkommen</div>
+
+  <div id="setup-view">
+    <!-- DESIGN -->
+    <div class="column">
+      <h2 style="color:var(--cyan);margin:0 0 10px 0;">DESIGN</h2>
+
+      <div id="bg-list" class="list-wrap"></div>
+
+      <div id="mac" class="status" style="margin-top:10px;">MAC: Lade…</div>
+      <div class="hint">
+        Navigation: ←/→ Menü • ↓ ins Setup • ↑ zurück • OK auswählen • Back = Zurück
       </div>
     </div>
-  </main>
+
+    <!-- HANDY UPLOAD -->
+    <div class="column">
+      <h2 style="color:var(--cyan);margin:0 0 10px 0;">HANDY UPLOAD</h2>
+
+      <div class="qr">
+        <img alt="QR" src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https://github.com/Artonstyle/IPTVBlack/edit/main/playlist.txt">
+      </div>
+
+      <div id="bUpload" class="btn">LINK VOM HANDY LADEN</div>
+      <input id="url-display" type="text" placeholder="Kein Link empfangen" readonly>
+      <div id="status" class="status"></div>
+
+      <div class="hint">
+        Hinweis: In <b>playlist.txt</b> muss wirklich nur der Link stehen.
+      </div>
+    </div>
+  </div>
+</main>
 
 <script>
-  // 1. INITIALISIERUNG (Basierend auf deiner Diagnose-Datei)
-  function initApp() {
-    document.body.focus(); [cite: 3]
-    setInterval(function() { document.body.focus(); }, 500); [cite: 3]
-    
-    updateTime(); [cite: 3]
-    setInterval(updateTime, 1000); [cite: 3]
-    
-    loadMac(); [cite: 3]
+  // ---------------------------
+  // CONFIG (dein Repo)
+  // ---------------------------
+  var REPO_RAW_BASE = "https://raw.githubusercontent.com/Artonstyle/IPTVBlack/main";
+  var BG_LIST_URL   = REPO_RAW_BASE + "/hintergrund/list.txt?t=" + Date.now();
 
-    if (window.update) {
-      const oldUpdate = window.update;
-      window.update = function() {
-        oldUpdate();
-        document.getElementById("tv-view").style.display = (window.mIdx === 0) ? "flex" : "none";
-        document.getElementById("setup-view").style.display = (window.mIdx === 3) ? "flex" : "none";
-      };
-      window.update();
+  // ---------------------------
+  // State
+  // ---------------------------
+  var area = "menu";     // menu | setup
+  var mIdx = 0;          // 0..3
+  var setupCol = 0;      // 0=design, 1=upload
+  var bgIdx = 0;         // index in bgButtons
+  var bgButtons = [];    // array of {type:'img'|'none'|'auto', label, file}
+
+  var slideshowTimer = null;
+  var slideshowIdx = 0;
+
+  function $(id){ return document.getElementById(id); }
+
+  function setStatus(msg){ $("status").innerText = msg || ""; }
+
+  function safeScroll(el){
+    try{ el && el.scrollIntoView({block:"center"}); }catch(e){}
+  }
+
+  // ---------------------------
+  // UI Render
+  // ---------------------------
+  function renderBgList(){
+    var host = $("bg-list");
+    var html = "";
+    for(var i=0;i<bgButtons.length;i++){
+      html += '<div id="bg'+i+'" class="bg-btn">'+ escapeHtml(bgButtons[i].label) +'</div>';
+    }
+    host.innerHTML = html;
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  function update(){
+    // reset focus
+    var foc = document.querySelectorAll(".item, .bg-btn, .btn, input");
+    for(var i=0;i<foc.length;i++) foc[i].classList.remove("focused");
+
+    // show view
+    $("setup-view").style.display = (mIdx===3) ? "flex" : "none";
+    $("tv-content").style.display = (mIdx===3) ? "none" : "block";
+
+    if(area==="menu"){
+      var mi = $("i"+mIdx);
+      if(mi){ mi.classList.add("focused"); safeScroll(mi); }
+      return;
+    }
+
+    // setup focus
+    if(setupCol===0){
+      var bi = $("bg"+bgIdx);
+      if(bi){ bi.classList.add("focused"); safeScroll(bi); }
+    }else{
+      $("bUpload").classList.add("focused");
+      safeScroll($("bUpload"));
     }
   }
 
-  // 2. UHRZEIT (Exakt wie in deiner Quelle)
-  function updateTime() {
-    var d = new Date(); [cite: 5]
-    var h = d.getHours(), m = d.getMinutes(); [cite: 5]
-    document.getElementById("time").innerText = (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m; [cite: 5]
-    
-    var tage = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
-    var monate = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
-    document.getElementById("date").innerText = tage[d.getDay()] + ", " + d.getDate() + ". " + monate[d.getMonth()] + " 2026";
+  // ---------------------------
+  // Background Engine
+  // ---------------------------
+  function stopSlideshow(){
+    if(slideshowTimer){ clearInterval(slideshowTimer); slideshowTimer = null; }
   }
 
-  // 3. MAC-ADRESSE (Exakt wie in deiner Quelle)
-  function loadMac() {
-    var macEl = document.getElementById("mac-info");
-    try {
-      tizen.systeminfo.getPropertyValue("WIFI_NETWORK", function(w) { [cite: 6]
-        if(w.macAddress) { 
-            macEl.innerText = "MAC: " + w.macAddress.toUpperCase(); [cite: 6]
-        } else { 
-            loadLan(); [cite: 6]
+  function setBGFromFile(file){
+    stopSlideshow();
+    localStorage.setItem("bg_mode", "file");
+    localStorage.setItem("bg_file", file);
+
+    var url = REPO_RAW_BASE + "/hintergrund/" + file + "?t=" + Date.now();
+    document.body.style.backgroundImage =
+      "linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url('" + url + "')";
+    document.body.style.backgroundSize = "cover";
+    document.body.style.backgroundPosition = "center";
+  }
+
+  function setBGNone(){
+    stopSlideshow();
+    localStorage.setItem("bg_mode", "none");
+    localStorage.removeItem("bg_file");
+
+    document.body.style.backgroundImage = "";
+    document.body.style.background = "var(--bg)";
+  }
+
+  function startSlideshow(){
+    stopSlideshow();
+    localStorage.setItem("bg_mode", "auto");
+    localStorage.removeItem("bg_file");
+
+    // nur echte bilder in slideshow
+    var images = bgButtons.filter(function(x){ return x.type==="img"; });
+    if(!images.length){
+      setBGNone();
+      return;
+    }
+
+    // start index aus storage oder 0
+    slideshowIdx = parseInt(localStorage.getItem("bg_auto_idx") || "0", 10);
+    if(isNaN(slideshowIdx) || slideshowIdx<0 || slideshowIdx>=images.length) slideshowIdx = 0;
+
+    function apply(){
+      var f = images[slideshowIdx].file;
+      var url = REPO_RAW_BASE + "/hintergrund/" + f + "?t=" + Date.now();
+      document.body.style.backgroundImage =
+        "linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url('" + url + "')";
+      document.body.style.backgroundSize = "cover";
+      document.body.style.backgroundPosition = "center";
+      localStorage.setItem("bg_auto_idx", String(slideshowIdx));
+      slideshowIdx = (slideshowIdx + 1) % images.length;
+    }
+
+    apply();
+    // alle 12 Sekunden wechseln (kannst du ändern)
+    slideshowTimer = setInterval(apply, 12000);
+  }
+
+  function applySavedBackground(){
+    var mode = localStorage.getItem("bg_mode") || "none";
+    var file = localStorage.getItem("bg_file") || "";
+
+    if(mode==="auto"){
+      startSlideshow();
+      return;
+    }
+    if(mode==="file" && file){
+      setBGFromFile(file);
+      return;
+    }
+    setBGNone();
+  }
+
+  // ---------------------------
+  // Load background list from GitHub
+  // ---------------------------
+  function loadBackgroundList(){
+    // Default buttons (falls list.txt fehlt)
+    bgButtons = [
+      {type:"auto", label:"AUTO SLIDESHOW", file:""},
+      {type:"img",  label:"bild1.webp", file:"bild1.webp"},
+      {type:"img",  label:"bild2.webp", file:"bild2.webp"},
+      {type:"none", label:"STANDARD", file:""}
+    ];
+    renderBgList();
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", BG_LIST_URL, true);
+    xhr.timeout = 15000;
+
+    xhr.onreadystatechange = function(){
+      if(xhr.readyState !== 4) return;
+      if(xhr.status === 200){
+        var lines = (xhr.responseText || "")
+          .split(/\r?\n/)
+          .map(function(x){ return (x||"").trim(); })
+          .filter(function(x){ return !!x; });
+
+        // baue buttons: AUTO + alle bilder + STANDARD
+        var list = [{type:"auto", label:"AUTO SLIDESHOW", file:""}];
+        for(var i=0;i<lines.length;i++){
+          list.push({type:"img", label:lines[i], file:lines[i]});
         }
-      }, loadLan); [cite: 6]
-    } catch(e) { 
-        macEl.innerText = "MAC: NICHT VERFÜGBAR"; [cite: 7]
+        list.push({type:"none", label:"STANDARD", file:""});
+
+        bgButtons = list;
+        renderBgList();
+
+        // Fokus wieder korrekt setzen
+        bgIdx = clampBgIdx(bgIdx);
+
+        // gespeicherten BG anwenden
+        applySavedBackground();
+        update();
+      }else{
+        // list.txt fehlt -> fallback bleibt
+        applySavedBackground();
+        update();
+      }
+    };
+
+    xhr.ontimeout = function(){
+      applySavedBackground();
+      update();
+    };
+    xhr.onerror = function(){
+      applySavedBackground();
+      update();
+    };
+
+    xhr.send();
+  }
+
+  function clampBgIdx(i){
+    if(i<0) return 0;
+    if(i>bgButtons.length-1) return bgButtons.length-1;
+    return i;
+  }
+
+  // ---------------------------
+  // Handy link load
+  // ---------------------------
+  function loadHandy(){
+    setStatus("Lade Link…");
+    var url = REPO_RAW_BASE + "/playlist.txt?t=" + Date.now();
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", url, true);
+    xhr.timeout = 15000;
+
+    xhr.onreadystatechange = function(){
+      if(xhr.readyState !== 4) return;
+      if(xhr.status === 200){
+        var txt = (xhr.responseText || "").trim();
+        $("url-display").value = txt;
+        setStatus("Link geladen ✓");
+      }else{
+        setStatus("Fehler: HTTP " + xhr.status);
+      }
+    };
+    xhr.ontimeout = function(){ setStatus("Timeout beim Laden"); };
+    xhr.onerror = function(){ setStatus("Netzwerkfehler"); };
+    xhr.send();
+  }
+
+  // ---------------------------
+  // MAC Address (Tizen korrekt)
+  // ---------------------------
+  function fetchMacAddress(){
+    $("mac").innerText = "MAC: Lade…";
+
+    function setMac(val){
+      var v = (val && String(val).trim()) ? String(val).trim() : "unbekannt";
+      $("mac").innerText = "MAC: " + v;
     }
 
-    function loadLan() {
-      try {
-        tizen.systeminfo.getPropertyValue("ETHERNET_NETWORK", function(l) { [cite: 8]
-          macEl.innerText = "MAC: " + (l.macAddress ? l.macAddress.toUpperCase() : "NICHT VERFÜGBAR"); [cite: 8]
-        }, function() {
-          macEl.innerText = "MAC: NICHT VERFÜGBAR"; [cite: 8]
-        });
-      } catch(e) {
-        macEl.innerText = "MAC: NICHT VERFÜGBAR"; [cite: 8]
+    try{
+      tizen.systeminfo.getPropertyValue(
+        "WIFI_NETWORK",
+        function(w){ if(w && w.macAddress) setMac(w.macAddress); else loadLan(); },
+        function(){ loadLan(); }
+      );
+    }catch(e){ loadLan(); }
+
+    function loadLan(){
+      try{
+        tizen.systeminfo.getPropertyValue(
+          "ETHERNET_NETWORK",
+          function(l){ if(l && l.macAddress) setMac(l.macAddress); else loadNetworkFallback(); },
+          function(){ loadNetworkFallback(); }
+        );
+      }catch(e){ loadNetworkFallback(); }
+    }
+
+    function loadNetworkFallback(){
+      try{
+        tizen.systeminfo.getPropertyValue(
+          "NETWORK",
+          function(n){ setMac(n && (n.wifiMacAddress || n.ethernetMacAddress || n.macAddress)); },
+          function(){ setMac(""); }
+        );
+      }catch(e){ setMac(""); }
+    }
+  }
+
+  // ---------------------------
+  // Keys (Tizen Remote)
+  // ---------------------------
+  function registerKeys(){
+    try{
+      var keys = ["Up","Down","Left","Right","Enter","Back","Return"];
+      for(var i=0;i<keys.length;i++){
+        try{ tizen.tvinputdevice.registerKey(keys[i]); }catch(e){}
+      }
+    }catch(e){}
+  }
+
+  function activateBgSelection(){
+    var b = bgButtons[bgIdx];
+    if(!b) return;
+
+    if(b.type==="auto"){
+      startSlideshow();
+      return;
+    }
+    if(b.type==="none"){
+      setBGNone();
+      return;
+    }
+    if(b.type==="img"){
+      setBGFromFile(b.file);
+      return;
+    }
+  }
+
+  document.addEventListener("keydown", function(e){
+    var k = e.keyCode;
+
+    // Back / Return
+    if(k === 10009 || k === 27 || k === 461){
+      if(area !== "menu"){
+        area = "menu";
+        update();
+        return;
+      }
+      try{ tizen.application.getCurrentApplication().exit(); }catch(ex){}
+      return;
+    }
+
+    // MENU
+    if(area === "menu"){
+      if(k === 37) mIdx = (mIdx > 0) ? (mIdx - 1) : 3;
+      else if(k === 39) mIdx = (mIdx < 3) ? (mIdx + 1) : 0;
+      else if(k === 40 || k === 13){
+        if(mIdx === 3){
+          area = "setup";
+          setupCol = 0;
+          bgIdx = clampBgIdx(bgIdx);
+        }
+      }
+      update();
+      return;
+    }
+
+    // SETUP
+    if(area === "setup"){
+      if(k === 37 || k === 39){
+        setupCol = (setupCol === 0) ? 1 : 0;
+        update();
+        return;
+      }
+
+      if(setupCol === 0){
+        if(k === 38){
+          if(bgIdx > 0) bgIdx--;
+          else { area = "menu"; update(); return; }
+          update(); return;
+        }
+        if(k === 40){
+          if(bgIdx < bgButtons.length-1) bgIdx++;
+          update(); return;
+        }
+        if(k === 13){
+          activateBgSelection();
+          update(); return;
+        }
+      }else{
+        // upload column
+        if(k === 38){ area="menu"; update(); return; }
+        if(k === 13){ loadHandy(); update(); return; }
       }
     }
-  }
+  });
 
-  // 4. SETUP AKTIONEN
-  window.handleSetupOK = function(idx) {
-    if (idx <= 4) {
-      var imgs = ["bild1.webp", "bild2.webp", "Albania.png", "Albania2.jpg"];
-      document.body.style.backgroundImage = "linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://raw.githubusercontent.com/Artonstyle/IPTVBlack/main/hintergrund/" + imgs[idx-1] + "')";
-    } else if (idx === 5) {
-      fetch("https://raw.githubusercontent.com/Artonstyle/IPTVBlack/main/playlist.txt?t=" + Date.now())
-        .then(r => r.text()).then(t => { document.getElementById("url-display").value = t.trim(); });
-    }
+  function init(){
+    registerKeys();
+    fetchMacAddress();
+    loadBackgroundList(); // lädt list.txt automatisch
+
+    area = "menu";
+    mIdx = 0;
+    setupCol = 0;
+    bgIdx = 0;
+    update();
   }
 </script>
 </body>
