@@ -2,34 +2,31 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Black IPTV 2026 - Emergency Fix</title>
+  <title>Black IPTV 2026 - Force Control</title>
   <script type="text/javascript" src="$WEBAPIS/webapis/webapis.js"></script>
   <style>
     :root { --blue: #0045ff; --cyan: #00d2ff; }
     body {
       width: 1920px; height: 1080px; margin: 0; background: #000;
-      background-size: cover; background-position: center;
       color: white; font-family: Arial, sans-serif; overflow: hidden;
     }
-    /* Aktiver Fokus muss extrem auffällig sein */
     .focused { 
       background: var(--blue) !important; 
-      border: 5px solid white !important; 
-      transform: scale(1.1); 
-      box-shadow: 0 0 50px var(--blue);
+      border: 6px solid white !important; 
+      box-shadow: 0 0 40px var(--blue);
     }
-    header { height: 150px; display: flex; justify-content: center; gap: 50px; align-items: center; background: rgba(0,0,0,0.8); }
-    .item { padding: 15px 30px; font-size: 30px; border-radius: 10px; border: 2px solid transparent; }
+    header { height: 150px; display: flex; justify-content: center; gap: 40px; align-items: center; background: rgba(0,0,0,0.9); }
+    .item { padding: 15px 30px; font-size: 30px; border-radius: 10px; border: 3px solid transparent; color: #555; }
     
-    main { display: flex; padding: 50px; gap: 30px; }
-    .column { background: rgba(255,255,255,0.15); border-radius: 20px; flex: 1; padding: 30px; text-align: center; }
-    .btn { padding: 25px; margin: 15px 0; background: #333; border-radius: 15px; font-size: 24px; border: 3px solid transparent; }
-    input { width: 80%; padding: 15px; margin-top: 20px; background: #000; color: #00d2ff; border: 1px solid #00d2ff; }
+    main { display: flex; padding: 60px; gap: 40px; }
+    .column { background: rgba(255,255,255,0.1); border-radius: 20px; flex: 1; padding: 40px; text-align: center; border: 1px solid rgba(0,210,255,0.2); }
+    .btn { padding: 25px; margin: 15px 0; background: #222; border-radius: 15px; font-size: 26px; border: 4px solid transparent; font-weight: bold; }
+    input { width: 90%; padding: 20px; margin-top: 20px; background: #000; color: #00d2ff; border: 2px solid #00d2ff; font-size: 20px; text-align: center; }
   </style>
 </head>
 
 <body onload="init()">
-  <header id="nav-bar">
+  <header>
     <div id="i0" class="item">TV</div>
     <div id="i1" class="item">FILME</div>
     <div id="i2" class="item">SERIEN</div>
@@ -38,23 +35,22 @@
 
   <main>
     <div class="column">
-      <h2 style="color:var(--cyan)">1. DESIGN WÄHLEN</h2>
+      <h2 style="color:var(--cyan)">DESIGN</h2>
       <div id="b1" class="btn">GALATASARAY</div>
       <div id="b2" class="btn">BLUE NEON</div>
-      <div id="b3" class="btn">STANDARD (AUS)</div>
+      <div id="b3" class="btn">AUS (Schwarz)</div>
     </div>
 
     <div class="column">
-      <h2 style="color:var(--cyan)">2. HANDY SYNC</h2>
+      <h2 style="color:var(--cyan)">HANDY SYNC</h2>
       <div id="b4" class="btn">VOM HANDY LADEN</div>
-      <input id="url-box" type="text" value="Warte auf Link..." readonly>
-      <div id="mac-info" style="margin-top:20px; font-size:18px;">MAC: Lade...</div>
+      <input id="url-box" type="text" value="Warte auf Scan..." readonly>
+      <div id="mac-info" style="margin-top:40px; font-size:22px; color:var(--cyan)">MAC: Lade...</div>
     </div>
   </main>
 
 <script>
-  // Wir starten direkt im Setup-Modus (b1), damit du sofort testen kannst
-  var area = "setup"; 
+  var area = "setup"; // Wir starten direkt im Setup zum Testen
   var sIdx = 1; 
   var mIdx = 3;
 
@@ -67,25 +63,33 @@
     }
   }
 
-  window.addEventListener("keydown", function(e) {
-    var k = e.keyCode;
-    // Konsolen-Log für Debugging (falls du am PC testest)
-    console.log("Taste gedrückt: " + k);
+  // WICHTIG: Tasten am Fernseher registrieren
+  function registerKeys() {
+    var usedKeys = ["Left", "Up", "Right", "Down", "Enter", "Back"];
+    usedKeys.forEach(function(keyName) {
+        try { tizen.tvinputdevice.registerKey(keyName); } catch (e) {}
+    });
+  }
 
+  window.addEventListener("keydown", function(e) {
+    // Erkennt Samsung Tizen Codes und Standard Web-Codes
+    var k = e.keyCode;
+    
+    // Pfeil Links (37), Hoch (38), Rechts (39), Runter (40), OK (13)
     if (area === "menu") {
-      if (k == 37 && mIdx > 0) mIdx--; // Links
-      if (k == 39 && mIdx < 3) mIdx++; // Rechts
-      if (k == 40) area = "setup";     // Runter
+      if (k == 37 && mIdx > 0) mIdx--;
+      if (k == 39 && mIdx < 3) mIdx++;
+      if (k == 40) { area = "setup"; sIdx = 1; }
     } else {
       if (k == 38) { // Hoch
         if (sIdx > 1 && sIdx != 4) sIdx--; 
-        else area = "menu"; 
+        else area = "menu";
       }
       if (k == 40 && sIdx < 3) sIdx++; // Runter
       if (k == 39 && sIdx <= 3) sIdx = 4; // Rechts
       if (k == 37 && sIdx == 4) sIdx = 1; // Links
 
-      if (k == 13) { // OK
+      if (k == 13 || k == 29443) { // OK / Enter
         if (sIdx == 1) setImg("bild1.webp");
         if (sIdx == 2) setImg("bild2.webp");
         if (sIdx == 3) setImg("none");
@@ -101,7 +105,8 @@
       document.body.style.backgroundColor = "#000";
     } else {
       var path = "https://raw.githubusercontent.com/Artonstyle/IPTVBlack/main/hintergrund/" + img + "?v=" + Date.now();
-      document.body.style.backgroundImage = "linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)), url('" + path + "')";
+      document.body.style.backgroundImage = "linear-gradient(rgba(0,0,0,0.6),rgba(0,0,0,0.6)), url('" + path + "')";
+      document.body.style.backgroundSize = "cover";
     }
   }
 
@@ -109,11 +114,11 @@
     fetch("https://raw.githubusercontent.com/Artonstyle/IPTVBlack/main/playlist.txt?v=" + Date.now())
     .then(r => r.text()).then(d => {
       document.getElementById("url-box").value = d.trim();
-      alert("Link empfangen!");
-    });
+    }).catch(e => { alert("Fehler beim Laden"); });
   }
 
   function init() {
+    registerKeys(); // Tasten aktivieren
     try { 
       var mac = webapis.network.getMac();
       document.getElementById("mac-info").innerText = "MAC: " + mac;
