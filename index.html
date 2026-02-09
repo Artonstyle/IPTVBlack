@@ -160,7 +160,6 @@
       overflow:hidden;
       height:auto;
       position:relative;
-    
       aspect-ratio:16/9;
       max-height:520px;
     }
@@ -196,7 +195,6 @@
       max-height:none;
     }
     body.is-fullscreen video{ object-fit:contain; }
-
 
     /* -----------------------------
        VOD VIEW (Netflix Rows)
@@ -439,8 +437,9 @@
 
     .label2{ color:var(--cyan); font-weight:900; letter-spacing:2px; font-size:14px; margin-top:10px; text-transform:uppercase; }
 
+    /* global: inputs nicht mehr über die ganze Seite */
     .input{
-      width:720px;
+      width:100%;
       max-width:100%;
       padding:18px 16px;
       margin-top:10px;
@@ -511,6 +510,25 @@
       color:#fff;
       letter-spacing:.5px;
     }
+
+    /* ===== M3U TAB: 2 SPALTEN (links Liste / rechts Eingabe) ===== */
+    .two-col{
+      display:flex;
+      gap:18px;
+      align-items:flex-start;
+    }
+    .two-col .left{
+      flex:1;
+      min-width:520px;
+    }
+    .two-col .right{
+      width:720px;
+      max-width:720px;
+    }
+    .two-col .right .input{
+      width:100%;
+      max-width:100%;
+    }
   </style>
 </head>
 
@@ -555,7 +573,7 @@
             <div class="player">
               <div class="video-box" id="tv-video-box">
                 <object id="av-player" type="application/avplayer" style="width:100%;height:100%;display:none;"></object>
-      <video id="tv-video" autoplay style="width:100%;height:100%;object-fit:contain;display:none;"></video>
+                <video id="tv-video" autoplay style="width:100%;height:100%;object-fit:contain;display:none;"></video>
               </div>
               <div class="pinfo">
                 <div class="pname" id="tv-now">-</div>
@@ -649,7 +667,7 @@
   }
 
   function getVideoBoxRect(){
-var box = $("tv-video-box");
+    var box = $("tv-video-box");
     if(!box) return {x:0,y:0,w:1920,h:1080};
     var r = box.getBoundingClientRect();
     return {x: Math.round(r.left), y: Math.round(r.top), w: Math.round(r.width), h: Math.round(r.height)};
@@ -704,22 +722,18 @@ var box = $("tv-video-box");
 
     // AVPlay path (best for Tizen, incl. HEVC if device supports it)
     if(tvUseAvplay && av){
+      try{ av.stop(); }catch(e){}
+      try{ av.close(); }catch(e){}
       try{
-        av.stop();
-      }catch(e){}
-      try{
-        av.close();
-      }catch(e){}
-      try{
-av.open(url);
-av.setStreamingProperty && av.setStreamingProperty("ADAPTIVE_INFO", "BITRATE=5000");
+        av.open(url);
+        av.setStreamingProperty && av.setStreamingProperty("ADAPTIVE_INFO", "BITRATE=5000");
 
-av.prepareAsync(function(){
-  applyPlayerRect(tvFullscreen); // <<< GANZ WICHTIG HIER
-  try{ av.play(); }catch(e){}
-}, function(){
-  try{ av.play(); }catch(e){}
-});
+        av.prepareAsync(function(){
+          applyPlayerRect(tvFullscreen); // <<< GANZ WICHTIG HIER
+          try{ av.play(); }catch(e){}
+        }, function(){
+          try{ av.play(); }catch(e){}
+        });
       }catch(e){}
       return;
     }
@@ -964,9 +978,45 @@ av.prepareAsync(function(){
     }
     return null;
   }
+
+  /* ✅ UPDATED: M3U TAB 2-SPALTEN */
   function renderM3UTab(){
     var host=$("content-body");
     var html='';
+
+    html += '<div class="two-col">';
+
+    /* LEFT: LISTE */
+    html += '<div class="left">';
+    html +=
+      '<div class="card2">'+
+        '<div class="card2-title">M3U Listen</div>'+
+        '<div class="card2-sub" style="font-size:20px;margin-top:10px;">OK = Aktivieren • → = Löschen</div>'+
+      '</div>';
+
+    if(!m3uProfiles.length){
+      html +=
+        '<div class="card2">'+
+          '<div class="card2-title">Keine Profile</div>'+
+          '<div class="card2-sub">Lege rechts ein M3U Profil an.</div>'+
+        '</div>';
+    }else{
+      for(var i=0;i<m3uProfiles.length;i++){
+        var p=m3uProfiles[i];
+        var isActive = (p.id && p.id===activeM3UId);
+        html +=
+          '<div class="card2 focusable" data-kind="m3u-prof" data-idx="'+i+'">'+
+            '<div class="card2-title">'+esc(p.name||("Profil "+(i+1)))+
+              (isActive ? '<span class="badge active">AKTIV</span>' : '')+
+            '</div>'+
+            '<div class="card2-sub">'+esc(p.url||"")+'</div>'+
+          '</div>';
+      }
+    }
+    html += '</div>';
+
+    /* RIGHT: EINGABE */
+    html += '<div class="right">';
     html +=
       '<div class="card2">'+
         '<div class="card2-title">Neues M3U Profil</div>'+
@@ -977,32 +1027,11 @@ av.prepareAsync(function(){
         '<div class="btnrow">'+
           '<div id="m3u-save" class="btn focusable" data-kind="m3u-save" data-idx="2">Speichern</div>'+
         '</div>'+
-        '<div class="card2-sub" style="font-size:20px; margin-top:12px;">OK auf Profil = Aktivieren • → auf Profil = Löschen</div>'+
+        '<div class="card2-sub" style="font-size:20px; margin-top:12px;">OK auf Eingabe = Tastatur</div>'+
       '</div>';
+    html += '</div>';
 
-    html += '<div class="divider"></div>';
-
-    if(!m3uProfiles.length){
-      html +=
-        '<div class="card2">'+
-          '<div class="card2-title">Keine Profile</div>'+
-          '<div class="card2-sub">Lege oben ein M3U Profil an.</div>'+
-        '</div>';
-      host.innerHTML = html;
-      return;
-    }
-
-    for(var i=0;i<m3uProfiles.length;i++){
-      var p=m3uProfiles[i];
-      var isActive = (p.id && p.id===activeM3UId);
-      html +=
-        '<div class="card2 focusable" data-kind="m3u-prof" data-idx="'+i+'">'+
-          '<div class="card2-title">'+esc(p.name||("Profil "+(i+1)))+
-            (isActive ? '<span class="badge active">AKTIV</span>' : '')+
-          '</div>'+
-          '<div class="card2-sub">'+esc(p.url||"")+'</div>'+
-        '</div>';
-    }
+    html += '</div>'; // two-col
 
     host.innerHTML = html;
   }
@@ -1129,43 +1158,27 @@ av.prepareAsync(function(){
     xhr.send();
   }
 
- function parseM3U(text) {
-    var lines = text.split("\n");
-    tvAllChans = [];
-    var pending = null;
-    
-    // Wir nutzen eine einfache for-Schleife für maximale Geschwindigkeit
-    for (var i = 0; i < lines.length; i++) {
-        var line = lines[i].trim();
-        if (!line) continue;
-
-        if (line.indexOf("#EXTINF") === 0) {
-            // Extrahiert den Namen (alles nach dem letzten Komma)
-            var name = line.split(",").pop().trim();
-            
-            // Extrahiert die Gruppe (group-title)
-            var g = line.match(/group-title="([^"]*)"/i);
-            var group = (g && g[1]) ? g[1].trim() : "Andere";
-            
-            // Extrahiert das Logo (falls vorhanden)
-            var l = line.match(/tvg-logo="([^"]*)"/i);
-            var logo = (l && l[1]) ? l[1].trim() : "";
-
-            pending = { name: name, group: group, logo: logo };
-        } 
-        else if (pending && (line.indexOf("http") === 0)) {
-            // Fügt den Sender hinzu und löscht das Limit
-            tvAllChans.push({
-                name: pending.name,
-                group: pending.group,
-                logo: pending.logo,
-                url: line
-            });
-            pending = null;
-        }
+  function parseM3U(text){
+    var lines=text.split("\n");
+    tvAllChans=[];
+    var pending=null;
+    for(var i=0;i<lines.length;i++){
+      var line=(lines[i]||"").trim();
+      if(!line) continue;
+      if(line.indexOf("#EXTINF")===0){
+        var parts=line.split(",");
+        var name=(parts.length>1?parts[parts.length-1]:"Unbekannt").trim();
+        var g=line.match(/group-title="([^"]*)"/i);
+        var group=(g && g[1])?g[1].trim():"Ohne Kategorie";
+        pending={name:name,group:group};
+        continue;
+      }
+      if(pending && (line.indexOf("http")===0 || line.indexOf("https")===0)){
+        tvAllChans.push({name:pending.name, group:pending.group, url:line});
+        pending=null;
+        if(tvAllChans.length>=4000) break;
+      }
     }
-    console.log("Erfolgreich geladen: " + tvAllChans.length + " Sender.");
-}
   }
 
   function buildTVCategories(){
@@ -1216,16 +1229,16 @@ av.prepareAsync(function(){
     updateFocus();
   }
 
-function tvPlayCurrent(){
-  if(!tvCurChans || !tvCurChans.length || !tvCurChans[tvChanIdx]) return;
+  function tvPlayCurrent(){
+    if(!tvCurChans || !tvCurChans.length || !tvCurChans[tvChanIdx]) return;
 
-  var ch = tvCurChans[tvChanIdx];
+    var ch = tvCurChans[tvChanIdx];
 
-  $("tv-now").innerText = ch.name || "Kanal";
-  $("tv-msg").innerText = "OK=Play • 0=Fav • Back=Menu • OK(2x)=Fullscreen";
+    $("tv-now").innerText = ch.name || "Kanal";
+    $("tv-msg").innerText = "OK=Play • 0=Fav • Back=Menu • OK(2x)=Fullscreen";
 
-  playUrl(ch.url);
-}
+    playUrl(ch.url);
+  }
 
   function tvToggleFav(){
     if(!tvCurChans[tvChanIdx]) return;
@@ -1241,11 +1254,8 @@ function tvPlayCurrent(){
   function tvToggleFullscreen(){
     tvFullscreen = !tvFullscreen;
     document.body.classList.toggle("is-fullscreen", tvFullscreen);
-
     // AVPlay muss das DisplayRect umsetzen
     applyPlayerRect(tvFullscreen);
-
-
   }
 
   function fetchJSON(url){ return fetch(url).then(function(r){ return r.json(); }); }
@@ -1537,14 +1547,12 @@ function tvPlayCurrent(){
       return;
     }
 
-    // ✅ MENU: LEFT/RIGHT wechselt nur Highlight + zeigt Inhalte SOFORT,
-    // aber BLEIBT im MENU (damit EINSTELLUNG sauber wählbar ist)
+    // MENU
     if(area==="menu"){
       if(k===37){
         menuIdx = (menuIdx>0)?menuIdx-1:3;
         showMainByMenu(menuIdx);
 
-        // Inhalte sofort vorbereiten, aber nicht in Inhalt springen
         if(menuIdx===0) tvReloadFromActiveProfile();
         if(menuIdx===1 || menuIdx===2) vodReloadFromActiveProfile();
         if(menuIdx===3){ renderSetupTabs(); renderSetupTabPreview(); }
@@ -1564,7 +1572,6 @@ function tvPlayCurrent(){
         return;
       }
 
-      // ✅ erst bei OK oder DOWN in Inhalt
       if(k===13 || k===40){
         if(menuIdx===0){ area="tvCats"; updateFocus(); return; }
         if(menuIdx===1 || menuIdx===2){ area="vod"; updateFocus(); return; }
