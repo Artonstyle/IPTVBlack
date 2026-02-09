@@ -648,7 +648,7 @@
   }
 
   function getVideoBoxRect(){
-    var box = $("video-box");
+var box = $("tv-video-box");
     if(!box) return {x:0,y:0,w:1920,h:1080};
     var r = box.getBoundingClientRect();
     return {x: Math.round(r.left), y: Math.round(r.top), w: Math.round(r.width), h: Math.round(r.height)};
