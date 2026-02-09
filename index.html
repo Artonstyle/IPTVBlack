@@ -80,7 +80,6 @@
       overflow:hidden;
       display:flex;
       flex-direction:column;
-      min-height:0;
     }
     .col-h{
       padding:18px 20px;
@@ -97,7 +96,6 @@
       flex:1;
       overflow-y:auto;
       padding:14px;
-      min-height:0;
     }
     .list::-webkit-scrollbar{ width:0; }
     .entry{
@@ -113,6 +111,13 @@
       display:flex;
       align-items:center;
       gap:12px;
+    }
+    .entry .sub{
+      color:rgba(255,255,255,.55);
+      font-weight:800;
+      font-size:18px;
+      letter-spacing:.3px;
+      margin-left:auto;
     }
     .entry.focused{
       border-color: rgba(0,210,255,.85);
@@ -147,68 +152,25 @@
       flex-direction:column;
       gap:14px;
       padding:14px;
-      min-height:0;
     }
-
-    /* ✅ echtes 16:9 */
     .video-box{
       background:#000;
       border:2px solid rgba(0,210,255,.22);
       border-radius:26px;
       overflow:hidden;
+      height:auto;
       position:relative;
-      width:100%;
+    
       aspect-ratio:16/9;
+      max-height:520px;
     }
     video{width:100%;height:100%;object-fit:contain}
-
     .pinfo{
       padding:14px 14px 8px 14px;
       display:flex; flex-direction:column; gap:8px;
     }
     .pname{ font-size:44px; font-weight:900; }
     .phint{ color:rgba(255,255,255,.55); font-size:18px; font-weight:800; letter-spacing:.2px; }
-
-    /* ✅ LIVE Hover (sofort beim Sender-Wechsel) */
-    .tv-hover{
-      position:absolute;
-      left:18px; right:18px; bottom:18px;
-      border-radius:18px;
-      padding:14px 16px;
-      background: linear-gradient(to top, rgba(0,0,0,.85), rgba(0,0,0,.35));
-      border:1px solid rgba(0,210,255,.25);
-      display:none;
-      align-items:center;
-      gap:14px;
-      z-index:5;
-    }
-    .tv-hover.active{ display:flex; }
-    .tv-hover .live-dot{
-      width:10px;height:10px;border-radius:50%;
-      background:#ff3b3b; box-shadow:0 0 12px rgba(255,0,0,.8);
-      flex:0 0 auto;
-    }
-    .tv-hover .live-txt{
-      color:var(--cyan);
-      font-weight:900;
-      letter-spacing:2px;
-      font-size:14px;
-      text-transform:uppercase;
-      margin-right:6px;
-    }
-    .tv-hover .hname{
-      font-weight:900;
-      font-size:26px;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      flex:1;
-    }
-    .tv-hover .hstar{
-      font-size:26px;
-      color:var(--gold);
-      display:none;
-    }
 
     /* Fullscreen TV */
     body.is-fullscreen header,
@@ -219,7 +181,6 @@
       width:1920px; height:1080px;
       z-index:9999;
       border:none; border-radius:0;
-      aspect-ratio:auto;
     }
 
     /* -----------------------------
@@ -231,7 +192,6 @@
       flex-direction:column;
       gap:14px;
       padding:18px 22px;
-      min-height:0;
     }
     .vod-topbar{
       background: rgba(0,0,0,.22);
@@ -257,7 +217,6 @@
       flex:1;
       overflow-y:auto;
       padding-right:6px;
-      min-height:0;
     }
     .vod-rows::-webkit-scrollbar{ width:0; }
 
@@ -365,7 +324,6 @@
       flex-direction:column;
       gap:22px;
       padding:22px;
-      min-height:0;
     }
 
     .tabs{
@@ -401,7 +359,6 @@
       overflow:hidden;
       display:flex;
       flex-direction:column;
-      min-height:0;
     }
     .content-header{
       padding:18px 20px;
@@ -420,7 +377,6 @@
       flex:1;
       overflow-y:auto;
       padding:16px;
-      min-height:0;
     }
     .content-body::-webkit-scrollbar{ width:0; }
 
@@ -449,8 +405,8 @@
       transform: scale(1.01);
       background: rgba(0,69,255,.18);
     }
-    .card2-title{ font-weight:900; font-size:34px; } /* ✅ größer */
-    .card2-sub{ margin-top:10px; color:rgba(255,255,255,.65); font-size:26px; word-break:break-all; } /* ✅ größer */
+    .card2-title{ font-weight:900; font-size:30px; }
+    .card2-sub{ margin-top:10px; color:rgba(255,255,255,.65); font-size:24px; word-break:break-all; }
 
     .badge{
       display:inline-block;
@@ -476,7 +432,7 @@
       border:1px solid rgba(0,210,255,.22);
       background: rgba(0,0,0,.28);
       color:#fff;
-      font-size:26px; /* ✅ größer */
+      font-size:24px;
     }
     .input.focused{
       border-color: rgba(0,210,255,.80);
@@ -493,7 +449,7 @@
       border:1px solid rgba(0,210,255,.22);
       background: rgba(0,69,255,.20);
       font-weight:900;
-      font-size:24px; /* ✅ größer */
+      font-size:22px;
       transition:.12s;
     }
     .btn.focused{
@@ -583,14 +539,6 @@
             <div class="player">
               <div class="video-box" id="tv-video-box">
                 <video id="tv-video" autoplay></video>
-
-                <!-- ✅ Hover Overlay -->
-                <div id="tv-hover" class="tv-hover">
-                  <div class="live-dot"></div>
-                  <div class="live-txt">LIVE</div>
-                  <div id="tv-hover-name" class="hname">-</div>
-                  <div id="tv-hover-star" class="hstar">★</div>
-                </div>
               </div>
               <div class="pinfo">
                 <div class="pname" id="tv-now">-</div>
@@ -674,15 +622,6 @@
   var tvFavs = JSON.parse(localStorage.getItem("iptv_tv_favs") || "[]");
   var tvHls = null;
   var tvFullscreen = false;
-
-  // ✅ Hover timer
-  var tvHoverTimer = null;
-
-  // ✅ Fokus-Optimierung (gegen Lag)
-  var tvCatEls = null;
-  var tvChanEls = null;
-  var tvPrevCatIdx = -1;
-  var tvPrevChanIdx = -1;
 
   var vodMode = "movies";
   var vodRows = [];
@@ -843,8 +782,8 @@
     $("content-body").innerHTML =
       '<div class="card2 focusable" data-kind="mac" data-idx="0">'+
         '<div class="card2-title">MAC ADRESSE</div>'+
-        '<div class="card2-sub" style="font-size:34px">'+esc(mac)+'</div>'+
-        '<div class="card2-sub" style="font-size:22px">OK = Aktualisieren</div>'+
+        '<div class="card2-sub" style="font-size:30px">'+esc(mac)+'</div>'+
+        '<div class="card2-sub" style="font-size:20px">OK = Aktualisieren</div>'+
       '</div>';
   }
 
@@ -893,7 +832,7 @@
         '<div class="btnrow">'+
           '<div id="m3u-save" class="btn focusable" data-kind="m3u-save" data-idx="2">Speichern</div>'+
         '</div>'+
-        '<div class="card2-sub" style="font-size:22px; margin-top:12px;">OK auf Profil = Aktivieren • → auf Profil = Löschen</div>'+
+        '<div class="card2-sub" style="font-size:20px; margin-top:12px;">OK auf Profil = Aktivieren • → auf Profil = Löschen</div>'+
       '</div>';
 
     html += '<div class="divider"></div>';
@@ -975,7 +914,7 @@
         '<div class="btnrow">'+
           '<div id="xc-save" class="btn focusable" data-kind="xc-save" data-idx="4">Speichern</div>'+
         '</div>'+
-        '<div class="card2-sub" style="font-size:22px; margin-top:12px;">OK auf Profil = Aktivieren • → auf Profil = Löschen</div>'+
+        '<div class="card2-sub" style="font-size:20px; margin-top:12px;">OK auf Profil = Aktivieren • → auf Profil = Löschen</div>'+
       '</div>';
 
     html += '<div class="divider"></div>';
@@ -1006,29 +945,10 @@
     host.innerHTML = html;
   }
 
-  /* -----------------------------
-     TV (M3U) + Fokus ohne Lag
-  ----------------------------- */
-
-  function tvShowHover(){
-    if(!tvCurChans[tvChanIdx]) return;
-    var chan = tvCurChans[tvChanIdx];
-    $("tv-hover-name").innerText = chan.name || "-";
-    $("tv-hover-star").style.display = (tvFavs.indexOf(chan.url)>-1) ? "block" : "none";
-
-    var box = $("tv-hover");
-    box.classList.add("active");
-    clearTimeout(tvHoverTimer);
-    tvHoverTimer = setTimeout(function(){
-      box.classList.remove("active");
-    }, 2200);
-  }
-
   function tvReloadFromActiveProfile(){
     var p=getActiveM3U();
     tvCats=[]; tvAllChans=[]; tvCurChans=[];
     tvCatIdx=0; tvChanIdx=0;
-    tvPrevCatIdx=-1; tvPrevChanIdx=-1;
     $("tv-now").innerText="-";
     if(!p || !p.url){
       $("tv-msg").innerText="Wähle ein M3U Profil in EINSTELLUNG → M3U PROFILE";
@@ -1049,7 +969,7 @@
         parseM3U(xhr.responseText);
         buildTVCategories();
         filterTVCategory(tvCats[0] ? tvCats[0].key : "ALL");
-        $("tv-msg").innerText="OK=Play • 0=Fav • Back=Menu • OK(2x)=Fullscreen";
+        $("tv-msg").innerText="OK=Play • 0=Fav • Back=Menu";
       }else{
         $("tv-msg").innerText="M3U Fehler ("+xhr.status+")";
         tvCats=[]; tvAllChans=[]; tvCurChans=[];
@@ -1108,7 +1028,6 @@
     else tvCurChans = tvAllChans.filter(function(c){ return (c.group||"Ohne Kategorie")===key; });
 
     tvChanIdx=0;
-    tvPrevChanIdx=-1;
     renderTVLists();
   }
 
@@ -1133,36 +1052,14 @@
     $("tv-chan-list").innerHTML = hh || '<div style="padding:16px;color:rgba(255,255,255,.6);font-weight:900">Keine Sender</div>';
     $("tv-chan-count").innerText = tvCurChans.length ? (tvCurChans.length+"") : "";
 
-    tvCatEls = $("tv-cat-list").getElementsByClassName("tv-cat");
-    tvChanEls = $("tv-chan-list").getElementsByClassName("tv-chan");
-
     updateFocus();
-  }
-
-  function tvApplyCatFocus(){
-    if(!tvCatEls) return;
-    if(tvPrevCatIdx>=0 && tvCatEls[tvPrevCatIdx]) tvCatEls[tvPrevCatIdx].classList.remove("focused");
-    if(tvCatEls[tvCatIdx]){
-      tvCatEls[tvCatIdx].classList.add("focused");
-      try{ tvCatEls[tvCatIdx].scrollIntoView({block:"center"}); }catch(e){}
-    }
-    tvPrevCatIdx = tvCatIdx;
-  }
-
-  function tvApplyChanFocus(){
-    if(!tvChanEls) return;
-    if(tvPrevChanIdx>=0 && tvChanEls[tvPrevChanIdx]) tvChanEls[tvPrevChanIdx].classList.remove("focused");
-    if(tvChanEls[tvChanIdx]){
-      tvChanEls[tvChanIdx].classList.add("focused");
-      try{ tvChanEls[tvChanIdx].scrollIntoView({block:"center"}); }catch(e){}
-    }
-    tvPrevChanIdx = tvChanIdx;
   }
 
   function tvPlayCurrent(){
     if(!tvCurChans[tvChanIdx]) return;
     var chan = tvCurChans[tvChanIdx];
     $("tv-now").innerText = chan.name;
+    $("tv-msg").innerText = "LIVE";
 
     var v=$("tv-video");
     if(tvHls){ try{ tvHls.destroy(); }catch(e){} tvHls=null; }
@@ -1190,7 +1087,6 @@
     buildTVCategories();
     var catKey = tvCats[tvCatIdx] ? tvCats[tvCatIdx].key : "ALL";
     filterTVCategory(catKey);
-    tvShowHover();
   }
 
   function tvToggleFullscreen(){
@@ -1437,8 +1333,16 @@
     }
 
     if($("tv-view").style.display==="block"){
-      if(area==="tvCats") tvApplyCatFocus();
-      if(area==="tvChans") tvApplyChanFocus();
+      var cats=$("tv-cat-list").getElementsByClassName("tv-cat");
+      for(var c=0;c<cats.length;c++){
+        cats[c].classList.toggle("focused", area==="tvCats" && c===tvCatIdx);
+        if(area==="tvCats" && c===tvCatIdx) try{ cats[c].scrollIntoView({block:"center"});}catch(e){}
+      }
+      var chans=$("tv-chan-list").getElementsByClassName("tv-chan");
+      for(var d=0;d<chans.length;d++){
+        chans[d].classList.toggle("focused", area==="tvChans" && d===tvChanIdx);
+        if(area==="tvChans" && d===tvChanIdx) try{ chans[d].scrollIntoView({block:"center"});}catch(e){}
+      }
     }
 
     if($("vod-view").style.display==="block" && area==="vod"){
@@ -1447,9 +1351,9 @@
     }
   }
 
-  /* -----------------------------
-     KEY HANDLING
-  ----------------------------- */
+  // -----------------------------
+  // KEY HANDLING (FIXED MENU!)
+  // -----------------------------
   document.addEventListener("keydown", function(e){
     var k=e.keyCode;
 
@@ -1476,19 +1380,21 @@
     }
 
     if(tvFullscreen){
-      if(k===38){ if(tvChanIdx>0) tvChanIdx--; tvPlayCurrent(); tvShowHover(); return; }
-      if(k===40){ if(tvChanIdx<tvCurChans.length-1) tvChanIdx++; tvPlayCurrent(); tvShowHover(); return; }
+      if(k===38){ if(tvChanIdx>0) tvChanIdx--; tvPlayCurrent(); return; }
+      if(k===40){ if(tvChanIdx<tvCurChans.length-1) tvChanIdx++; tvPlayCurrent(); return; }
       if(k===13){ tvToggleFullscreen(); return; }
       if(k===48){ tvToggleFav(); return; }
       return;
     }
 
-    // MENU: links/rechts zeigt Inhalte sofort, bleibt aber im MENU
+    // ✅ MENU: LEFT/RIGHT wechselt nur Highlight + zeigt Inhalte SOFORT,
+    // aber BLEIBT im MENU (damit EINSTELLUNG sauber wählbar ist)
     if(area==="menu"){
       if(k===37){
         menuIdx = (menuIdx>0)?menuIdx-1:3;
         showMainByMenu(menuIdx);
 
+        // Inhalte sofort vorbereiten, aber nicht in Inhalt springen
         if(menuIdx===0) tvReloadFromActiveProfile();
         if(menuIdx===1 || menuIdx===2) vodReloadFromActiveProfile();
         if(menuIdx===3){ renderSetupTabs(); renderSetupTabPreview(); }
@@ -1508,9 +1414,9 @@
         return;
       }
 
-      // erst bei OK oder DOWN in Inhalt
+      // ✅ erst bei OK oder DOWN in Inhalt
       if(k===13 || k===40){
-        if(menuIdx===0){ area="tvCats"; tvPrevCatIdx=-1; updateFocus(); return; }
+        if(menuIdx===0){ area="tvCats"; updateFocus(); return; }
         if(menuIdx===1 || menuIdx===2){ area="vod"; updateFocus(); return; }
         if(menuIdx===3){ area="tabs"; updateFocus(); return; }
       }
@@ -1622,7 +1528,10 @@
           updateFocus();
           return;
         }
-        if(kind2==="m3u-input"){ try{ el2.focus(); }catch(ex){} return; }
+        if(kind2==="m3u-input"){
+          try{ el2.focus(); }catch(ex){}
+          return;
+        }
         if(kind2==="m3u-save"){
           var name = ($("m3u-name") ? $("m3u-name").value : "");
           var url  = ($("m3u-url") ? $("m3u-url").value : "");
@@ -1647,7 +1556,10 @@
           return;
         }
 
-        if(kind2==="xc-input"){ try{ el2.focus(); }catch(ex){} return; }
+        if(kind2==="xc-input"){
+          try{ el2.focus(); }catch(ex){}
+          return;
+        }
         if(kind2==="xc-save"){
           var n = ($("xc-name") ? $("xc-name").value : "");
           var u = ($("xc-user") ? $("xc-user").value : "");
@@ -1681,39 +1593,38 @@
 
     // TV nav
     if(area==="tvCats"){
-      if(k===38){ if(tvCatIdx>0) tvCatIdx--; tvApplyCatFocus(); return; }
-      if(k===40){ if(tvCatIdx<tvCats.length-1) tvCatIdx++; tvApplyCatFocus(); return; }
+      if(k===38){ if(tvCatIdx>0) tvCatIdx--; updateFocus(); return; }
+      if(k===40){ if(tvCatIdx<tvCats.length-1) tvCatIdx++; updateFocus(); return; }
       if(k===39 || k===13){
         area="tvChans";
         var key = tvCats[tvCatIdx] ? tvCats[tvCatIdx].key : "ALL";
         filterTVCategory(key);
-        tvPrevChanIdx=-1;
-        tvApplyChanFocus();
-        tvShowHover(); /* ✅ sofort Hover */
+        updateFocus();
         return;
       }
       if(k===37){ area="menu"; updateFocus(); return; }
-      tvApplyCatFocus();
+      updateFocus();
       return;
     }
     if(area==="tvChans"){
-      if(k===37){ area="tvCats"; tvPrevCatIdx=-1; tvApplyCatFocus(); return; }
-      if(k===38){ if(tvChanIdx>0) tvChanIdx--; tvApplyChanFocus(); tvShowHover(); return; }
-      if(k===40){ if(tvChanIdx<tvCurChans.length-1) tvChanIdx++; tvApplyChanFocus(); tvShowHover(); return; }
+      if(k===37){ area="tvCats"; updateFocus(); return; }
+      if(k===38){
+        if(tvChanIdx>0) tvChanIdx--;
+        updateFocus();
+        tvPlayCurrent();
+        return;
+      }
+      if(k===40){ if(tvChanIdx<tvCurChans.length-1) tvChanIdx++; updateFocus(); return; }
       if(k===48){ tvToggleFav(); return; }
       if(k===13){
-        // 1x OK = Play (wenn nicht schon gleicher Sender)
-        // 2x OK = Fullscreen
-        var curName = (tvCurChans[tvChanIdx] ? tvCurChans[tvChanIdx].name : "");
-        if($("tv-now").innerText === curName && curName){
+        if($("tv-now").innerText=== (tvCurChans[tvChanIdx] ? tvCurChans[tvChanIdx].name : "")){
           tvToggleFullscreen();
         }else{
           tvPlayCurrent();
-          tvShowHover();
         }
         return;
       }
-      tvApplyChanFocus();
+      updateFocus();
       return;
     }
 
@@ -1729,6 +1640,7 @@
       if(k===37){ if(vodItemIdx>0) vodItemIdx--; vodUpdateFocusAndScroll(); vodUpdateInfoPanel(); return; }
       if(k===39){ var count=(vodRows[vodRowIdx].items||[]).length; if(vodItemIdx<count-1) vodItemIdx++; vodUpdateFocusAndScroll(); vodUpdateInfoPanel(); return; }
       if(k===13){ vodPlayCurrent(); return; }
+      updateFocus();
       return;
     }
   });
