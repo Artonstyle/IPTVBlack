@@ -173,15 +173,30 @@
     .phint{ color:rgba(255,255,255,.55); font-size:18px; font-weight:800; letter-spacing:.2px; }
 
     /* Fullscreen TV */
-    body.is-fullscreen header,
-    body.is-fullscreen main { display:none!important; }
+    body.is-fullscreen header{ display:none!important; }
+
+    /* hide lists + info, but KEEP the player visible */
+    body.is-fullscreen #tv-left,
+    body.is-fullscreen #tv-mid,
+    body.is-fullscreen .pinfo{ display:none!important; }
+
+    body.is-fullscreen main{
+      padding:0!important;
+      margin:0!important;
+      height:1080px!important;
+      width:1920px!important;
+    }
+
     body.is-fullscreen .video-box{
       position:fixed;
       left:0; top:0;
       width:1920px; height:1080px;
       z-index:9999;
       border:none; border-radius:0;
+      max-height:none;
     }
+    body.is-fullscreen video{ object-fit:contain; }
+
 
     /* -----------------------------
        VOD VIEW (Netflix Rows)
