@@ -1130,26 +1130,27 @@ av.prepareAsync(function(){
   }
 
   function parseM3U(text){
-    var lines=text.split("\n");
-    tvAllChans=[];
-    var pending=null;
-    for(var i=0;i<lines.length;i++){
-      var line=(lines[i]||"").trim();
+    var lines = text.split("\n");
+    tvAllChans = []; 
+    var pending = null;
+    
+    // Performance-Trick: Wir nutzen eine lokale Variable für die Länge
+    var len = lines.length;
+    for(var i=0; i < len; i++){
+      var line = lines[i].trim();
       if(!line) continue;
-      if(line.indexOf("#EXTINF")===0){
-        var parts=line.split(",");
-        var name=(parts.length>1?parts[parts.length-1]:"Unbekannt").trim();
-        var g=line.match(/group-title="([^"]*)"/i);
-        var group=(g && g[1])?g[1].trim():"Ohne Kategorie";
-        pending={name:name,group:group};
-        continue;
+      
+      if(line.indexOf("#EXTINF") === 0){
+        var name = line.split(",").pop().trim();
+        var g = line.match(/group-title="([^"]*)"/i);
+        pending = { name: name, group: (g ? g[1] : "Sonstige") };
+      } else if(pending && line.startsWith("http")){
+        tvAllChans.push({ name: pending.name, group: pending.group, url: line });
+        pending = null;
       }
-      if(pending && (line.indexOf("http")===0 || line.indexOf("https")===0)){
-        tvAllChans.push({name:pending.name, group:pending.group, url:line});
-        pending=null;
-        if(tvAllChans.length>=4000) break;
-      }
+      // KEIN "break" mehr – wir laden alles, egal ob 1.811 oder 10.000 Sender!
     }
+  }
   }
 
   function buildTVCategories(){
