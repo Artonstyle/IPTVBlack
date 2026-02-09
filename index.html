@@ -529,7 +529,138 @@
       width:100%;
       max-width:100%;
     }
-  </style>
+  </style> /* --- Mini Buttons in Listen (Edit/Delete) --- */
+.btn-mini{
+  padding:10px 14px;
+  border-radius:12px;
+  border:1px solid rgba(0,210,255,.22);
+  background: rgba(0,69,255,.18);
+  font-weight:900;
+  font-size:18px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  transition:.12s;
+}
+.btn-mini.focused{
+  background: var(--blue);
+  box-shadow:0 0 18px rgba(0,69,255,.35);
+  transform:scale(1.03);
+}
+.btn-mini.danger{
+  border-color: rgba(255,77,77,.40);
+  background: rgba(255,77,77,.12);
+}
+.btn-mini.danger.focused{
+  background: rgba(255,77,77,.55);
+  box-shadow:0 0 18px rgba(255,77,77,.25);
+}
+.card-actions{
+  margin-left:auto;
+  display:flex;
+  gap:10px;
+}
+
+/* --- Virtual Keyboard Overlay --- */
+#kb-overlay{
+  position:fixed;
+  left:0; top:0;
+  width:1920px; height:1080px;
+  background: rgba(0,0,0,.72);
+  z-index:99999;
+  display:none;
+}
+#kb-wrap{
+  position:absolute;
+  left:80px;
+  right:80px;
+  bottom:70px;
+  background: rgba(0,0,0,.55);
+  border:1px solid rgba(0,210,255,.22);
+  border-radius:26px;
+  padding:22px;
+  box-shadow:0 0 40px rgba(0,0,0,.55);
+}
+#kb-title{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+  margin-bottom:14px;
+}
+#kb-label{
+  font-weight:900;
+  color:var(--cyan);
+  letter-spacing:2px;
+  text-transform:uppercase;
+  font-size:14px;
+}
+#kb-hint{
+  color:rgba(255,255,255,.65);
+  font-weight:800;
+  font-size:18px;
+}
+#kb-display{
+  margin-top:8px;
+  background: rgba(0,0,0,.35);
+  border:1px solid rgba(0,210,255,.20);
+  border-radius:18px;
+  padding:16px 18px;
+  font-size:28px;
+  font-weight:900;
+  letter-spacing:.3px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+#kb-display .caret{
+  display:inline-block;
+  width:12px;
+  height:30px;
+  background: rgba(0,210,255,.95);
+  vertical-align:middle;
+  margin-left:6px;
+  border-radius:4px;
+}
+#kb-keys{
+  margin-top:16px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.kb-row{
+  display:flex;
+  gap:12px;
+  justify-content:center;
+}
+.kb-key{
+  min-width:88px;
+  padding:16px 14px;
+  border-radius:16px;
+  border:1px solid rgba(0,210,255,.18);
+  background: rgba(0,0,0,.35);
+  font-weight:900;
+  font-size:22px;
+  text-align:center;
+  transition:.12s;
+}
+.kb-key.wide{ min-width:220px; }
+.kb-key.xwide{ min-width:360px; }
+.kb-key.focused{
+  border-color: rgba(0,210,255,.90);
+  box-shadow:0 0 18px rgba(0,210,255,.15);
+  transform:scale(1.05);
+  background: rgba(0,69,255,.22);
+}
+.kb-key.danger{
+  border-color: rgba(255,77,77,.35);
+}
+.kb-key.danger.focused{
+  background: rgba(255,77,77,.30);
+  box-shadow:0 0 18px rgba(255,77,77,.18);
+}
+
 </head>
 
 <body onload="init()">
