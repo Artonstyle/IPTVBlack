@@ -710,16 +710,15 @@
         av.close();
       }catch(e){}
       try{
-        av.open(url);
-        applyPlayerRect(tvFullscreen);
-        av.setStreamingProperty && av.setStreamingProperty("ADAPTIVE_INFO", "BITRATE=5000");
-        // prepare async then play
-        av.prepareAsync(function(){
-          try{ av.play(); }catch(e){}
-        }, function(){
-          // fallback: try play anyway
-          try{ av.play(); }catch(e){}
-        });
+av.open(url);
+av.setStreamingProperty && av.setStreamingProperty("ADAPTIVE_INFO", "BITRATE=5000");
+
+av.prepareAsync(function(){
+  applyPlayerRect(tvFullscreen); // <<< GANZ WICHTIG HIER
+  try{ av.play(); }catch(e){}
+}, function(){
+  try{ av.play(); }catch(e){}
+});
       }catch(e){}
       return;
     }
