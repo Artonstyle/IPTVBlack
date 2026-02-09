@@ -1200,20 +1200,16 @@
     updateFocus();
   }
 
-  function tvPlayCurrent(){
-    if(!tvChannels || !tvChannels.length || !tvChannels[tvChanIdx]) return;
+function tvPlayCurrent(){
+  if(!tvCurChans || !tvCurChans.length || !tvCurChans[tvChanIdx]) return;
 
-    var ch = tvChannels[tvChanIdx];
-    $("tv-title").innerText = ch.name || "Kanal";
-    // sofort Hover/Info zeigen (ohne OK)
-    tvShowHover();
+  var ch = tvCurChans[tvChanIdx];
 
-    // Play stream
-    playUrl(ch.url);
+  $("tv-now").innerText = ch.name || "Kanal";
+  $("tv-msg").innerText = "OK=Play • 0=Fav • Back=Menu • OK(2x)=Fullscreen";
 
-    // wenn Vollbild aktiv, Hover automatisch
-    if(tvFullscreen){ tvShowHover(); }
-  }
+  playUrl(ch.url);
+}
 
   function tvToggleFav(){
     if(!tvCurChans[tvChanIdx]) return;
@@ -1233,11 +1229,7 @@
     // AVPlay muss das DisplayRect umsetzen
     applyPlayerRect(tvFullscreen);
 
-    if(tvFullscreen){
-      tvShowHover();
-    }else{
-      try{ $("tv-hover").classList.remove("active"); }catch(e){}
-    }
+
   }
 
   function fetchJSON(url){ return fetch(url).then(function(r){ return r.json(); }); }
