@@ -112,13 +112,6 @@
       align-items:center;
       gap:12px;
     }
-    .entry .sub{
-      color:rgba(255,255,255,.55);
-      font-weight:800;
-      font-size:18px;
-      letter-spacing:.3px;
-      margin-left:auto;
-    }
     .entry.focused{
       border-color: rgba(0,210,255,.85);
       box-shadow:0 0 18px rgba(0,210,255,.12);
@@ -160,7 +153,6 @@
       overflow:hidden;
       height:auto;
       position:relative;
-    
       aspect-ratio:16/9;
       max-height:520px;
     }
@@ -172,31 +164,33 @@
     .pname{ font-size:44px; font-weight:900; }
     .phint{ color:rgba(255,255,255,.55); font-size:18px; font-weight:800; letter-spacing:.2px; }
 
-    /* Fullscreen TV */
-    body.is-fullscreen header{ display:none!important; }
+    /* --- FULLSCREEN FIX --- */
+    body.is-fullscreen header,
+    body.is-fullscreen main { display:none!important; }
 
-    /* hide lists + info, but KEEP the player visible */
-    body.is-fullscreen #tv-left,
-    body.is-fullscreen #tv-mid,
-    body.is-fullscreen .pinfo{ display:none!important; }
-
-    body.is-fullscreen main{
-      padding:0!important;
-      margin:0!important;
-      height:1080px!important;
-      width:1920px!important;
+    body.is-fullscreen {
+        background: #000 !important;
+        background-image: none !important;
     }
 
     body.is-fullscreen .video-box{
-      position:fixed;
-      left:0; top:0;
-      width:1920px; height:1080px;
-      z-index:9999;
-      border:none; border-radius:0;
-      max-height:none;
+      position:fixed !important;
+      left:0 !important;
+      top:0 !important;
+      width:100vw !important;
+      height:100vh !important;
+      max-height: none !important;
+      z-index:999999 !important;
+      border:none !important;
+      border-radius:0 !important;
+      background: #000 !important;
     }
-    body.is-fullscreen video{ object-fit:contain; }
-
+    
+    body.is-fullscreen video {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: contain !important;
+    }
 
     /* -----------------------------
        VOD VIEW (Netflix Rows)
@@ -527,7 +521,6 @@
   <main>
     <div class="panel">
 
-      <!-- TV -->
       <div id="tv-view">
         <div class="tv-root">
           <div class="col" style="width:420px">
@@ -564,7 +557,6 @@
         </div>
       </div>
 
-      <!-- VOD -->
       <div id="vod-view">
         <div class="vod-root">
           <div class="vod-topbar">
@@ -590,7 +582,6 @@
         </div>
       </div>
 
-      <!-- SETUP -->
       <div id="setup-view">
         <div class="tabs">
           <div id="t0" class="tab">HINTERGRUND</div>
@@ -1402,40 +1393,31 @@
       return;
     }
 
-    // ✅ MENU: LEFT/RIGHT wechselt nur Highlight + zeigt Inhalte SOFORT,
-    // aber BLEIBT im MENU (damit EINSTELLUNG sauber wählbar ist)
+    // ✅ MENU
     if(area==="menu"){
       if(k===37){
         menuIdx = (menuIdx>0)?menuIdx-1:3;
         showMainByMenu(menuIdx);
-
-        // Inhalte sofort vorbereiten, aber nicht in Inhalt springen
         if(menuIdx===0) tvReloadFromActiveProfile();
         if(menuIdx===1 || menuIdx===2) vodReloadFromActiveProfile();
         if(menuIdx===3){ renderSetupTabs(); renderSetupTabPreview(); }
-
         updateFocus();
         return;
       }
       if(k===39){
         menuIdx = (menuIdx<3)?menuIdx+1:0;
         showMainByMenu(menuIdx);
-
         if(menuIdx===0) tvReloadFromActiveProfile();
         if(menuIdx===1 || menuIdx===2) vodReloadFromActiveProfile();
         if(menuIdx===3){ renderSetupTabs(); renderSetupTabPreview(); }
-
         updateFocus();
         return;
       }
-
-      // ✅ erst bei OK oder DOWN in Inhalt
       if(k===13 || k===40){
         if(menuIdx===0){ area="tvCats"; updateFocus(); return; }
         if(menuIdx===1 || menuIdx===2){ area="vod"; updateFocus(); return; }
         if(menuIdx===3){ area="tabs"; updateFocus(); return; }
       }
-
       updateFocus();
       return;
     }
@@ -1667,21 +1649,15 @@
       });
     }catch(e){}
     normalizeProfiles();
-
     menuIdx=0;
     area="menu";
-
     showMainByMenu(menuIdx);
-
     renderMenuFocus();
     renderSetupTabs();
     renderSetupTabPreview();
-
     loadBackgroundsFromGitHub();
-
     tvReloadFromActiveProfile();
     vodReloadFromActiveProfile();
-
     updateFocus();
   }
 </script>
