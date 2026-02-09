@@ -553,7 +553,8 @@
             </div>
             <div class="player">
               <div class="video-box" id="tv-video-box">
-                <video id="tv-video" autoplay></video>
+                <object id="av-player" type="application/avplayer" style="width:100%;height:100%;display:none;"></object>
+      <video id="tv-video" autoplay style="width:100%;height:100%;object-fit:contain;display:none;"></video>
               </div>
               <div class="pinfo">
                 <div class="pname" id="tv-now">-</div>
@@ -612,6 +613,118 @@
   </main>
 
 <script>
+
+  // -----------------------------
+  // Player (Samsung Tizen AVPlay + fallback)
+  // -----------------------------
+  var tvUseAvplay = false;
+  var av = null;           // webapis.avplay
+  var tvLastUrl = "";
+
+  function initPlayer(){
+    tvUseAvplay = !!(window.webapis && webapis.avplay);
+    if(tvUseAvplay){
+      av = webapis.avplay;
+      // show AVPlay object, hide HTML5 video
+      try{ $("av-player").style.display="block"; }catch(e){}
+      try{ $("tv-video").style.display="none"; }catch(e){}
+      // basic listeners (optional)
+      try{
+        av.setListener({
+          onbufferingstart: function(){},
+          onbufferingprogress: function(){},
+          onbufferingcomplete: function(){},
+          oncurrentplaytime: function(){},
+          onevent: function(){},
+          onerror: function(){},
+          onstreamcompleted: function(){ try{ av.stop(); }catch(e){} }
+        });
+      }catch(e){}
+    }else{
+      // browser/emulator
+      try{ $("tv-video").style.display="block"; }catch(e){}
+      try{ $("av-player").style.display="none"; }catch(e){}
+    }
+  }
+
+  function getVideoBoxRect(){
+    var box = $("video-box");
+    if(!box) return {x:0,y:0,w:1920,h:1080};
+    var r = box.getBoundingClientRect();
+    return {x: Math.round(r.left), y: Math.round(r.top), w: Math.round(r.width), h: Math.round(r.height)};
+  }
+
+  function applyPlayerRect(full){
+    if(!tvUseAvplay || !av) return;
+    try{
+      if(full){
+        av.setDisplayRect(0,0,1920,1080);
+      }else{
+        var r=getVideoBoxRect();
+        av.setDisplayRect(r.x,r.y,r.w,r.h);
+      }
+    }catch(e){}
+  }
+
+  function stopTV(){
+    tvLastUrl = "";
+    // stop AVPlay
+    if(tvUseAvplay && av){
+      try{ av.stop(); }catch(e){}
+      try{ av.close(); }catch(e){}
+      return;
+    }
+    // stop HTML5 / HLS.js
+    if(tvHls){ try{ tvHls.destroy(); }catch(e){} tvHls=null; }
+    var v=$("tv-video");
+    if(v){ try{ v.pause(); v.removeAttribute("src"); v.load(); }catch(e){} }
+  }
+
+  function playUrl(url){
+    if(!url) return;
+    tvLastUrl = url;
+
+    // AVPlay path (best for Tizen, incl. HEVC if device supports it)
+    if(tvUseAvplay && av){
+      try{
+        av.stop();
+      }catch(e){}
+      try{
+        av.close();
+      }catch(e){}
+      try{
+        av.open(url);
+        applyPlayerRect(tvFullscreen);
+        av.setStreamingProperty && av.setStreamingProperty("ADAPTIVE_INFO", "BITRATE=5000");
+        // prepare async then play
+        av.prepareAsync(function(){
+          try{ av.play(); }catch(e){}
+        }, function(){
+          // fallback: try play anyway
+          try{ av.play(); }catch(e){}
+        });
+      }catch(e){}
+      return;
+    }
+
+    // Browser fallback (HLS.js)
+    var v=$("tv-video");
+    if(!v) return;
+
+    if(tvHls){ try{ tvHls.destroy(); }catch(e){} tvHls=null; }
+    try{ v.pause(); v.removeAttribute("src"); v.load(); }catch(e){}
+
+    if(window.Hls && Hls.isSupported()){
+      tvHls = new Hls({enableWorker:true, lowLatencyMode:true, backBufferLength:30});
+      tvHls.loadSource(url);
+      tvHls.attachMedia(v);
+      tvHls.on(Hls.Events.MANIFEST_PARSED, function(){ v.play().catch(function(){}); });
+    }else{
+      v.src=url;
+      v.play().catch(function(){});
+    }
+  }
+
   var GH_OWNER = "Artonstyle";
   var GH_REPO  = "IPTVBlack";
   var GH_BG_DIR = "hintergrund";
@@ -1071,26 +1184,18 @@
   }
 
   function tvPlayCurrent(){
-    if(!tvCurChans[tvChanIdx]) return;
-    var chan = tvCurChans[tvChanIdx];
-    $("tv-now").innerText = chan.name;
-    $("tv-msg").innerText = "LIVE";
+    if(!tvChannels || !tvChannels.length || !tvChannels[tvChanIdx]) return;
 
-    var v=$("tv-video");
-    if(tvHls){ try{ tvHls.destroy(); }catch(e){} tvHls=null; }
-    try{ v.pause(); v.removeAttribute("src"); v.load(); }catch(e){}
+    var ch = tvChannels[tvChanIdx];
+    $("tv-title").innerText = ch.name || "Kanal";
+    // sofort Hover/Info zeigen (ohne OK)
+    tvShowHover();
 
-    if(window.Hls && Hls.isSupported()){
-      tvHls = new Hls({ enableWorker:true, lowLatencyMode:true, backBufferLength:30 });
-      tvHls.loadSource(chan.url);
-      tvHls.attachMedia(v);
-      tvHls.on(Hls.Events.MANIFEST_PARSED, function(){
-        v.play().catch(function(){});
-      });
-    }else{
-      v.src = chan.url;
-      v.play().catch(function(){});
-    }
+    // Play stream
+    playUrl(ch.url);
+
+    // wenn Vollbild aktiv, Hover automatisch
+    if(tvFullscreen){ tvShowHover(); }
   }
 
   function tvToggleFav(){
@@ -1106,10 +1211,15 @@
 
   function tvToggleFullscreen(){
     tvFullscreen = !tvFullscreen;
+    document.body.classList.toggle("is-fullscreen", tvFullscreen);
+
+    // AVPlay muss das DisplayRect umsetzen
+    applyPlayerRect(tvFullscreen);
+
     if(tvFullscreen){
-      document.body.classList.add("is-fullscreen");
+      tvShowHover();
     }else{
-      document.body.classList.remove("is-fullscreen");
+      try{ $("tv-hover").classList.remove("active"); }catch(e){}
     }
   }
 
@@ -1668,6 +1778,9 @@
     }catch(e){}
     normalizeProfiles();
 
+    initPlayer();
+    // ensure player rect after first layout
+    setTimeout(function(){ applyPlayerRect(false); }, 50);
     menuIdx=0;
     area="menu";
 
