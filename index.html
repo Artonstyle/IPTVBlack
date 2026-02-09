@@ -1,242 +1,1287 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <title>Black IPTV 2026 – High Performance</title>
+  <meta charset="UTF-8">
+  <title>Black IPTV – Blue Neon 2026</title>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <script type="text/javascript" src="$WEBAPIS/webapis/webapis.js"></script>
+
   <style>
-    :root {
-      --blue: #0045ff; --cyan: #00d2ff; --bg: radial-gradient(circle at top right, #001a4d, #00050a);
-      --glass: rgba(255, 255, 255, 0.05); --panel: rgba(0, 0, 0, 0.6);
+    :root{
+      --main-blue:#0045ff;
+      --neon-cyan:#00d2ff;
+      --glass-blue:rgba(0,50,150,.3);
+      --fav-gold:#ffcc00;
+      --muted: rgba(255,255,255,.45);
+      --panel: rgba(0,0,0,.38);
     }
-    * { box-sizing: border-box; outline: none; }
-    body {
-      width: 1920px; height: 1080px; margin: 0; background: var(--bg);
-      color: #fff; font-family: 'Segoe UI', Arial, sans-serif; overflow: hidden;
-    }
-    
-    /* Header & Navigation */
-    header {
-      height: 140px; display: flex; justify-content: space-between; align-items: center;
-      padding: 0 80px; border-bottom: 1px solid rgba(0, 210, 255, 0.1);
-    }
-    .brand { font-size: 48px; font-weight: 900; }
-    .brand span { color: var(--cyan); }
-    #menu { display: flex; gap: 20px; }
-    .menu-item {
-      padding: 15px 40px; font-size: 30px; font-weight: 700; color: rgba(255,255,255,0.4);
-      border-radius: 12px; transition: 0.2s;
-    }
-    .menu-item.focused { background: var(--blue); color: #fff; transform: scale(1.1); box-shadow: 0 0 20px rgba(0,69,255,0.5); }
-
-    /* Main Container */
-    main { height: 940px; padding: 40px 60px; position: relative; }
-    .view-section { display: none; width: 100%; height: 100%; animation: fadeIn 0.3s ease; }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-    /* TV / Live View */
-    #tv-view { display: none; gap: 20px; }
-    .list-col { width: 450px; background: var(--panel); border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.1); }
-    .list-item {
-      padding: 18px; margin-bottom: 8px; border-radius: 10px; font-size: 24px;
-      background: rgba(255,255,255,0.03); border-left: 5px solid transparent;
-    }
-    .list-item.focused { background: var(--blue); border-left-color: var(--cyan); transform: translateX(10px); }
-    #video-container { flex: 1; position: relative; border-radius: 20px; overflow: hidden; background: #000; border: 2px solid var(--cyan); }
-
-    /* Grid Layout für VOD (Filme/Serien) - 6 Spalten, 5 Reihen */
-    .grid-container {
-      display: grid; grid-template-columns: repeat(6, 1fr); gap: 25px;
-      padding: 10px; overflow-y: hidden; width: 100%;
-    }
-    .tile {
-      height: 380px; background: var(--glass); border-radius: 15px; position: relative;
-      overflow: hidden; border: 2px solid transparent; transition: 0.2s;
-    }
-    .tile img { width: 100%; height: 100%; object-fit: cover; }
-    .tile.focused { border-color: var(--cyan); transform: scale(1.05); z-index: 10; box-shadow: 0 0 30px rgba(0,210,255,0.4); }
-    .tile-label {
-      position: absolute; bottom: 0; width: 100%; padding: 15px;
-      background: linear-gradient(transparent, rgba(0,0,0,0.9)); font-size: 18px; font-weight: bold;
+    *{box-sizing:border-box;outline:none}
+    body{
+      width:1920px;height:1080px;margin:0;padding:0;
+      background:radial-gradient(circle at top right,#001a4d,#00050a);
+      background-size:cover;background-position:center;
+      color:white;font-family:'Segoe UI',Arial,sans-serif;overflow:hidden;
     }
 
-    /* Setup View */
-    #setup-view { display: none; flex-direction: column; gap: 20px; }
-    .setup-tabs { display: flex; gap: 15px; margin-bottom: 20px; }
-    .tab { padding: 15px 30px; background: var(--glass); border-radius: 10px; font-size: 22px; }
-    .tab.focused { background: var(--blue); }
-
-    /* Fullscreen Player */
-    #fullscreen-player {
-      display: none; position: fixed; top: 0; left: 0; width: 1920px; height: 1080px;
-      background: #000; z-index: 9999;
+    header{
+      height:160px;padding:0 80px;
+      display:flex;justify-content:space-between;align-items:center;
+      border-bottom:1px solid rgba(0,210,255,.1);
     }
+    .brand{font-size:50px;font-weight:900;letter-spacing:-1px}
+    .brand span{color:var(--neon-cyan);font-style:italic}
+    .header-right{display:flex;align-items:center;gap:40px}
+
+    #menu{display:flex;gap:10px}
+    .item{
+      padding:15px 40px;font-size:32px;font-weight:bold;
+      color:rgba(255,255,255,.4);border-radius:15px;transition:.25s;
+    }
+    .item.focused{
+      color:white;background:var(--main-blue);
+      box-shadow:0 0 35px rgba(0,69,255,.6);transform:scale(1.08);
+    }
+
+    .time-date-block{
+      display:flex;flex-direction:column;align-items:flex-end;
+      border-left:2px solid rgba(0,210,255,.2);padding-left:30px;
+    }
+    .clock-text{font-size:48px;font-weight:200;line-height:1}
+    .date-text{font-size:16px;font-weight:800;color:var(--neon-cyan);letter-spacing:2px;margin-top:5px}
+
+    main{display:flex;height:920px;padding:40px 60px;gap:40px}
+
+    .column{
+      background:var(--glass-blue);backdrop-filter:blur(10px);
+      border-radius:30px;border:1px solid rgba(0,210,255,.2);
+      display:flex;flex-direction:column;overflow:hidden;
+    }
+    .column-header{
+      padding:25px;font-size:16px;font-weight:800;color:var(--neon-cyan);
+      text-transform:uppercase;letter-spacing:4px;
+    }
+
+    /* TV layout */
+    #cat-container{width:340px}
+    #chan-container{width:500px;transition:.35s;opacity:0;transform:translateY(20px)}
+    #chan-container.visible{opacity:1;transform:translateY(0)}
+    .list{flex:1;overflow-y:auto;padding:0 15px 25px 15px}
+    .list::-webkit-scrollbar{width:0}
+
+    .cat-entry,.chan-entry{
+      padding:18px 25px;font-size:26px;color:rgba(255,255,255,.6);
+      border-radius:15px;margin-bottom:10px;transition:.15s;display:flex;align-items:center;
+    }
+    .cat-entry.focused,.chan-entry.focused{
+      background:linear-gradient(90deg,var(--main-blue),transparent);
+      color:white;border-left:8px solid var(--neon-cyan);
+      transform:translateX(10px);background-color:rgba(0,69,255,.4);
+    }
+    .chan-num{
+      color:var(--neon-cyan);font-weight:800;margin-right:20px;min-width:50px;
+      font-size:22px;opacity:.75;
+    }
+
+    /* ⭐ nicht fav = goldene Linie; fav = voll gold */
+    .star{
+      margin-left:auto;font-size:30px;display:block;
+      color:transparent;
+      -webkit-text-stroke:2px var(--fav-gold);
+      text-shadow:0 0 10px rgba(255,204,0,.25);
+      padding:6px 10px;border-radius:10px;border:2px solid transparent;
+      transition:.12s;
+    }
+    .is-fav .star{
+      color:var(--fav-gold);
+      -webkit-text-stroke:0px transparent;
+      text-shadow:0 0 12px rgba(255,204,0,.7);
+    }
+    .star.star-focused{
+      border-color: rgba(255,204,0,.85);
+      box-shadow: 0 0 18px rgba(255,204,0,.35);
+      transform: scale(1.08);
+    }
+
+    .player-side{flex:1;display:flex;flex-direction:column;gap:24px}
+
+    /* 16:9 Player */
+    #video-box{
+      width:100%;
+      border-radius:40px;overflow:hidden;
+      border:2px solid rgba(0,210,255,.3);
+      position:relative;
+      background:#000;
+    }
+    #video-box::before{content:"";display:block;padding-top:56.25%;}
+    #video-player{
+      position:absolute;inset:0;
+      width:100%;height:100%;
+      object-fit:contain;background:#000;
+    }
+
+    #info-box{font-size:64px;font-weight:900;color:white;margin-top:5px}
+    .live-indicator{display:inline-flex;align-items:center;gap:10px;color:var(--neon-cyan);font-weight:bold;font-size:18px}
+    .dot{width:12px;height:12px;background:red;border-radius:50%;box-shadow:0 0 10px red;animation:blink 1.5s infinite}
+    @keyframes blink{50%{opacity:.3}}
+
+    /* Fullscreen */
+    body.is-fullscreen header,
+    body.is-fullscreen main .column,
+    body.is-fullscreen .player-info { display:none!important; }
+    body.is-fullscreen main{padding:0;margin:0;height:1080px;width:1920px}
+    body.is-fullscreen #video-box{
+      position:fixed;top:0;left:0;width:100%;height:100%;
+      border:none;border-radius:0;z-index:9999;
+    }
+    body.is-fullscreen #video-box::before{display:none}
+    body.is-fullscreen #video-player{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+
+    #infobar{
+      position:fixed;bottom:-280px;left:0;width:1920px;height:250px;
+      background:linear-gradient(to top,rgba(0,0,0,.95),rgba(0,26,77,.9));
+      border-top:4px solid var(--neon-cyan);z-index:10000;
+      padding:40px 80px;display:flex;align-items:center;justify-content:space-between;
+      transition:bottom .18s ease-out;
+    }
+    #infobar.active{bottom:0}
+    #infobar-num{font-size:80px;font-weight:900;color:var(--neon-cyan);min-width:100px}
+    .infobar-name{font-size:60px;font-weight:900;color:white;text-transform:uppercase}
+    .infobar-star{color:var(--fav-gold);font-size:50px;margin-left:20px;display:none}
+
+    /* VOD view */
+    #vod-view{display:none;flex:1;gap:40px;width:100%}
+    #vod-left{width:360px}
+    #vod-mid{flex:1}
+    #vod-right{width:520px}
+
+    .vod-top{padding:18px 18px 0 18px}
+    .vod-search{
+      width:100%;padding:14px 16px;font-size:22px;
+      border-radius:16px;border:1px solid rgba(0,210,255,.25);
+      background: rgba(0,0,0,.25);color:white;
+    }
+    .vod-search.focused{
+      border-color: rgba(0,210,255,.75);
+      box-shadow:0 0 18px rgba(0,210,255,.18);
+    }
+    .vod-cat-wrap{padding:18px 18px 25px 18px; overflow-y:auto}
+    .vod-cat-wrap::-webkit-scrollbar{width:0}
+
+    .vod-grid{
+      display:grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap:18px;
+      padding:18px;
+      overflow-y:auto;
+    }
+    .vod-grid::-webkit-scrollbar{width:0}
+    .vod-card{
+      height:240px;border-radius:18px;
+      background: rgba(0,0,0,.35);
+      border:1px solid rgba(0,210,255,.15);
+      overflow:hidden;position:relative;transition:.15s;
+    }
+    .vod-card.focused{
+      border:2px solid rgba(0,210,255,.65);
+      box-shadow: 0 0 26px rgba(0,210,255,.15);
+      transform: scale(1.03);
+    }
+    .vod-thumb{width:100%;height:100%;object-fit:cover;display:block;opacity:.95}
+    .vod-titlebar{
+      position:absolute;left:0;right:0;bottom:0;
+      padding:10px 12px;
+      background: linear-gradient(to top, rgba(0,0,0,.9), rgba(0,0,0,0));
+      font-size:16px;font-weight:900;
+      text-shadow:0 2px 10px rgba(0,0,0,.6);
+    }
+
+    /* Setup */
+    #setup-view{display:none;flex:1;gap:40px;width:100%}
+    .setup-shell{
+      flex:1;display:flex;flex-direction:column;gap:16px;
+      background:rgba(0,0,0,.22);
+      border:1px solid rgba(0,210,255,.22);
+      border-radius:30px;overflow:hidden;
+    }
+    .setup-tabs{
+      display:flex;gap:10px;
+      padding:18px 18px 14px 18px;
+      border-bottom:1px solid rgba(0,210,255,.12);
+      background: rgba(0,0,0,.18);
+    }
+    .tab{
+      padding:14px 18px;border-radius:16px;
+      border:1px solid rgba(0,210,255,.18);
+      color:rgba(255,255,255,.55);
+      font-weight:900;font-size:18px;letter-spacing:1px;transition:.15s;
+    }
+    .tab.focused{
+      color:white;border-color: rgba(0,210,255,.65);
+      box-shadow:0 0 18px rgba(0,210,255,.12);
+      background: rgba(0,69,255,.22);
+      transform: scale(1.02);
+    }
+    .tab.active{
+      color:white;background: rgba(0,69,255,.35);
+      border-color: rgba(0,210,255,.55);
+    }
+
+    .setup-content{flex:1;display:flex;gap:22px;padding:18px;overflow:hidden}
+    .panel{
+      flex:1;background: rgba(0,0,0,.38);
+      border:1px solid rgba(0,210,255,.15);
+      border-radius:24px;overflow:hidden;display:flex;flex-direction:column;
+    }
+    .panel-head{
+      padding:18px 18px 14px 18px;color:var(--neon-cyan);
+      font-weight:900;letter-spacing:3px;font-size:14px;text-transform:uppercase;
+      border-bottom:1px solid rgba(0,210,255,.12);
+      background: rgba(0,0,0,.18);
+    }
+    .panel-body{flex:1;padding:18px;overflow-y:auto}
+    .panel-body::-webkit-scrollbar{width:0}
+
+    .setup-row{
+      padding:16px 16px;border:1px solid rgba(0,210,255,.15);
+      background: rgba(0,0,0,.18);
+      border-radius:18px;margin-bottom:12px;
+    }
+    .setup-label{color:var(--neon-cyan);font-weight:900;letter-spacing:2px;font-size:14px}
+    .setup-val{font-size:30px;margin-top:10px;font-weight:900;color:white}
+    .mini{font-size:18px;color:rgba(255,255,255,.55);margin-top:10px;line-height:1.3}
+
+    .input{
+      width:100%;padding:16px 18px;font-size:26px;
+      border-radius:16px;border:1px solid rgba(0,210,255,.25);
+      background: rgba(0,0,0,.30);color:white;margin-top:10px;
+    }
+    .btn{
+      display:inline-block;padding:14px 18px;font-size:22px;border-radius:16px;
+      border:1px solid rgba(0,210,255,.30);
+      background: rgba(0,69,255,.25);
+      color:white;margin-top:12px;font-weight:900;letter-spacing:1px;
+    }
+
+    .focusable{border:2px solid transparent;transition:.12s}
+    .focusable.focused{
+      border-color: rgba(0,210,255,.75);
+      box-shadow:0 0 18px rgba(0,210,255,.18);
+      background: rgba(0,69,255,.20);
+      transform:scale(1.01);
+    }
+
+    /* ✅ Hintergrund Grid: 5 Spalten, Kacheln größer (Bild sichtbar) */
+    .bg-grid{
+      display:grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap:18px;
+      padding:10px;
+    }
+    .bg-card{
+      height:210px; /* größer */
+      border-radius:20px;
+      border:2px solid rgba(0,210,255,.14);
+      background: rgba(0,0,0,.25);
+      overflow:hidden;
+      position:relative;
+      background-size:cover;
+      background-position:center;
+      opacity:.99;
+      transform-origin:center;
+    }
+    .bg-card::after{
+      content:"";
+      position:absolute;inset:0;
+      background:linear-gradient(to top, rgba(0,0,0,.78), rgba(0,0,0,.00));
+      opacity:.75;
+      pointer-events:none;
+    }
+    .bg-name{
+      position:absolute;left:12px;right:12px;bottom:10px;
+      font-weight:900;font-size:18px;
+      text-shadow:0 2px 10px rgba(0,0,0,.85);
+      z-index:2;color:white;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    }
+    .bg-card.focused{
+      border-color: rgba(0,210,255,.85);
+      box-shadow:0 0 26px rgba(0,210,255,.24);
+      transform:scale(1.05);
+    }
+
+    .profile-card{
+      padding:16px 16px;border-radius:18px;
+      border:1px solid rgba(0,210,255,.15);
+      background: rgba(0,0,0,.18);
+      margin-bottom:12px;
+      display:flex;flex-direction:column;gap:8px;
+    }
+    .profile-card.focused{
+      border-color: rgba(0,210,255,.75);
+      box-shadow:0 0 18px rgba(0,210,255,.18);
+      background: rgba(0,69,255,.18);
+      transform:scale(1.01);
+    }
+    .profile-title{font-size:28px;font-weight:900;color:white}
+    .profile-sub{font-size:20px;color:rgba(255,255,255,.65);word-break:break-all}
   </style>
 </head>
 
 <body onload="init()">
-  <header>
-    <div class="brand">BLACK<span>IPTV</span></div>
+<header>
+  <div class="brand">BLACK<span>IPTV</span></div>
+  <div class="header-right">
     <nav id="menu">
-      <div id="m0" class="menu-item">TV</div>
-      <div id="m1" class="menu-item">FILME</div>
-      <div id="m2" class="menu-item">SERIEN</div>
-      <div id="m3" class="menu-item">EINSTELLUNG</div>
+      <div id="i0" class="item">TV</div>
+      <div id="i1" class="item">FILME</div>
+      <div id="i2" class="item">SERIEN</div>
+      <div id="i3" class="item">EINSTELLUNG</div>
     </nav>
-    <div id="clock" style="font-size: 35px; font-weight: bold;">00:00</div>
-  </header>
+    <div class="time-date-block">
+      <div id="main-clock" class="clock-text">00:00</div>
+      <div id="main-date" class="date-text">01. JAN 2026</div>
+    </div>
+  </div>
+</header>
 
-  <main>
-    <div id="tv-view" class="view-section">
-      <div class="list-col" id="channel-list">
-        <h2 style="color:var(--cyan)">SENDER</h2>
-        <div id="ch-container"></div>
-      </div>
-      <div id="video-container">
-          <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:var(--cyan)">VORSCHAU</div>
-      </div>
+<main id="main-root">
+
+  <!-- TV VIEW -->
+  <div id="tv-view" style="display:flex; gap:40px; width:100%;">
+    <div id="cat-container" class="column">
+      <div class="column-header">Kategorien</div>
+      <div id="cat-list" class="list"></div>
     </div>
 
-    <div id="vod-view" class="view-section">
-      <div id="movie-grid" class="grid-container"></div>
+    <div id="chan-container" class="column">
+      <div class="column-header">Sender</div>
+      <div id="chan-list" class="list"></div>
     </div>
 
-    <div id="setup-view" class="view-section">
+    <div class="player-side">
+      <div id="video-box"><video id="video-player" autoplay></video></div>
+      <div class="player-info">
+        <div class="live-indicator"><div class="dot"></div> LIVE STREAM</div>
+        <div id="info-box">Black IPTV 2026</div>
+        <div style="margin-top:10px;color:rgba(255,255,255,.55);font-size:18px">
+          Sender: ▲/▼ • Stern: → dann OK • Vollbild: OK • Vollbild: ▲/▼ wechseln
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VOD VIEW -->
+  <div id="vod-view">
+    <div id="vod-left" class="column">
+      <div class="column-header">Kategorien</div>
+      <div class="vod-top">
+        <input id="vod-cat-search" class="vod-search" placeholder="Kategorie suchen (OK zum Tippen)" />
+      </div>
+      <div id="vod-cat-wrap" class="vod-cat-wrap"></div>
+    </div>
+
+    <div id="vod-mid" class="column">
+      <div id="vod-mid-title" class="column-header">Inhalte</div>
+      <div id="vod-grid" class="vod-grid"></div>
+    </div>
+
+    <div id="vod-right" class="column">
+      <div class="column-header">Info</div>
+      <div class="setup-row" style="margin:18px">
+        <div class="setup-label">TITEL</div>
+        <div id="vod-info-title" class="setup-val">-</div>
+        <div class="mini" style="margin-top:12px">Navigation: ← zur Kategorie • OK im Suchfeld zum Tippen</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETUP VIEW -->
+  <div id="setup-view">
+    <div class="setup-shell">
       <div class="setup-tabs">
         <div id="t0" class="tab">HINTERGRUND</div>
-        <div id="t1" class="tab">PROFIL</div>
-        <div id="t2" class="tab">MAC ADRESSE</div>
+        <div id="t1" class="tab">MAC</div>
+        <div id="t2" class="tab">M3U PROFILE</div>
+        <div id="t3" class="tab">XTREAM PROFILE</div>
       </div>
-      <div id="setup-content" style="background:var(--panel); flex:1; border-radius:20px; padding:40px;">
-          <div id="mac-display" style="font-size:40px; color:var(--cyan)">MAC: lade...</div>
+
+      <div class="setup-content">
+        <div class="panel" style="flex:1.2">
+          <div id="setup-panel-title" class="panel-head">Hintergrund</div>
+          <div id="setup-panel-body" class="panel-body"></div>
+        </div>
       </div>
     </div>
-  </main>
+  </div>
 
-  <div id="fullscreen-player"></div>
+</main>
+
+<div id="infobar">
+  <div style="display:flex; align-items:center; gap:30px;">
+    <div id="infobar-num">01</div>
+    <div>
+      <div style="color:var(--neon-cyan); font-weight:bold; letter-spacing:3px; font-size: 16px;">JETZT LIVE</div>
+      <div style="display:flex; align-items:center;">
+        <span id="infobar-name-text" class="infobar-name">SENDERNAME</span>
+        <span id="infobar-star-icon" class="infobar-star">★</span>
+      </div>
+    </div>
+  </div>
+  <div style="text-align:right;">
+    <div id="infobar-clock" style="font-size:60px; font-weight:200;">00:00</div>
+    <div id="infobar-date" style="font-size:20px; font-weight:800; color:var(--neon-cyan);">01. JAN 2026</div>
+  </div>
+</div>
 
 <script>
-  var area = "menu", mIdx = 0, tIdx = 0, gIdx = 0;
-  var rowLen = 6; // 6 Kacheln pro Reihe
-  var currentView = "tv";
+  // -----------------------------
+  // GitHub backgrounds (no list.txt)
+  // -----------------------------
+  var GH_OWNER = "Artonstyle";
+  var GH_REPO  = "IPTVBlack";
+  var GH_BG_PATH = "hintergrund";
+  function ghApiContentsUrl(path){
+    return "https://api.github.com/repos/" + GH_OWNER + "/" + GH_REPO + "/contents/" + path + "?t=" + Date.now();
+  }
+  function ghRawUrl(path){
+    return "https://raw.githubusercontent.com/" + GH_OWNER + "/" + GH_REPO + "/main/" + path + "?t=" + Date.now();
+  }
 
-  function $(id) { return document.getElementById(id); }
+  // -----------------------------
+  // State
+  // -----------------------------
+  var area = "menu"; // menu | cats | chans | vodSearch | vodCats | vodGrid | setupTabs | setupContent
+  var menuIdx = 0;
 
-  function init() {
-    // Tasten registrieren [cite: 10, 11]
-    try {
-      ["Up","Down","Left","Right","Enter","Back"].forEach(k => tizen.tvinputdevice.registerKey(k));
-    } catch(e){}
+  // TV
+  var catIdx=0, chanIdx=0, chanSubFocus="row";
+  var categoriesModel=[], allChannels=[], currentChannels=[];
+  var favorites = JSON.parse(localStorage.getItem('iptv_favs')) || [];
+  var hls=null, isFullscreen=false, barTimer=null;
+  var activeM3U = localStorage.getItem("iptv_active_m3u") || "https://iptv-org.github.io/iptv/index.m3u";
 
-    setInterval(updateTime, 1000);
-    loadMac();
-    renderGrids();
+  // ✅ Anti-Hang: stream reload only when channel changes
+  var lastPlayedUrl = "";
+
+  // VOD demo (nur placeholder)
+  var vodMode="movies";
+  var vodCatIdx=0, vodItemIdx=0;
+  var vodAllCategories=["Alle","Action","Drama","Kids","Thriller","Comedy","SciFi","Anime","Romance","Crime","Docu"];
+  var vodCatQuery = (localStorage.getItem("vod_cat_query") || "");
+  var vodItems=[
+    {title:"Demo Movie 1", cat:"Action", poster:"https://dummyimage.com/400x600/001a4d/00d2ff&text=Movie+1"},
+    {title:"Demo Movie 2", cat:"Drama",  poster:"https://dummyimage.com/400x600/001a4d/00d2ff&text=Movie+2"},
+    {title:"Demo Movie 3", cat:"Kids",   poster:"https://dummyimage.com/400x600/001a4d/00d2ff&text=Movie+3"},
+    {title:"Demo Movie 4", cat:"Action", poster:"https://dummyimage.com/400x600/001a4d/00d2ff&text=Movie+4"},
+    {title:"Demo Movie 5", cat:"Drama",  poster:"https://dummyimage.com/400x600/001a4d/00d2ff&text=Movie+5"},
+    {title:"Demo Movie 6", cat:"Comedy", poster:"https://dummyimage.com/400x600/001a4d/00d2ff&text=Movie+6"},
+    {title:"Demo Movie 7", cat:"SciFi",  poster:"https://dummyimage.com/400x600/001a4d/00d2ff&text=Movie+7"},
+    {title:"Demo Movie 8", cat:"Crime",  poster:"https://dummyimage.com/400x600/001a4d/00d2ff&text=Movie+8"},
+    {title:"Demo Movie 9", cat:"Docu",   poster:"https://dummyimage.com/400x600/001a4d/00d2ff&text=Movie+9"},
+    {title:"Demo Movie 10",cat:"Anime",  poster:"https://dummyimage.com/400x600/001a4d/00d2ff&text=Movie+10"}
+  ];
+
+  // SETUP
+  var setupTabIdx = 0;
+  var setupContentIdx = 0;
+  var bgImages = [];
+  var bgLoaded = false;
+
+  var m3uProfiles = JSON.parse(localStorage.getItem("iptv_m3u_profiles") || "[]");
+  if(!Array.isArray(m3uProfiles)) m3uProfiles=[];
+  var xcProfiles = JSON.parse(localStorage.getItem("iptv_xc_profiles") || "[]");
+  if(!Array.isArray(xcProfiles)) xcProfiles=[];
+  var activeXcProfile = JSON.parse(localStorage.getItem("iptv_xc_active") || "null");
+
+  function $(id){return document.getElementById(id);}
+  function esc(s){
+    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  // -----------------------------
+  // Init
+  // -----------------------------
+  function init(){
+    try { ["Up","Down","Left","Right","Enter","Back","0"].forEach(function(k){ tizen.tvinputdevice.registerKey(k); }); } catch(e){}
+
+    updateTime(); setInterval(updateTime, 1000);
+
+    $("vod-cat-search").value = vodCatQuery;
+    $("vod-cat-search").addEventListener("input", function(){
+      vodCatQuery = $("vod-cat-search").value || "";
+      localStorage.setItem("vod_cat_query", vodCatQuery);
+      vodCatIdx = 0; vodItemIdx = 0;
+      renderVOD(); updateUI();
+    });
+
+    var savedBg = localStorage.getItem("iptv_bg_url") || "";
+    if(savedBg) applyBackground(savedBg, true);
+
+    renderAll();
+    loadM3U(activeM3U);
+    fetchMacAddress();
+    loadBackgroundsFromGitHub();
+
+    showView("tv");
+    area="menu"; menuIdx=0;
+    updateUI();
+  }
+
+  function updateTime(){
+    var now=new Date();
+    var h=now.getHours(), m=now.getMinutes();
+    var timeStr=(h<10?"0"+h:h)+":"+(m<10?"0"+m:m);
+    var months=["JAN","FEB","MÄR","APR","MAI","JUN","JUL","AUG","SEP","OKT","NOV","DEZ"];
+    var dd=now.getDate(); if(dd<10) dd="0"+dd;
+    var dateStr=dd+". "+months[now.getMonth()]+" "+now.getFullYear();
+    $("main-clock").innerText=timeStr; $("infobar-clock").innerText=timeStr;
+    $("main-date").innerText=dateStr; $("infobar-date").innerText=dateStr;
+  }
+
+  // -----------------------------
+  // View switching
+  // -----------------------------
+  function showView(which){
+    $("tv-view").style.display = (which==="tv") ? "flex" : "none";
+    $("vod-view").style.display = (which==="vod") ? "flex" : "none";
+    $("setup-view").style.display = (which==="setup") ? "flex" : "none";
+  }
+
+  function setMenuView(idx){
+    menuIdx = idx;
+
+    if(menuIdx===0){
+      showView("tv"); area="cats"; updateUI();
+      if(currentChannels.length) playNow(true, false);
+      return;
+    }
+    if(menuIdx===1){
+      vodMode="movies"; showView("vod");
+      area="vodGrid"; renderVOD(); updateUI();
+      return;
+    }
+    if(menuIdx===2){
+      vodMode="series"; showView("vod");
+      area="vodGrid"; renderVOD(); updateUI();
+      return;
+    }
+
+    showView("setup");
+    area="setupTabs";
+    setupTabIdx=0; setupContentIdx=0;
+    renderSetupTab(); updateUI();
+  }
+
+  function renderAll(){
+    renderCategories();
+    renderChannels();
+    renderVOD();
+    renderSetupTab();
+    updateUI();
+  }
+
+  // -----------------------------
+  // TV / M3U
+  // -----------------------------
+  function loadM3U(url){
+    if(!url) return;
+    activeM3U=url;
+    localStorage.setItem("iptv_active_m3u", activeM3U);
+
+    var xhr=new XMLHttpRequest();
+    xhr.open("GET", url, true);
+    xhr.timeout=15000;
+    xhr.onreadystatechange=function(){
+      if(xhr.readyState!==4) return;
+      if(xhr.status===200 && xhr.responseText){
+        parseM3U(xhr.responseText);
+        buildCategories();
+        catIdx=0;
+        filterCategory("ALL", true);
+        $("chan-container").classList.add("visible");
+        updateUI();
+      }else{
+        $("info-box").innerText="M3U Fehler ("+xhr.status+")";
+      }
+    };
+    xhr.ontimeout=function(){ $("info-box").innerText="M3U Timeout"; };
+    xhr.send();
+  }
+
+  function parseM3U(text){
+    var lines=text.split("\n");
+    allChannels=[];
+    var pending=null;
+    for(var i=0;i<lines.length;i++){
+      var line=(lines[i]||"").trim();
+      if(!line) continue;
+      if(line.indexOf("#EXTINF")===0){
+        var parts=line.split(",");
+        var name=(parts.length>1?parts[parts.length-1]:"Unbekannt").trim();
+        var g=line.match(/group-title="([^"]*)"/i);
+        var group=(g && g[1])?g[1].trim():"Ohne Kategorie";
+        pending={name:name,group:group};
+        continue;
+      }
+      if(pending && line.indexOf("http")===0){
+        allChannels.push({name:pending.name,group:pending.group,url:line});
+        pending=null;
+        if(allChannels.length>=1500) break;
+      }
+    }
+  }
+
+  function buildCategories(){
+    var counts={};
+    for(var i=0;i<allChannels.length;i++){
+      var g=allChannels[i].group||"Ohne Kategorie";
+      counts[g]=(counts[g]||0)+1;
+    }
+    var groups=Object.keys(counts).sort(function(a,b){return a.localeCompare(b);});
+    categoriesModel=[];
+    categoriesModel.push({key:"ALL", label:"ALL ("+allChannels.length+")"});
+    categoriesModel.push({key:"Favoriten", label:"Favoriten ("+favorites.length+")"});
+    for(var j=0;j<groups.length;j++){
+      categoriesModel.push({key:groups[j], label:groups[j]+" ("+counts[groups[j]]+")"});
+    }
+  }
+
+  function filterCategory(catKey, autoPlay){
+    if(catKey==="ALL") currentChannels=allChannels.slice();
+    else if(catKey==="Favoriten") currentChannels=allChannels.filter(function(c){return favorites.indexOf(c.url)>-1;});
+    else currentChannels=allChannels.filter(function(c){return (c.group||"Ohne Kategorie")===catKey;});
+
+    chanIdx=0; chanSubFocus="row";
+    renderCategories(); renderChannels(); updateUI();
+
+    if(autoPlay && currentChannels.length){
+      playNow(true, false);
+    }
+  }
+
+  function renderCategories(){
+    var html="";
+    for(var i=0;i<categoriesModel.length;i++){
+      html+='<div class="cat-entry">'+esc(categoriesModel[i].label)+'</div>';
+    }
+    $("cat-list").innerHTML=html;
+  }
+
+  function renderChannels(){
+    var html="";
+    for(var i=0;i<currentChannels.length;i++){
+      var c=currentChannels[i];
+      var isFav = favorites.indexOf(c.url)>-1 ? " is-fav" : "";
+      html += '<div class="chan-entry'+isFav+'">'+
+                '<span class="chan-num">'+(i+1)+'</span>'+
+                '<span>'+esc(c.name)+'</span>'+
+                '<span class="star">★</span>'+
+              '</div>';
+    }
+    $("chan-list").innerHTML=html;
+  }
+
+  // ✅ showBarNow = Infobar sofort
+  // ✅ forceReload=false = stream nur reload wenn URL anders (kein hängen)
+  function playNow(showBarNow, forceReload){
+    if(!currentChannels[chanIdx]) return;
+    var chan=currentChannels[chanIdx];
+    $("info-box").innerText=chan.name;
+
+    // ✅ Infobar sofort beim Fokus
+    if(showBarNow) showInfobar();
+
+    // ✅ nur reload wenn Sender wirklich wechselt
+    if(!forceReload && chan.url === lastPlayedUrl){
+      return;
+    }
+    lastPlayedUrl = chan.url;
+
+    var v=$("video-player");
+
+    if(hls){ try{hls.destroy();}catch(e){} hls=null; }
+    try{ v.pause(); v.removeAttribute("src"); v.load(); }catch(e){}
+
+    if(typeof Hls!=="undefined" && Hls.isSupported()){
+      hls=new Hls({enableWorker:true,lowLatencyMode:true,backBufferLength:30});
+      hls.loadSource(chan.url);
+      hls.attachMedia(v);
+      hls.on(Hls.Events.MANIFEST_PARSED, function(){ v.play().catch(function(){}); });
+    }else{
+      v.src=chan.url;
+      v.play().catch(function(){});
+    }
+  }
+
+  function toggleFavorite(){
+    if(!currentChannels[chanIdx]) return;
+    var url=currentChannels[chanIdx].url;
+    var idx=favorites.indexOf(url);
+    if(idx>-1) favorites.splice(idx,1); else favorites.push(url);
+    localStorage.setItem("iptv_favs", JSON.stringify(favorites));
+
+    buildCategories();
+    renderCategories();
     renderChannels();
     updateUI();
+    showInfobar();
   }
 
-  function updateTime() {
-    var d = new Date();
-    $("clock").innerText = (d.getHours()<10?"0":"") + d.getHours() + ":" + (d.getMinutes()<10?"0":"") + d.getMinutes();
+  function showInfobar(){
+    var chan=currentChannels[chanIdx];
+    if(!chan) return;
+    $("infobar-num").innerText=(chanIdx+1<10?"0":"")+(chanIdx+1);
+    $("infobar-name-text").innerText=chan.name;
+    $("infobar-star-icon").style.display = favorites.indexOf(chan.url)>-1 ? "inline-block" : "none";
+    $("infobar").classList.add("active");
+    clearTimeout(barTimer);
+    barTimer=setTimeout(function(){ $("infobar").classList.remove("active"); }, 2600);
   }
 
-  function loadMac() {
-    try {
-      tizen.systeminfo.getPropertyValue("WIFI_NETWORK", w => {
-        if(w.macAddress) $("mac-display").innerText = "MAC: " + w.macAddress.toUpperCase();
-      }, () => {
-        tizen.systeminfo.getPropertyValue("ETHERNET_NETWORK", l => {
-          $("mac-display").innerText = "MAC: " + (l.macAddress || "NICHT VERFÜGBAR");
-        });
-      });
-    } catch(e) { $("mac-display").innerText = "MAC: NICHT VERFÜGBAR"; }
+  // -----------------------------
+  // VOD
+  // -----------------------------
+  function filteredVodCategories(){
+    var q=(vodCatQuery||"").toLowerCase().trim();
+    if(!q) return vodAllCategories.slice();
+    return vodAllCategories.filter(function(c){ return c.toLowerCase().indexOf(q)>-1; });
   }
 
-  function renderGrids() {
-    let html = "";
-    for(let i=0; i<30; i++) { // 6 Spalten * 5 Reihen = 30 Kacheln
-      html += `<div id="g${i}" class="tile">
-                <img src="https://via.placeholder.com/300x450/00050a/00d2ff?text=Film+${i+1}">
-                <div class="tile-label">Movie Title ${i+1}</div>
-              </div>`;
-    }
-    $("movie-grid").innerHTML = html;
+  function getFilteredVODItems(){
+    var cats=filteredVodCategories();
+    var sel=cats[vodCatIdx] || "Alle";
+    if(sel==="Alle") return vodItems.slice();
+    return vodItems.filter(function(x){ return x.cat===sel; });
   }
 
-  function renderChannels() {
-    let html = "";
-    for(let i=0; i<10; i++) {
-      html += `<div id="ch${i}" class="list-item">Channel Name ${i+1}</div>`;
-    }
-    $("ch-container").innerHTML = html;
-  }
+  function renderVOD(){
+    $("vod-mid-title").innerText = (vodMode==="movies") ? "Filme" : "Serien";
 
-  function updateUI() {
-    // Reset Focus
-    document.querySelectorAll('.focused').forEach(el => el.classList.remove('focused'));
-    
-    // View Management
-    $("tv-view").style.display = (mIdx === 0) ? "flex" : "none";
-    $("vod-view").style.display = (mIdx === 1 || mIdx === 2) ? "block" : "none";
-    $("setup-view").style.display = (mIdx === 3) ? "flex" : "none";
+    var cats=filteredVodCategories();
+    if(vodCatIdx>cats.length-1) vodCatIdx=Math.max(0,cats.length-1);
+    var html="";
+    for(var i=0;i<cats.length;i++){
+      html+='<div class="cat-entry">'+esc(cats[i])+'</div>';
+    }
+    if(!cats.length) html='<div class="mini" style="padding:18px">Keine Kategorie</div>';
+    $("vod-cat-wrap").innerHTML=html;
 
-    // Focus Logic
-    if(area === "menu") {
-      $("m" + mIdx).classList.add("focused");
-    } else if(area === "grid") {
-      $("g" + gIdx).classList.add("focused");
-    } else if(area === "list") {
-      $("ch" + gIdx).classList.add("focused");
-      // Simulierter Hover-Start [Anfrage]
-      console.log("Hover-Play für Kanal: " + gIdx);
-    } else if(area === "tabs") {
-      $("t" + tIdx).classList.add("focused");
+    var items=getFilteredVODItems();
+    var ghtml="";
+    for(var j=0;j<items.length;j++){
+      var it=items[j];
+      ghtml += '<div class="vod-card"><img class="vod-thumb" src="'+it.poster+'"/><div class="vod-titlebar">'+esc(it.title)+'</div></div>';
     }
-  }
-
-  document.addEventListener("keydown", function(e) {
-    let k = e.keyCode;
-    
-    if(area === "menu") {
-      if(k === 37) mIdx = (mIdx > 0) ? mIdx - 1 : 3;
-      if(k === 39) mIdx = (mIdx < 3) ? mIdx + 1 : 0;
-      if(k === 40 || k === 13) area = (mIdx === 0) ? "list" : (mIdx < 3 ? "grid" : "tabs");
-    } 
-    else if(area === "grid") {
-      if(k === 38) { if(gIdx < rowLen) area = "menu"; else gIdx -= rowLen; }
-      if(k === 40) { if(gIdx < 24) gIdx += rowLen; }
-      if(k === 37) { if(gIdx % rowLen !== 0) gIdx--; }
-      if(k === 39) { if(gIdx % rowLen !== rowLen - 1) gIdx++; }
-      if(k === 13) toggleFullscreen();
-    }
-    else if(area === "list") {
-      if(k === 38) { if(gIdx === 0) area = "menu"; else gIdx--; }
-      if(k === 40) { if(gIdx < 9) gIdx++; }
-      if(k === 13) toggleFullscreen();
-    }
-    else if(area === "tabs") {
-        if(k === 38) area = "menu";
-        if(k === 37) tIdx = (tIdx > 0) ? tIdx - 1 : 2;
-        if(k === 39) tIdx = (tIdx < 2) ? tIdx + 1 : 0;
-    }
-
-    if(k === 10009 || k === 27) { // Back Key
-      if(area !== "menu") area = "menu";
-      else tizen.application.getCurrentApplication().exit();
-    }
-
+    $("vod-grid").innerHTML=ghtml;
+    if(vodItemIdx>items.length-1) vodItemIdx=Math.max(0, items.length-1);
+    if(items[vodItemIdx]) $("vod-info-title").innerText = items[vodItemIdx].title;
     updateUI();
+  }
+
+  // -----------------------------
+  // SETTINGS / Backgrounds
+  // -----------------------------
+  function renderSetupTab(){
+    var titles=["Hintergrund","MAC Adresse","M3U Profile","Xtream Profile"];
+    $("setup-panel-title").innerText = titles[setupTabIdx] || "Einstellung";
+
+    if(setupTabIdx===0) return renderSetupBackgrounds();
+    if(setupTabIdx===1) return renderSetupMac();
+    if(setupTabIdx===2) return renderSetupM3UProfiles();
+    return renderSetupXtreamProfiles();
+  }
+
+  function renderSetupBackgrounds(){
+    var body=$("setup-panel-body");
+    var html="";
+    html += '<div class="mini" style="margin-bottom:12px">←/→ Tab wechseln • OK = in Inhalt • In Inhalt: OK = Hintergrund speichern</div>';
+    if(!bgLoaded){
+      html += '<div class="setup-row"><div class="setup-label">STATUS</div><div class="setup-val">Lade Hintergründe…</div><div class="mini">GitHub Ordner: '+esc(GH_BG_PATH)+'</div></div>';
+      body.innerHTML = html;
+      return;
+    }
+    if(!bgImages.length){
+      html += '<div class="setup-row"><div class="setup-label">KEINE BILDER</div><div class="setup-val">0 gefunden</div><div class="mini">Bitte Bilder in <b>hintergrund/</b> (jpg/png/webp) hochladen.</div></div>';
+      body.innerHTML = html;
+      return;
+    }
+    html += '<div class="bg-grid" id="bg-grid">';
+    for(var i=0;i<bgImages.length;i++){
+      var b=bgImages[i];
+      html += '<div class="bg-card focusable" data-idx="'+i+'" style="background-image:url(\''+b.url+'\')">'+
+                '<div class="bg-name">'+esc(b.name)+'</div>'+
+              '</div>';
+    }
+    html += '</div>';
+    body.innerHTML = html;
+  }
+
+  function renderSetupMac(){
+    var body=$("setup-panel-body");
+    body.innerHTML =
+      '<div class="setup-row">'+
+        '<div class="setup-label">MAC-ADRESSE</div>'+
+        '<div id="mac-value" class="setup-val">Lade…</div>'+
+        '<div class="mini">Samsung Tizen: WIFI_NETWORK → ETHERNET_NETWORK → NETWORK Fallback.</div>'+
+      '</div>';
+    fetchMacAddress();
+  }
+
+  function renderSetupM3UProfiles(){
+    var body=$("setup-panel-body");
+    var html='';
+    html += '<div class="mini" style="margin-bottom:12px">OK = in Inhalt • In Inhalt: OK = Profil laden • → = löschen</div>';
+    html += '<div class="setup-row">';
+    html += '  <div class="setup-label">NEUES M3U PROFIL</div>';
+    html += '  <input id="m3u-prof-name" class="input focusable" placeholder="Profil Name (z.B. Zuhause)" />';
+    html += '  <input id="m3u-prof-url" class="input focusable" placeholder="M3U URL (https://...m3u)" />';
+    html += '  <div id="btn-m3u-add" class="btn focusable">Profil speichern</div>';
+    html += '</div>';
+    if(!m3uProfiles.length){
+      html += '<div class="setup-row"><div class="setup-label">PROFILE</div><div class="setup-val">Keine</div><div class="mini">Lege oben ein Profil an.</div></div>';
+    } else {
+      html += '<div class="setup-row"><div class="setup-label">GESPEICHERTE PROFILE</div></div>';
+      for(var i=0;i<m3uProfiles.length;i++){
+        var p=m3uProfiles[i];
+        var active = (p.url===activeM3U) ? ' (AKTIV)' : '';
+        html += '<div class="profile-card focusable" data-m3u="'+i+'">'+
+                  '<div class="profile-title">'+esc(p.name||("M3U "+(i+1)))+active+'</div>'+
+                  '<div class="profile-sub">'+esc(p.url||"")+'</div>'+
+                '</div>';
+      }
+    }
+    body.innerHTML = html;
+  }
+
+  function renderSetupXtreamProfiles(){
+    var body=$("setup-panel-body");
+    var html='';
+    html += '<div class="mini" style="margin-bottom:12px">OK = in Inhalt • In Inhalt: OK = Profil aktivieren • → = löschen</div>';
+    html += '<div class="setup-row">';
+    html += '  <div class="setup-label">NEUES XTREAM PROFIL</div>';
+    html += '  <input id="xc-prof-name" class="input focusable" placeholder="Profil Name (z.B. Anbieter A)" />';
+    html += '  <input id="xc-prof-user" class="input focusable" placeholder="Benutzername" />';
+    html += '  <input id="xc-prof-pass" class="input focusable" placeholder="Passwort" />';
+    html += '  <input id="xc-prof-url"  class="input focusable" placeholder="URL (http://server:port)" />';
+    html += '  <div id="btn-xc-add" class="btn focusable">Profil speichern</div>';
+    html += '</div>';
+    if(!xcProfiles.length){
+      html += '<div class="setup-row"><div class="setup-label">PROFILE</div><div class="setup-val">Keine</div><div class="mini">Lege oben ein Profil an.</div></div>';
+    } else {
+      html += '<div class="setup-row"><div class="setup-label">GESPEICHERTE PROFILE</div></div>';
+      for(var i=0;i<xcProfiles.length;i++){
+        var p=xcProfiles[i];
+        var active = (activeXcProfile && activeXcProfile.name===p.name && activeXcProfile.url===p.url) ? ' (AKTIV)' : '';
+        html += '<div class="profile-card focusable" data-xc="'+i+'">'+
+                  '<div class="profile-title">'+esc(p.name||("XTREAM "+(i+1)))+active+'</div>'+
+                  '<div class="profile-sub">User: '+esc(p.user||"")+'</div>'+
+                  '<div class="profile-sub">URL: '+esc(p.url||"")+'</div>'+
+                '</div>';
+      }
+    }
+    body.innerHTML = html;
+  }
+
+  function loadBackgroundsFromGitHub(){
+    bgLoaded=false; renderSetupTab();
+    fetch(ghApiContentsUrl(GH_BG_PATH))
+      .then(function(r){ return r.json(); })
+      .then(function(list){
+        bgImages=[];
+        if(Array.isArray(list)){
+          for(var i=0;i<list.length;i++){
+            var it=list[i];
+            if(!it || !it.name || !it.path) continue;
+            var n=String(it.name).toLowerCase();
+            if(n.indexOf(".jpg")>-1 || n.indexOf(".jpeg")>-1 || n.indexOf(".png")>-1 || n.indexOf(".webp")>-1){
+              bgImages.push({ name: it.name, path: it.path, url: ghRawUrl(it.path) });
+            }
+          }
+        }
+        bgImages.sort(function(a,b){ return a.name.localeCompare(b.name); });
+        bgLoaded=true; renderSetupTab(); updateUI();
+      })
+      .catch(function(){
+        bgLoaded=true; bgImages=[];
+        renderSetupTab(); updateUI();
+      });
+  }
+
+  function applyBackground(url, save){
+    if(!url) return;
+    document.body.style.backgroundImage =
+      "linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url('"+url+"')";
+    document.body.style.backgroundSize="cover";
+    document.body.style.backgroundPosition="center";
+    if(save) localStorage.setItem("iptv_bg_url", url);
+  }
+
+  function fetchMacAddress(){
+    var el = document.getElementById("mac-value");
+    if(!el) return;
+    el.innerText="Lade…";
+    function setMac(val){ el.innerText = (val && String(val).trim()) ? val : "unbekannt"; }
+
+    try{
+      tizen.systeminfo.getPropertyValue("WIFI_NETWORK",
+        function(w){ if(w && w.macAddress) setMac(w.macAddress); else loadLan(); },
+        loadLan
+      );
+    }catch(e){ loadLan(); }
+
+    function loadLan(){
+      try{
+        tizen.systeminfo.getPropertyValue("ETHERNET_NETWORK",
+          function(l){ if(l && l.macAddress) setMac(l.macAddress); else loadNetworkFallback(); },
+          loadNetworkFallback
+        );
+      }catch(e){ loadNetworkFallback(); }
+    }
+    function loadNetworkFallback(){
+      try{
+        tizen.systeminfo.getPropertyValue("NETWORK",
+          function(n){ setMac(n && (n.wifiMacAddress || n.ethernetMacAddress || n.macAddress)); },
+          function(){ setMac(""); }
+        );
+      }catch(e){ setMac(""); }
+    }
+  }
+
+  function updateUI(){
+    var items=document.getElementsByClassName("item");
+    for(var i=0;i<items.length;i++){
+      items[i].classList.toggle("focused", area==="menu" && i===menuIdx);
+    }
+
+    if($("tv-view").style.display==="flex"){
+      var tvCats=$("cat-list").getElementsByClassName("cat-entry");
+      for(var a=0;a<tvCats.length;a++){
+        tvCats[a].classList.toggle("focused", area==="cats" && a===catIdx);
+        if(area==="cats" && a===catIdx) try{ tvCats[a].scrollIntoView({block:"center"});}catch(e){}
+      }
+      var tvChans=$("chan-list").getElementsByClassName("chan-entry");
+      for(var b=0;b<tvChans.length;b++){
+        tvChans[b].classList.toggle("focused", area==="chans" && b===chanIdx);
+        if(area==="chans" && b===chanIdx) try{ tvChans[b].scrollIntoView({block:"center"});}catch(e){}
+        var star=tvChans[b].querySelector(".star");
+        if(star){
+          star.classList.toggle("star-focused", area==="chans" && b===chanIdx && chanSubFocus==="star");
+        }
+      }
+    }
+
+    if($("vod-view").style.display==="flex"){
+      $("vod-cat-search").classList.toggle("focused", area==="vodSearch");
+      var vcats=$("vod-cat-wrap").getElementsByClassName("cat-entry");
+      for(var c=0;c<vcats.length;c++){
+        vcats[c].classList.toggle("focused", area==="vodCats" && c===vodCatIdx);
+        if(area==="vodCats" && c===vodCatIdx) try{ vcats[c].scrollIntoView({block:"center"});}catch(e){}
+      }
+      var cards=document.getElementsByClassName("vod-card");
+      for(var d=0;d<cards.length;d++){
+        cards[d].classList.toggle("focused", area==="vodGrid" && d===vodItemIdx);
+      }
+      if(area==="vodGrid" && cards[vodItemIdx]) try{ cards[vodItemIdx].scrollIntoView({block:"center"});}catch(e){}
+    }
+
+    if($("setup-view").style.display==="flex"){
+      for(var t=0;t<4;t++){
+        var te=$("t"+t);
+        if(!te) continue;
+        te.classList.toggle("focused", area==="setupTabs" && t===setupTabIdx);
+        te.classList.toggle("active", t===setupTabIdx);
+      }
+      var foc=document.getElementsByClassName("focusable");
+      for(var k=0;k<foc.length;k++) foc[k].classList.remove("focused");
+      if(area==="setupContent"){
+        if(foc[setupContentIdx]) foc[setupContentIdx].classList.add("focused");
+        if(foc[setupContentIdx]) try{ foc[setupContentIdx].scrollIntoView({block:"center"});}catch(e){}
+      }
+    }
+  }
+
+  function getSetupFocusables(){
+    var list=document.getElementsByClassName("focusable");
+    var arr=[];
+    for(var i=0;i<list.length;i++) arr.push(list[i]);
+    return arr;
+  }
+
+  function setupActivateFocused(){
+    var foc=getSetupFocusables();
+    var el=foc[setupContentIdx];
+    if(!el) return;
+
+    if(setupTabIdx===0){
+      var idx=el.getAttribute("data-idx");
+      if(idx!==null){ idx=parseInt(idx,10); if(bgImages[idx]) applyBackground(bgImages[idx].url, true); }
+      return;
+    }
+
+    if(setupTabIdx===2){
+      if(el.id==="btn-m3u-add"){
+        var name=(document.getElementById("m3u-prof-name").value||"").trim();
+        var url=(document.getElementById("m3u-prof-url").value||"").trim();
+        if(!name) name="Profil "+(m3uProfiles.length+1);
+        if(!url) return;
+        m3uProfiles.unshift({name:name,url:url});
+        if(m3uProfiles.length>30) m3uProfiles=m3uProfiles.slice(0,30);
+        localStorage.setItem("iptv_m3u_profiles", JSON.stringify(m3uProfiles));
+        activeM3U=url;
+        localStorage.setItem("iptv_active_m3u", activeM3U);
+        renderSetupTab(); setupContentIdx=0; updateUI();
+        return;
+      }
+      var pidx=el.getAttribute("data-m3u");
+      if(pidx!==null){
+        pidx=parseInt(pidx,10);
+        if(m3uProfiles[pidx]){
+          activeM3U=m3uProfiles[pidx].url;
+          localStorage.setItem("iptv_active_m3u", activeM3U);
+          setMenuView(0);
+          loadM3U(activeM3U);
+        }
+      }
+      return;
+    }
+
+    if(setupTabIdx===3){
+      if(el.id==="btn-xc-add"){
+        var n=(document.getElementById("xc-prof-name").value||"").trim();
+        var u=(document.getElementById("xc-prof-user").value||"").trim();
+        var p=(document.getElementById("xc-prof-pass").value||"").trim();
+        var url=(document.getElementById("xc-prof-url").value||"").trim();
+        if(!n) n="Xtream "+(xcProfiles.length+1);
+        if(!u||!p||!url) return;
+        xcProfiles.unshift({name:n,user:u,pass:p,url:url});
+        if(xcProfiles.length>30) xcProfiles=xcProfiles.slice(0,30);
+        localStorage.setItem("iptv_xc_profiles", JSON.stringify(xcProfiles));
+        activeXcProfile={name:n,user:u,pass:p,url:url};
+        localStorage.setItem("iptv_xc_active", JSON.stringify(activeXcProfile));
+        renderSetupTab(); setupContentIdx=0; updateUI();
+        return;
+      }
+      var xidx=el.getAttribute("data-xc");
+      if(xidx!==null){
+        xidx=parseInt(xidx,10);
+        if(xcProfiles[xidx]){
+          activeXcProfile=xcProfiles[xidx];
+          localStorage.setItem("iptv_xc_active", JSON.stringify(activeXcProfile));
+          renderSetupTab(); updateUI();
+        }
+      }
+      return;
+    }
+  }
+
+  function setupDeleteFocusedIfProfile(){
+    var foc=getSetupFocusables();
+    var el=foc[setupContentIdx];
+    if(!el) return;
+
+    if(setupTabIdx===2){
+      var pidx=el.getAttribute("data-m3u");
+      if(pidx!==null){
+        pidx=parseInt(pidx,10);
+        if(pidx>=0 && pidx<m3uProfiles.length){
+          m3uProfiles.splice(pidx,1);
+          localStorage.setItem("iptv_m3u_profiles", JSON.stringify(m3uProfiles));
+          renderSetupTab();
+          setupContentIdx=Math.min(setupContentIdx, Math.max(0, getSetupFocusables().length-1));
+          updateUI();
+        }
+      }
+      return;
+    }
+
+    if(setupTabIdx===3){
+      var xidx=el.getAttribute("data-xc");
+      if(xidx!==null){
+        xidx=parseInt(xidx,10);
+        if(xidx>=0 && xidx<xcProfiles.length){
+          if(activeXcProfile && xcProfiles[xidx].name===activeXcProfile.name && xcProfiles[xidx].url===activeXcProfile.url){
+            activeXcProfile=null;
+            localStorage.setItem("iptv_xc_active","null");
+          }
+          xcProfiles.splice(xidx,1);
+          localStorage.setItem("iptv_xc_profiles", JSON.stringify(xcProfiles));
+          renderSetupTab();
+          setupContentIdx=Math.min(setupContentIdx, Math.max(0, getSetupFocusables().length-1));
+          updateUI();
+        }
+      }
+      return;
+    }
+  }
+
+  document.addEventListener("keydown", function(e){
+    var k=e.keyCode;
+
+    if(k===10009 || k===27){
+      var ae=document.activeElement;
+      if(ae && ae.tagName==="INPUT"){ try{ ae.blur(); }catch(ex){} updateUI(); return; }
+
+      if(isFullscreen){
+        isFullscreen=false;
+        document.body.classList.remove("is-fullscreen");
+        $("infobar").classList.remove("active");
+        return;
+      }
+
+      if(area!=="menu"){ area="menu"; chanSubFocus="row"; updateUI(); return; }
+      try{ tizen.application.getCurrentApplication().exit(); }catch(ex){}
+      return;
+    }
+
+    if(isFullscreen){
+      if(k===38 && currentChannels.length){ chanIdx=(chanIdx>0)?chanIdx-1:(currentChannels.length-1); playNow(true,false); return; }
+      if(k===40 && currentChannels.length){ chanIdx=(chanIdx<currentChannels.length-1)?chanIdx+1:0; playNow(true,false); return; }
+      if(k===48){ toggleFavorite(); return; }
+      if(k===13){ showInfobar(); return; }
+      return;
+    }
+
+    if(area==="menu"){
+      if(k===37) menuIdx = (menuIdx>0)?menuIdx-1:3;
+      else if(k===39) menuIdx = (menuIdx<3)?menuIdx+1:0;
+      else if(k===40 || k===13){ setMenuView(menuIdx); return; }
+      updateUI(); return;
+    }
+
+    if($("tv-view").style.display==="flex"){
+      if(k===48 && area==="chans"){ toggleFavorite(); return; }
+
+      if(area==="cats"){
+        if(k===38){ if(catIdx===0) area="menu"; else catIdx--; }
+        else if(k===40){ if(catIdx<categoriesModel.length-1) catIdx++; }
+        else if(k===39 || k===13){
+          area="chans";
+          var catKey=categoriesModel[catIdx]?categoriesModel[catIdx].key:"ALL";
+          filterCategory(catKey, true);
+          return;
+        }
+        updateUI(); return;
+      }
+
+      if(area==="chans"){
+        if(k===39){ chanSubFocus="star"; updateUI(); return; }
+        if(k===37){
+          if(chanSubFocus==="star"){ chanSubFocus="row"; updateUI(); return; }
+          area="cats"; updateUI(); return;
+        }
+        if(k===38){
+          if(chanIdx===0){ area="cats"; chanSubFocus="row"; updateUI(); return; }
+          chanIdx--; chanSubFocus="row";
+          playNow(true,false); updateUI(); return;
+        }
+        if(k===40){
+          if(chanIdx<currentChannels.length-1){
+            chanIdx++; chanSubFocus="row";
+            playNow(true,false); updateUI();
+          }
+          return;
+        }
+        if(k===13){
+          if(chanSubFocus==="star"){ toggleFavorite(); chanSubFocus="row"; updateUI(); return; }
+          isFullscreen=true;
+          document.body.classList.add("is-fullscreen");
+          showInfobar();
+          return;
+        }
+      }
+      return;
+    }
+
+    if($("vod-view").style.display==="flex"){
+      var items=getFilteredVODItems();
+      var cols=5;
+
+      if(area==="vodGrid"){
+        if(k===37){ area="vodCats"; updateUI(); return; }
+        if(k===38){ if(vodItemIdx-cols>=0) vodItemIdx-=cols; updateUI(); if(items[vodItemIdx]) $("vod-info-title").innerText=items[vodItemIdx].title; return; }
+        if(k===40){ if(vodItemIdx+cols<=items.length-1) vodItemIdx+=cols; updateUI(); if(items[vodItemIdx]) $("vod-info-title").innerText=items[vodItemIdx].title; return; }
+        if(k===39){ if(vodItemIdx+1<=items.length-1) vodItemIdx++; updateUI(); if(items[vodItemIdx]) $("vod-info-title").innerText=items[vodItemIdx].title; return; }
+        if(k===13){ return; }
+      }
+
+      if(area==="vodCats"){
+        if(k===37){ area="vodSearch"; updateUI(); return; }
+        if(k===38){ if(vodCatIdx>0) vodCatIdx--; renderVOD(); updateUI(); return; }
+        if(k===40){
+          var cats=filteredVodCategories();
+          if(vodCatIdx<cats.length-1) vodCatIdx++;
+          renderVOD(); updateUI(); return;
+        }
+        if(k===39 || k===13){
+          vodItemIdx=0; area="vodGrid";
+          renderVOD(); updateUI(); return;
+        }
+      }
+
+      if(area==="vodSearch"){
+        if(k===39){ area="vodCats"; updateUI(); return; }
+        if(k===40){ area="vodCats"; updateUI(); return; }
+        if(k===13){ try{ $("vod-cat-search").focus(); }catch(ex){} return; }
+      }
+      return;
+    }
+
+    if($("setup-view").style.display==="flex"){
+      if(area==="setupTabs"){
+        if(k===37){ setupTabIdx=(setupTabIdx>0)?setupTabIdx-1:3; renderSetupTab(); updateUI(); return; }
+        if(k===39){ setupTabIdx=(setupTabIdx<3)?setupTabIdx+1:0; renderSetupTab(); updateUI(); return; }
+        if(k===40 || k===13){ area="setupContent"; setupContentIdx=0; updateUI(); return; }
+        if(k===38){ area="menu"; updateUI(); return; }
+        return;
+      }
+
+      if(area==="setupContent"){
+        var foc=getSetupFocusables();
+
+        if(k===38){
+          if(setupContentIdx<=0){ area="setupTabs"; updateUI(); return; }
+          setupContentIdx=Math.max(0, setupContentIdx-1);
+          updateUI();
+          // preview background while moving
+          if(setupTabIdx===0){
+            var el=foc[setupContentIdx];
+            if(el){
+              var idx=el.getAttribute("data-idx");
+              if(idx!==null){ idx=parseInt(idx,10); if(bgImages[idx]) applyBackground(bgImages[idx].url, false); }
+            }
+          }
+          return;
+        }
+
+        if(k===40){
+          setupContentIdx=Math.min(foc.length-1, setupContentIdx+1);
+          updateUI();
+          if(setupTabIdx===0){
+            var el2=foc[setupContentIdx];
+            if(el2){
+              var idx2=el2.getAttribute("data-idx");
+              if(idx2!==null){ idx2=parseInt(idx2,10); if(bgImages[idx2]) applyBackground(bgImages[idx2].url, false); }
+            }
+          }
+          return;
+        }
+
+        if(k===39){ setupDeleteFocusedIfProfile(); return; }
+        if(k===13){ setupActivateFocused(); return; }
+        if(k===37){ area="setupTabs"; updateUI(); return; }
+        return;
+      }
+    }
   });
 
-  function toggleFullscreen() {
-    let p = $("fullscreen-player");
-    if(p.style.display === "block") {
-        p.style.display = "none";
-    } else {
-        p.style.display = "block";
-        p.innerHTML = "<h1 style='color:white; text-align:center; margin-top:20%;'>VOLLBILD-PLAYER AKTIV</h1><p style='text-align:center'>Back-Taste zum Schließen</p>";
+  document.addEventListener("click", function(ev){
+    var t = ev.target;
+    if(!t) return;
+    if(t.classList.contains("bg-card")){
+      var idx=t.getAttribute("data-idx");
+      if(idx!==null){ idx=parseInt(idx,10); if(bgImages[idx]) applyBackground(bgImages[idx].url, true); }
     }
-  }
+  });
 </script>
 </body>
 </html>
