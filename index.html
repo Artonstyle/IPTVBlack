@@ -655,15 +655,32 @@
   }
 
   function applyPlayerRect(full){
-    if(!tvUseAvplay || !av) return;
+    // For AVPlay video plane on Tizen, we also try TVWindow (more reliable on real TVs)
+    var x=0,y=0,w=1920,h=1080;
+    if(!full){
+      var box=$("tv-video-box");
+      if(box){
+        var r=box.getBoundingClientRect();
+        x=Math.round(r.left);
+        y=Math.round(r.top);
+        w=Math.round(r.width);
+        h=Math.round(r.height);
+      }
+    }
+
+    // Some firmwares require tvwindow.show/setRect for video visibility
     try{
-      if(full){
-        av.setDisplayRect(0,0,1920,1080);
-      }else{
-        var r=getVideoBoxRect();
-        av.setDisplayRect(r.x,r.y,r.w,r.h);
+      if(window.tizen && tizen.tvwindow){
+        // Ensure TV window is visible
+        tizen.tvwindow.show(function(){}, function(){});
+        tizen.tvwindow.setRect(x,y,w,h);
       }
     }catch(e){}
+
+    if(av){
+      try{ av.setDisplayRect(x,y,w,h); }catch(e){}
+      try{ av.setDisplayMethod(full ? "PLAYER_DISPLAY_MODE_FULL_SCREEN" : "PLAYER_DISPLAY_MODE_AUTO"); }catch(e){}
+    }
   }
 
   function stopTV(){
