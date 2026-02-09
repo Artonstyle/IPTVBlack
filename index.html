@@ -13,7 +13,6 @@
       --glass-blue:rgba(0,50,150,.3);
       --fav-gold:#ffcc00;
       --muted: rgba(255,255,255,.45);
-      --panel: rgba(0,0,0,.38);
     }
     *{box-sizing:border-box;outline:none}
     body{
@@ -148,7 +147,7 @@
     .infobar-name{font-size:60px;font-weight:900;color:white;text-transform:uppercase}
     .infobar-star{color:var(--fav-gold);font-size:50px;margin-left:20px;display:none}
 
-    /* VOD */
+    /* VOD view */
     #vod-view{display:none;flex:1;gap:40px;width:100%}
     #vod-left{width:360px}
     #vod-mid{flex:1}
@@ -195,7 +194,7 @@
       text-shadow:0 2px 10px rgba(0,0,0,.6);
     }
 
-    /* Settings Tabs */
+    /* Settings (Tabs) */
     #setup-view{display:none;flex:1;gap:40px;width:100%}
     .setup-shell{
       flex:1;display:flex;flex-direction:column;gap:16px;
@@ -270,37 +269,37 @@
       transform:scale(1.01);
     }
 
-    /* ✅ Hintergrund Grid: 5 Spalten, große Kacheln, IMG statt background-image */
+    /* ✅ Hintergrund Grid: GENAU 5 Kacheln + IMG sichtbar */
     .bg-grid{
       display:grid;
       grid-template-columns: repeat(5, 1fr);
       gap:18px;
-      padding:10px;
+      padding:6px;
     }
     .bg-card{
-      height:230px;
-      border-radius:20px;
-      border:2px solid rgba(0,210,255,.14);
-      background: rgba(0,0,0,.25);
+      height:250px;
+      border-radius:22px;
+      border:2px solid rgba(0,210,255,.16);
+      background: rgba(0,0,0,.22);
       overflow:hidden;
       position:relative;
       transform-origin:center;
     }
     .bg-card.focused{
       border-color: rgba(0,210,255,.85);
-      box-shadow:0 0 26px rgba(0,210,255,.24);
-      transform:scale(1.05);
+      box-shadow:0 0 28px rgba(0,210,255,.28);
+      transform:scale(1.06);
     }
     .bg-img{
       position:absolute;inset:0;
       width:100%;height:100%;
       object-fit:cover;
       display:block;
-      opacity:.95;
+      opacity:.98;
     }
     .bg-shade{
       position:absolute;inset:0;
-      background:linear-gradient(to top, rgba(0,0,0,.82), rgba(0,0,0,0));
+      background:linear-gradient(to top, rgba(0,0,0,.80), rgba(0,0,0,0));
       opacity:.85;pointer-events:none;
     }
     .bg-name{
@@ -324,7 +323,7 @@
       background: rgba(0,69,255,.18);
       transform:scale(1.01);
     }
-    .profile-title{font-size:30px;font-weight:900;color:white}
+    .profile-title{font-size:32px;font-weight:900;color:white}
     .profile-sub{font-size:22px;color:rgba(255,255,255,.70);word-break:break-all}
   </style>
 </head>
@@ -408,7 +407,7 @@
       </div>
 
       <div class="setup-content">
-        <div class="panel" style="flex:1.2">
+        <div class="panel">
           <div id="setup-panel-title" class="panel-head">Hintergrund</div>
           <div id="setup-panel-body" class="panel-body"></div>
         </div>
@@ -436,24 +435,13 @@
 </div>
 
 <script>
-  // -----------------------------
-  // GitHub backgrounds (no list.txt)
-  // -----------------------------
-  var GH_OWNER = "Artonstyle";
-  var GH_REPO  = "IPTVBlack";
-  var GH_BG_PATH = "hintergrund";
-  function ghApiContentsUrl(path){
-    return "https://api.github.com/repos/" + GH_OWNER + "/" + GH_REPO + "/contents/" + path + "?t=" + Date.now();
-  }
-  function ghRawUrl(path){
-    return "https://raw.githubusercontent.com/" + GH_OWNER + "/" + GH_REPO + "/main/" + path + "?t=" + Date.now();
-  }
+  // GitHub backgrounds (ohne list.txt)
+  var GH_OWNER="Artonstyle", GH_REPO="IPTVBlack", GH_BG_PATH="hintergrund";
+  function ghApiContentsUrl(path){ return "https://api.github.com/repos/"+GH_OWNER+"/"+GH_REPO+"/contents/"+path+"?t="+Date.now(); }
+  function ghRawUrl(path){ return "https://raw.githubusercontent.com/"+GH_OWNER+"/"+GH_REPO+"/main/"+path+"?t="+Date.now(); }
 
-  // -----------------------------
-  // State
-  // -----------------------------
-  var area = "menu"; // menu | cats | chans | vodSearch | vodCats | vodGrid | setupTabs | setupContent
-  var menuIdx = 0;
+  var area="menu";
+  var menuIdx=0;
 
   // TV
   var catIdx=0, chanIdx=0, chanSubFocus="row";
@@ -461,13 +449,13 @@
   var favorites = JSON.parse(localStorage.getItem('iptv_favs')) || [];
   var hls=null, isFullscreen=false, barTimer=null;
   var activeM3U = localStorage.getItem("iptv_active_m3u") || "https://iptv-org.github.io/iptv/index.m3u";
-  var lastPlayedUrl = "";
+  var lastPlayedUrl="";
 
   // VOD demo (placeholder)
   var vodMode="movies";
   var vodCatIdx=0, vodItemIdx=0;
   var vodAllCategories=["Alle","Action","Drama","Kids","Thriller","Comedy","SciFi","Anime","Romance","Crime","Docu"];
-  var vodCatQuery = (localStorage.getItem("vod_cat_query") || "");
+  var vodCatQuery=(localStorage.getItem("vod_cat_query")||"");
   var vodItems=[
     {title:"Demo Movie 1", cat:"Action", poster:"https://dummyimage.com/400x600/001a4d/00d2ff&text=Movie+1"},
     {title:"Demo Movie 2", cat:"Drama",  poster:"https://dummyimage.com/400x600/001a4d/00d2ff&text=Movie+2"},
@@ -481,11 +469,9 @@
     {title:"Demo Movie 10",cat:"Anime",  poster:"https://dummyimage.com/400x600/001a4d/00d2ff&text=Movie+10"}
   ];
 
-  // SETUP
-  var setupTabIdx = 0;
-  var setupContentIdx = 0;
-  var bgImages = [];
-  var bgLoaded = false;
+  // Setup
+  var setupTabIdx=0, setupContentIdx=0;
+  var bgImages=[], bgLoaded=false;
 
   var m3uProfiles = JSON.parse(localStorage.getItem("iptv_m3u_profiles") || "[]");
   if(!Array.isArray(m3uProfiles)) m3uProfiles=[];
@@ -501,18 +487,18 @@
   function init(){
     try { ["Up","Down","Left","Right","Enter","Back","0"].forEach(function(k){ tizen.tvinputdevice.registerKey(k); }); } catch(e){}
 
-    updateTime(); setInterval(updateTime, 1000);
+    updateTime(); setInterval(updateTime,1000);
 
-    $("vod-cat-search").value = vodCatQuery;
+    $("vod-cat-search").value=vodCatQuery;
     $("vod-cat-search").addEventListener("input", function(){
-      vodCatQuery = $("vod-cat-search").value || "";
+      vodCatQuery=$("vod-cat-search").value||"";
       localStorage.setItem("vod_cat_query", vodCatQuery);
-      vodCatIdx = 0; vodItemIdx = 0;
+      vodCatIdx=0; vodItemIdx=0;
       renderVOD(); updateUI();
     });
 
-    var savedBg = localStorage.getItem("iptv_bg_url") || "";
-    if(savedBg) applyBackground(savedBg, true);
+    var savedBg = localStorage.getItem("iptv_bg_url")||"";
+    if(savedBg) applyBackground(savedBg,true);
 
     renderAll();
     loadM3U(activeM3U);
@@ -520,7 +506,8 @@
     loadBackgroundsFromGitHub();
 
     showView("tv");
-    area="menu"; menuIdx=0;
+    area="menu";
+    menuIdx=0;
     updateUI();
   }
 
@@ -542,21 +529,27 @@
   }
 
   function setMenuView(idx){
-    menuIdx = idx;
+    menuIdx=idx;
 
     if(menuIdx===0){
-      showView("tv"); area="cats"; updateUI();
-      if(currentChannels.length) playNow(true, false);
+      showView("tv");
+      area="cats";
+      updateUI();
+      if(currentChannels.length) playNow(true,false);
       return;
     }
     if(menuIdx===1){
-      vodMode="movies"; showView("vod");
-      area="vodGrid"; renderVOD(); updateUI();
+      vodMode="movies";
+      showView("vod");
+      area="vodGrid";
+      renderVOD(); updateUI();
       return;
     }
     if(menuIdx===2){
-      vodMode="series"; showView("vod");
-      area="vodGrid"; renderVOD(); updateUI();
+      vodMode="series";
+      showView("vod");
+      area="vodGrid";
+      renderVOD(); updateUI();
       return;
     }
 
@@ -574,9 +567,7 @@
     updateUI();
   }
 
-  // -----------------------------
-  // TV / M3U
-  // -----------------------------
+  // ---------- TV / M3U ----------
   function loadM3U(url){
     if(!url) return;
     activeM3U=url;
@@ -649,7 +640,7 @@
     renderCategories(); renderChannels(); updateUI();
 
     if(autoPlay && currentChannels.length){
-      playNow(true, false);
+      playNow(true,false);
     }
   }
 
@@ -678,14 +669,14 @@
   function playNow(showBarNow, forceReload){
     if(!currentChannels[chanIdx]) return;
     var chan=currentChannels[chanIdx];
+
     $("info-box").innerText=chan.name;
 
+    // ✅ Hover/Infobar sofort beim Fokus
     if(showBarNow) showInfobar();
 
-    if(!forceReload && chan.url === lastPlayedUrl){
-      return;
-    }
-    lastPlayedUrl = chan.url;
+    if(!forceReload && chan.url===lastPlayedUrl) return;
+    lastPlayedUrl=chan.url;
 
     var v=$("video-player");
     if(hls){ try{hls.destroy();}catch(e){} hls=null; }
@@ -727,31 +718,26 @@
     barTimer=setTimeout(function(){ $("infobar").classList.remove("active"); }, 2600);
   }
 
-  // -----------------------------
-  // VOD
-  // -----------------------------
+  // ---------- VOD ----------
   function filteredVodCategories(){
     var q=(vodCatQuery||"").toLowerCase().trim();
     if(!q) return vodAllCategories.slice();
     return vodAllCategories.filter(function(c){ return c.toLowerCase().indexOf(q)>-1; });
   }
-
   function getFilteredVODItems(){
     var cats=filteredVodCategories();
     var sel=cats[vodCatIdx] || "Alle";
     if(sel==="Alle") return vodItems.slice();
     return vodItems.filter(function(x){ return x.cat===sel; });
   }
-
   function renderVOD(){
     $("vod-mid-title").innerText = (vodMode==="movies") ? "Filme" : "Serien";
 
     var cats=filteredVodCategories();
     if(vodCatIdx>cats.length-1) vodCatIdx=Math.max(0,cats.length-1);
+
     var html="";
-    for(var i=0;i<cats.length;i++){
-      html+='<div class="cat-entry">'+esc(cats[i])+'</div>';
-    }
+    for(var i=0;i<cats.length;i++) html+='<div class="cat-entry">'+esc(cats[i])+'</div>';
     if(!cats.length) html='<div class="mini" style="padding:18px">Keine Kategorie</div>';
     $("vod-cat-wrap").innerHTML=html;
 
@@ -762,14 +748,14 @@
       ghtml += '<div class="vod-card"><img class="vod-thumb" src="'+it.poster+'"/><div class="vod-titlebar">'+esc(it.title)+'</div></div>';
     }
     $("vod-grid").innerHTML=ghtml;
+
     if(vodItemIdx>items.length-1) vodItemIdx=Math.max(0, items.length-1);
     if(items[vodItemIdx]) $("vod-info-title").innerText = items[vodItemIdx].title;
+
     updateUI();
   }
 
-  // -----------------------------
-  // SETTINGS / Backgrounds
-  // -----------------------------
+  // ---------- SETTINGS ----------
   function renderSetupTab(){
     var titles=["Hintergrund","MAC Adresse","M3U Profile","Xtream Profile"];
     $("setup-panel-title").innerText = titles[setupTabIdx] || "Einstellung";
@@ -783,19 +769,18 @@
   function renderSetupBackgrounds(){
     var body=$("setup-panel-body");
     var html="";
-    html += '<div class="mini" style="margin-bottom:12px">←/→ Tab wechseln • OK = in Inhalt • In Inhalt: OK = Hintergrund speichern</div>';
     if(!bgLoaded){
       html += '<div class="setup-row"><div class="setup-label">STATUS</div><div class="setup-val">Lade Hintergründe…</div><div class="mini">GitHub Ordner: '+esc(GH_BG_PATH)+'</div></div>';
-      body.innerHTML = html;
+      body.innerHTML=html;
       return;
     }
     if(!bgImages.length){
       html += '<div class="setup-row"><div class="setup-label">KEINE BILDER</div><div class="setup-val">0 gefunden</div><div class="mini">Bitte Bilder in <b>hintergrund/</b> (jpg/png/webp) hochladen.</div></div>';
-      body.innerHTML = html;
+      body.innerHTML=html;
       return;
     }
 
-    html += '<div class="bg-grid" id="bg-grid">';
+    html += '<div class="bg-grid">';
     for(var i=0;i<bgImages.length;i++){
       var b=bgImages[i];
       html += '<div class="bg-card focusable" data-idx="'+i+'">'+
@@ -805,7 +790,7 @@
               '</div>';
     }
     html += '</div>';
-    body.innerHTML = html;
+    body.innerHTML=html;
   }
 
   function renderSetupMac(){
@@ -814,7 +799,7 @@
       '<div class="setup-row">'+
         '<div class="setup-label">MAC-ADRESSE</div>'+
         '<div id="mac-value" class="setup-val">Lade…</div>'+
-        '<div class="mini">Samsung Tizen: WIFI_NETWORK → ETHERNET_NETWORK → NETWORK Fallback.</div>'+
+        '<div class="mini">Samsung Tizen: WIFI_NETWORK → ETHERNET_NETWORK → NETWORK fallback.</div>'+
       '</div>';
     fetchMacAddress();
   }
@@ -822,7 +807,6 @@
   function renderSetupM3UProfiles(){
     var body=$("setup-panel-body");
     var html='';
-    html += '<div class="mini" style="margin-bottom:12px">OK = in Inhalt • In Inhalt: OK = Profil laden • → = löschen</div>';
     html += '<div class="setup-row">';
     html += '  <div class="setup-label">NEUES M3U PROFIL</div>';
     html += '  <input id="m3u-prof-name" class="input focusable" placeholder="Profil Name (z.B. Zuhause)" />';
@@ -832,7 +816,6 @@
     if(!m3uProfiles.length){
       html += '<div class="setup-row"><div class="setup-label">PROFILE</div><div class="setup-val">Keine</div><div class="mini">Lege oben ein Profil an.</div></div>';
     } else {
-      html += '<div class="setup-row"><div class="setup-label">GESPEICHERTE PROFILE</div></div>';
       for(var i=0;i<m3uProfiles.length;i++){
         var p=m3uProfiles[i];
         var active = (p.url===activeM3U) ? ' (AKTIV)' : '';
@@ -842,13 +825,12 @@
                 '</div>';
       }
     }
-    body.innerHTML = html;
+    body.innerHTML=html;
   }
 
   function renderSetupXtreamProfiles(){
     var body=$("setup-panel-body");
     var html='';
-    html += '<div class="mini" style="margin-bottom:12px">OK = in Inhalt • In Inhalt: OK = Profil aktivieren • → = löschen</div>';
     html += '<div class="setup-row">';
     html += '  <div class="setup-label">NEUES XTREAM PROFIL</div>';
     html += '  <input id="xc-prof-name" class="input focusable" placeholder="Profil Name (z.B. Anbieter A)" />';
@@ -860,7 +842,6 @@
     if(!xcProfiles.length){
       html += '<div class="setup-row"><div class="setup-label">PROFILE</div><div class="setup-val">Keine</div><div class="mini">Lege oben ein Profil an.</div></div>';
     } else {
-      html += '<div class="setup-row"><div class="setup-label">GESPEICHERTE PROFILE</div></div>';
       for(var i=0;i<xcProfiles.length;i++){
         var p=xcProfiles[i];
         var active = (activeXcProfile && activeXcProfile.name===p.name && activeXcProfile.url===p.url) ? ' (AKTIV)' : '';
@@ -871,7 +852,7 @@
                 '</div>';
       }
     }
-    body.innerHTML = html;
+    body.innerHTML=html;
   }
 
   function loadBackgroundsFromGitHub(){
@@ -909,7 +890,7 @@
   }
 
   function fetchMacAddress(){
-    var el = document.getElementById("mac-value");
+    var el=document.getElementById("mac-value");
     if(!el) return;
     el.innerText="Lade…";
     function setMac(val){ el.innerText = (val && String(val).trim()) ? val : "unbekannt"; }
@@ -951,14 +932,13 @@
         tvCats[a].classList.toggle("focused", area==="cats" && a===catIdx);
         if(area==="cats" && a===catIdx) try{ tvCats[a].scrollIntoView({block:"center"});}catch(e){}
       }
+
       var tvChans=$("chan-list").getElementsByClassName("chan-entry");
       for(var b=0;b<tvChans.length;b++){
         tvChans[b].classList.toggle("focused", area==="chans" && b===chanIdx);
         if(area==="chans" && b===chanIdx) try{ tvChans[b].scrollIntoView({block:"center"});}catch(e){}
         var star=tvChans[b].querySelector(".star");
-        if(star){
-          star.classList.toggle("star-focused", area==="chans" && b===chanIdx && chanSubFocus==="star");
-        }
+        if(star) star.classList.toggle("star-focused", area==="chans" && b===chanIdx && chanSubFocus==="star");
       }
     }
 
@@ -1006,7 +986,10 @@
 
     if(setupTabIdx===0){
       var idx=el.getAttribute("data-idx");
-      if(idx!==null){ idx=parseInt(idx,10); if(bgImages[idx]) applyBackground(bgImages[idx].url, true); }
+      if(idx!==null){
+        idx=parseInt(idx,10);
+        if(bgImages[idx]) applyBackground(bgImages[idx].url,true);
+      }
       return;
     }
 
@@ -1066,46 +1049,6 @@
     }
   }
 
-  function setupDeleteFocusedIfProfile(){
-    var foc=getSetupFocusables();
-    var el=foc[setupContentIdx];
-    if(!el) return;
-
-    if(setupTabIdx===2){
-      var pidx=el.getAttribute("data-m3u");
-      if(pidx!==null){
-        pidx=parseInt(pidx,10);
-        if(pidx>=0 && pidx<m3uProfiles.length){
-          m3uProfiles.splice(pidx,1);
-          localStorage.setItem("iptv_m3u_profiles", JSON.stringify(m3uProfiles));
-          renderSetupTab();
-          setupContentIdx=Math.min(setupContentIdx, Math.max(0, getSetupFocusables().length-1));
-          updateUI();
-        }
-      }
-      return;
-    }
-
-    if(setupTabIdx===3){
-      var xidx=el.getAttribute("data-xc");
-      if(xidx!==null){
-        xidx=parseInt(xidx,10);
-        if(xidx>=0 && xidx<xcProfiles.length){
-          if(activeXcProfile && xcProfiles[xidx].name===activeXcProfile.name && xcProfiles[xidx].url===activeXcProfile.url){
-            activeXcProfile=null;
-            localStorage.setItem("iptv_xc_active","null");
-          }
-          xcProfiles.splice(xidx,1);
-          localStorage.setItem("iptv_xc_profiles", JSON.stringify(xcProfiles));
-          renderSetupTab();
-          setupContentIdx=Math.min(setupContentIdx, Math.max(0, getSetupFocusables().length-1));
-          updateUI();
-        }
-      }
-      return;
-    }
-  }
-
   document.addEventListener("keydown", function(e){
     var k=e.keyCode;
 
@@ -1134,8 +1077,8 @@
     }
 
     if(area==="menu"){
-      if(k===37) menuIdx = (menuIdx>0)?menuIdx-1:3;
-      else if(k===39) menuIdx = (menuIdx<3)?menuIdx+1:0;
+      if(k===37) menuIdx=(menuIdx>0)?menuIdx-1:3;
+      else if(k===39) menuIdx=(menuIdx<3)?menuIdx+1:0;
       else if(k===40 || k===13){ setMenuView(menuIdx); return; }
       updateUI(); return;
     }
@@ -1149,7 +1092,7 @@
         else if(k===39 || k===13){
           area="chans";
           var catKey=categoriesModel[catIdx]?categoriesModel[catIdx].key:"ALL";
-          filterCategory(catKey, true);
+          filterCategory(catKey,true);
           return;
         }
         updateUI(); return;
@@ -1198,11 +1141,11 @@
 
       if(area==="vodCats"){
         if(k===37){ area="vodSearch"; updateUI(); return; }
-        if(k===38){ if(vodCatIdx>0) vodCatIdx--; renderVOD(); updateUI(); return; }
+        if(k===38){ if(vodCatIdx>0) vodCatIdx--; vodItemIdx=0; renderVOD(); updateUI(); return; }
         if(k===40){
           var cats=filteredVodCategories();
           if(vodCatIdx<cats.length-1) vodCatIdx++;
-          renderVOD(); updateUI(); return;
+          vodItemIdx=0; renderVOD(); updateUI(); return;
         }
         if(k===39 || k===13){
           vodItemIdx=0; area="vodGrid";
@@ -1229,21 +1172,13 @@
 
       if(area==="setupContent"){
         var foc=getSetupFocusables();
-
         if(k===38){
           if(setupContentIdx<=0){ area="setupTabs"; updateUI(); return; }
-          setupContentIdx=Math.max(0, setupContentIdx-1);
-          updateUI();
-          return;
+          setupContentIdx=Math.max(0, setupContentIdx-1); updateUI(); return;
         }
-
         if(k===40){
-          setupContentIdx=Math.min(foc.length-1, setupContentIdx+1);
-          updateUI();
-          return;
+          setupContentIdx=Math.min(foc.length-1, setupContentIdx+1); updateUI(); return;
         }
-
-        if(k===39){ setupDeleteFocusedIfProfile(); return; }
         if(k===13){ setupActivateFocused(); return; }
         if(k===37){ area="setupTabs"; updateUI(); return; }
         return;
@@ -1251,15 +1186,14 @@
     }
   });
 
+  // Klick: Hintergrund setzen
   document.addEventListener("click", function(ev){
-    var t = ev.target;
+    var t=ev.target;
     if(!t) return;
-
-    // Klick auf Kachel oder Bild = speichern
-    var card = t.classList.contains("bg-card") ? t : (t.closest ? t.closest(".bg-card") : null);
+    var card = t.classList && t.classList.contains("bg-card") ? t : (t.closest ? t.closest(".bg-card") : null);
     if(card){
       var idx=card.getAttribute("data-idx");
-      if(idx!==null){ idx=parseInt(idx,10); if(bgImages[idx]) applyBackground(bgImages[idx].url, true); }
+      if(idx!==null){ idx=parseInt(idx,10); if(bgImages[idx]) applyBackground(bgImages[idx].url,true); }
     }
   });
 </script>
