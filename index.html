@@ -1433,7 +1433,7 @@
       if(pending && (line.indexOf("http")===0 || line.indexOf("https")===0)){
         tvAllChans.push({name:pending.name, group:pending.group, url:line});
         pending=null;
-        if(tvAllChans.length>=4000) break;
+        if(tvAllChans.length>=60000) break;
       }
     }
   }
