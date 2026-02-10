@@ -328,17 +328,16 @@
     }
 
     
-    /* =============================
-       NETFLIX STYLE VOD LAYOUT
-    ============================== */
-    #vod-view{ padding:22px; }
-    #vod-view .vod-root{
+    /* -----------------------------
+       VOD VIEW (Netflix Grid)
+    ----------------------------- */
+    .vod-netflix{
+      height:100%;
       display:flex;
-      flex-direction:row;
-      gap:22px;
-      align-items:stretch;
+      gap:24px;
+      padding:22px;
     }
-    #vod-view .vod-cats{
+    .vod-cat-col{
       width:420px;
       background: rgba(0,0,0,.22);
       border:1px solid rgba(0,210,255,.14);
@@ -347,86 +346,59 @@
       display:flex;
       flex-direction:column;
     }
-    #vod-view .vod-cats .col-h{
-      padding:18px 18px 12px 18px;
-      display:flex;
-      align-items:flex-end;
-      justify-content:space-between;
-      gap:14px;
-      color:var(--cyan);
-      font-size:22px;
-      font-weight:1000;
-      letter-spacing:2px;
-      text-transform:uppercase;
-      border-bottom:1px solid rgba(0,210,255,.12);
-    }
-    #vod-view .vod-cats .list{
-      padding:14px;
-      overflow-y:auto;
-      height: calc(100vh - 140px);
-    }
-    #vod-view .vod-cat{
-      margin-bottom:10px;
-      border-radius:16px;
-      padding:14px 16px;
-      font-weight:950;
-      font-size:18px;
-    }
-
-    #vod-view .vod-grid-wrap{
+    .vod-grid-col{
       flex:1;
       background: rgba(0,0,0,.18);
       border:1px solid rgba(0,210,255,.14);
       border-radius:26px;
-      padding:18px;
       overflow:hidden;
+      display:flex;
+      flex-direction:column;
     }
-    #vod-view .vod-grid{
+    .vod-grid-scroll{
+      flex:1;
+      overflow-y:auto;
+      padding:16px;
+    }
+    .vod-grid-scroll::-webkit-scrollbar{ width:0; }
+
+    .vod-grid{
       display:grid;
       grid-template-columns: repeat(5, 1fr);
       gap:18px;
-      overflow-y:auto;
-      height: calc(100vh - 140px);
-      padding-right:6px;
     }
-    #vod-view .vod-tile{
+    .vod-tile{
       position:relative;
       border-radius:18px;
       overflow:hidden;
-      background:#000;
-      border:1px solid rgba(0,210,255,.18);
+      background: rgba(0,0,0,.35);
+      border:1px solid rgba(0,210,255,.12);
       transition:.12s;
     }
-    #vod-view .vod-tile::before{
-      content:"";
-      display:block;
-      padding-top:150%;
-    }
-    #vod-view .vod-tile img{
-      position:absolute;
-      inset:0;
-      width:100%;
-      height:100%;
+    .vod-tile::before{ content:""; display:block; padding-top:150%; }
+    .vod-tile img{
+      position:absolute; top:0; left:0; right:0; bottom:0;
+      width:100%; height:100%;
       object-fit:cover;
       display:block;
       background:#000;
     }
-    #vod-view .vod-tile .label{
+    .vod-tile .cap{
       position:absolute;
       left:0; right:0; bottom:0;
-      padding:12px;
-      font-size:16px;
-      font-weight:950;
-      background:linear-gradient(to top, rgba(0,0,0,.95), transparent);
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
+      padding:12px 12px;
+      font-size:18px;
+      font-weight:900;
+      background: linear-gradient(to top, rgba(0,0,0,.92), rgba(0,0,0,0));
+      text-shadow:0 2px 10px rgba(0,0,0,.75);
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      letter-spacing:.3px;
     }
-    #vod-view .vod-tile.focused{
-      transform:scale(1.12);
+    .vod-tile.focused{
       border-color: rgba(0,210,255,.85);
-      box-shadow:0 0 28px rgba(0,210,255,.35);
-      z-index:5;
+      box-shadow:0 0 18px rgba(0,210,255,.12);
+      transform: scale(1.10);
+      z-index:2;
     }
 
 /* -----------------------------
@@ -846,26 +818,37 @@
 
       <!-- VOD -->
       <div id="vod-view">
-        <div class="vod-root">
-
+        <div class="vod-netflix">
           <!-- LEFT: Kategorien -->
-          <div class="vod-cats">
+          <div class="vod-cat-col">
             <div class="col-h">
-              <span id="vod-mode-label">FILME</span>
-              <span id="vod-status" style="color:rgba(255,255,255,.65);font-weight:900;font-size:16px;"></span>
+              <span id="vod-cat-title">Kategorien</span>
+              <span id="vod-cat-count" style="color:rgba(255,255,255,.5);font-weight:900;font-size:14px"></span>
             </div>
             <div id="vod-cat-list" class="list"></div>
           </div>
 
           <!-- RIGHT: Netflix Grid -->
-          <div class="vod-grid-wrap">
-            <div id="vod-grid" class="vod-grid"></div>
+          <div class="vod-grid-col">
+            <div class="col-h">
+              <span id="vod-grid-title">Inhalte</span>
+              <span id="vod-grid-count" style="color:rgba(255,255,255,.5);font-weight:900;font-size:14px"></span>
+            </div>
+
+            <div class="vod-grid-scroll" id="vod-grid-scroll">
+              <div id="vod-grid" class="vod-grid"></div>
+            </div>
+
+            <!-- Hidden player (keine UI, aber Playback bleibt möglich) -->
+            <video id="vod-video" autoplay style="display:none;"></video>
+            <!-- Legacy hidden elements (für Fernbedienung/JS-Kompatibilität) -->
+            <div id="vod-sub" style="display:none"></div>
+            <div id="vod-rows" style="display:none"></div>
+            <div id="vod-info-title" style="display:none"></div>
+            <div id="vod-info-sub" style="display:none"></div>
+
           </div>
-
         </div>
-
-        <!-- hidden video element (keep playback possible without UI) -->
-        <video id="vod-video" autoplay playsinline style="display:none"></video>
       </div>
 
       <!-- SETUP -->
@@ -1084,11 +1067,11 @@
     }else if(idx===1){
       showMain("vod");
       vodMode="movies";
-      var el=$("vod-mode-label"); if(el) el.innerText="FILME";
+      $("vod-title").innerText="FILME";
     }else if(idx===2){
       showMain("vod");
       vodMode="series";
-      var el2=$("vod-mode-label"); if(el2) el2.innerText="SERIEN";
+      $("vod-title").innerText="SERIEN";
     }else{
       showMain("setup");
     }
@@ -1593,18 +1576,16 @@
   function vodReloadFromActiveProfile(){
     vodRows=[];
     vodRowIdx=0; vodItemIdx=0;
-
-    if($("vod-cat-list")) $("vod-cat-list").innerHTML="";
-    if($("vod-grid")) $("vod-grid").innerHTML = '<div style="padding:24px;color:rgba(255,255,255,.7);font-weight:900;font-size:26px">Lade…</div>';
-    if($("vod-status")) $("vod-status").innerText="";
+    $("vod-info-title").innerText="-";
+    $("vod-info-sub").innerText="-";
 
     var xc=getActiveXC();
     if(!xc){
-      if($("vod-status")) $("vod-status").innerText="Xtream Profil fehlt";
-      if($("vod-grid")) $("vod-grid").innerHTML = '<div style="padding:24px;color:rgba(255,255,255,.7);font-weight:900;font-size:26px">Kein aktives Xtream Profil (EINSTELLUNG → XTREAM PROFILE)</div>';
+      $("vod-sub").innerText="Aktives Xtream Profil wird benötigt (EINSTELLUNG → XTREAM PROFILE)";
+      $("vod-rows").innerHTML = '<div style="padding:24px;color:rgba(255,255,255,.7);font-weight:900;font-size:26px">Kein aktives Xtream Profil</div>';
       return;
     }
-    if($("vod-status")) $("vod-status").innerText="Lade: "+xc.name;
+    $("vod-sub").innerText="Lade Inhalte von: "+xc.name;
     vodLoadRows(xc, vodMode);
   }
 
@@ -1616,15 +1597,14 @@
   }
 
   function vodLoadRows(xc, mode){
-    var grid=$("vod-grid");
-    if(grid) grid.innerHTML = '<div style="padding:24px;color:rgba(255,255,255,.7);font-weight:900;font-size:26px">Lade…</div>';
+    var rowsHost=$("vod-rows");
+    rowsHost.innerHTML = '<div style="padding:24px;color:rgba(255,255,255,.7);font-weight:900;font-size:26px">Lade…</div>';
 
     if(mode==="movies"){
       fetchJSON(xtreamApi(xc, "get_vod_categories"))
         .then(function(cats){
           if(!Array.isArray(cats)) cats=[];
           cats = cats.slice(0, 12);
-
           var chain = Promise.resolve([]);
           cats.forEach(function(cat){
             chain = chain.then(function(acc){
@@ -1632,7 +1612,7 @@
               return fetchJSON(xtreamApi(xc, "get_vod_streams") + "&category_id=" + encodeURIComponent(catId))
                 .then(function(items){
                   if(!Array.isArray(items)) items=[];
-                  items = items.slice(0, 30);
+                  items = items.slice(0, 20);
                   var rowItems = items.map(function(it){
                     return {
                       name: it.name || "Unbekannt",
@@ -1657,14 +1637,13 @@
           });
         })
         .catch(function(){
-          if(grid) grid.innerHTML = '<div style="padding:24px;color:rgba(255,255,255,.75);font-weight:900;font-size:26px">Xtream Fehler beim Laden (Filme)</div>';
+          rowsHost.innerHTML = '<div style="padding:24px;color:rgba(255,255,255,.75);font-weight:900;font-size:26px">Xtream Fehler beim Laden (Filme)</div>';
         });
     }else{
       fetchJSON(xtreamApi(xc, "get_series_categories"))
         .then(function(cats){
           if(!Array.isArray(cats)) cats=[];
           cats = cats.slice(0, 12);
-
           var chain = Promise.resolve([]);
           cats.forEach(function(cat){
             chain = chain.then(function(acc){
@@ -1672,7 +1651,7 @@
               return fetchJSON(xtreamApi(xc, "get_series") + "&category_id=" + encodeURIComponent(catId))
                 .then(function(items){
                   if(!Array.isArray(items)) items=[];
-                  items = items.slice(0, 30);
+                  items = items.slice(0, 20);
                   var rowItems = items.map(function(it){
                     return {
                       name: it.name || "Unbekannt",
@@ -1698,72 +1677,85 @@
           });
         })
         .catch(function(){
-          if(grid) grid.innerHTML = '<div style="padding:24px;color:rgba(255,255,255,.75);font-weight:900;font-size:26px">Xtream Fehler beim Laden (Serien)</div>';
+          rowsHost.innerHTML = '<div style="padding:24px;color:rgba(255,255,255,.75);font-weight:900;font-size:26px">Xtream Fehler beim Laden (Serien)</div>';
         });
     }
   }
 
   function renderVODRows(){
-    var catHost=$("vod-cat-list");
-    var gridHost=$("vod-grid");
+    // LEFT: Kategorien (vodRows = Kategorienliste)
+    var catHost = $("vod-cat-list");
+    var gridHost = $("vod-grid");
 
-    if(!vodRows.length){
-      if(catHost) catHost.innerHTML = '<div style="padding:16px;color:rgba(255,255,255,.6);font-weight:900">Keine Kategorien</div>';
-      if(gridHost) gridHost.innerHTML = '<div style="padding:24px;color:rgba(255,255,255,.75);font-weight:900;font-size:26px">Keine Inhalte gefunden</div>';
+    if(!catHost || !gridHost){
+      // Fallback: falls HTML nicht geladen ist
       return;
     }
 
-    vodRowIdx=clamp(vodRowIdx,0,vodRows.length-1);
-    var row=vodRows[vodRowIdx] || {items:[]};
-    var items=row.items||[];
-    vodItemIdx=clamp(vodItemIdx,0,Math.max(0,items.length-1));
-
-    // Kategorien links
-    if(catHost){
-      var ch="";
-      for(var i=0;i<vodRows.length;i++){
-        ch += '<div class="entry vod-cat" data-idx="'+i+'">'+esc(vodRows[i].title||"Kategorie")+'</div>';
-      }
-      catHost.innerHTML = ch;
+    if(!vodRows.length){
+      catHost.innerHTML = '<div style="padding:16px;color:rgba(255,255,255,.6);font-weight:900">Keine Kategorien</div>';
+      gridHost.innerHTML = '';
+      if($("vod-cat-count")) $("vod-cat-count").innerText = "";
+      if($("vod-grid-count")) $("vod-grid-count").innerText = "";
+      return;
     }
 
-    // Grid rechts
-    if(gridHost){
-      var gh="";
-      for(var j=0;j<items.length;j++){
-        var it=items[j];
-        var poster = it.poster ? (it.poster + (it.poster.indexOf("?")>-1 ? "&" : "?") + nowBust()) : "";
-        gh += '<div class="vod-tile" data-idx="'+j+'">'+
-                (poster ? '<img src="'+poster+'" onerror="this.src=\'\';this.style.background=\'#000\';" />' : '<img src="" />')+
-                '<div class="label">'+esc(it.name||"Titel")+'</div>'+
-              '</div>';
-      }
-      gridHost.innerHTML = gh || '<div style="padding:24px;color:rgba(255,255,255,.75);font-weight:900;font-size:26px">Keine Inhalte in dieser Kategorie</div>';
-    }
+    vodRowIdx = clamp(vodRowIdx, 0, vodRows.length-1);
+    var row = vodRows[vodRowIdx];
+    var items = (row && row.items) ? row.items : [];
+    vodItemIdx = clamp(vodItemIdx, 0, Math.max(0, items.length-1));
 
-    vodUpdateFocusAndScroll();
-    vodUpdateInfoPanel();
+    var ch = "";
+    for(var i=0;i<vodRows.length;i++){
+      ch += '<div class="entry vod-cat focusable' + (i===vodRowIdx ? ' focused' : '') + '" data-idx="'+i+'">' +
+              esc(vodRows[i].title) +
+            '</div>';
+    }
+    catHost.innerHTML = ch;
+
+    var gh = "";
+    for(var j=0;j<items.length;j++){
+      var it = items[j] || {};
+      var poster = it.poster ? (it.poster + (it.poster.indexOf("?")>-1 ? "&" : "?") + nowBust()) : "";
+      gh += '<div class="vod-tile focusable' + (j===vodItemIdx ? ' focused' : '') + '" data-idx="'+j+'">' +
+              (poster ? '<img src="'+poster+'" onerror="this.src='';this.style.background='#000';" />' : '<div style="position:absolute;inset:0;background:#000"></div>') +
+              '<div class="cap">'+esc(it.name||"")+'</div>' +
+            '</div>';
+    }
+    gridHost.innerHTML = gh || '<div style="padding:16px;color:rgba(255,255,255,.6);font-weight:900">Keine Inhalte</div>';
+
+    if($("vod-cat-count")) $("vod-cat-count").innerText = vodRows.length ? (vodRows.length+"") : "";
+    if($("vod-grid-count")) $("vod-grid-count").innerText = items.length ? (items.length+"") : "";
+
+    // optional: Titel oben rechts anpassen
+    if($("vod-grid-title")) $("vod-grid-title").innerText = row ? row.title : "Inhalte";
   }
 
   function vodUpdateInfoPanel(){
-    // Netflix-Look: kein Info-Panel mehr
+    // UI wurde entfernt – Funktion bleibt als Guard, damit kein Fehler kommt
+    return;
   }
 
   function vodUpdateFocusAndScroll(){
-    // Kategorien fokussieren
-    var cats = document.getElementsByClassName("vod-cat");
-    for(var c=0;c<cats.length;c++){
-      cats[c].classList.toggle("focused", c===vodRowIdx);
-      if(c===vodRowIdx) try{ cats[c].scrollIntoView({block:"center"}); }catch(e){}
+    // Kategorien Fokus
+    var cats = $("vod-cat-list") ? $("vod-cat-list").getElementsByClassName("vod-cat") : [];
+    for(var i=0;i<cats.length;i++){
+      cats[i].classList.toggle("focused", i===vodRowIdx);
+      if(i===vodRowIdx){
+        try{ cats[i].scrollIntoView({block:"center"}); }catch(e){}
+      }
     }
 
-    // Tiles fokussieren
-    var tiles = document.getElementsByClassName("vod-tile");
-    for(var t=0;t<tiles.length;t++) tiles[t].classList.remove("focused");
-    var sel = document.querySelector('.vod-tile[data-idx="'+vodItemIdx+'"]');
-    if(sel){
-      sel.classList.add("focused");
-      try{ sel.scrollIntoView({block:"nearest", inline:"nearest"}); }catch(e){}
+    // Tiles Fokus
+    var grid = $("vod-grid");
+    if(!grid) return;
+
+    var tiles = grid.getElementsByClassName("vod-tile");
+    for(var j=0;j<tiles.length;j++){
+      tiles[j].classList.toggle("focused", j===vodItemIdx);
+      if(j===vodItemIdx){
+        try{ tiles[j].scrollIntoView({block:"nearest", inline:"nearest"}); }catch(e){}
+      }
     }
   }
 
@@ -1795,16 +1787,12 @@
     var row=vodRows[vodRowIdx];
     if(!row || !row.items || !row.items[vodItemIdx]) return;
     var it=row.items[vodItemIdx];
-
     if(vodMode==="movies"){
       if(!it.url) return;
-      if($("vod-status")) $("vod-status").innerText="Play: "+(it.name||"Movie");
       vodPlayUrl(it.url);
       return;
     }
-
-    // Serien: noch keine Episode-Auswahl in dieser Version
-    if($("vod-status")) $("vod-status").innerText="Serie ausgewählt: "+(it.name||"") + " • Episode-Auswahl kommt als nächstes";
+    $("vod-info-sub").innerText="Serien-Play kommt als nächstes (Episode-Auswahl).";
   }
 
   // -----------------------------
@@ -2275,11 +2263,42 @@
         if(k===37){ area="menu"; updateFocus(); return; }
         return;
       }
-      if(k===38){ if(vodRowIdx>0){ vodRowIdx--; vodItemIdx=clamp(vodItemIdx,0,(vodRows[vodRowIdx].items||[]).length-1); } vodUpdateFocusAndScroll(); vodUpdateInfoPanel(); return; }
-      if(k===40){ if(vodRowIdx<vodRows.length-1){ vodRowIdx++; vodItemIdx=clamp(vodItemIdx,0,(vodRows[vodRowIdx].items||[]).length-1); } vodUpdateFocusAndScroll(); vodUpdateInfoPanel(); return; }
-      if(k===37){ if(vodItemIdx>0) vodItemIdx--; vodUpdateFocusAndScroll(); vodUpdateInfoPanel(); return; }
-      if(k===39){ var count=(vodRows[vodRowIdx].items||[]).length; if(vodItemIdx<count-1) vodItemIdx++; vodUpdateFocusAndScroll(); vodUpdateInfoPanel(); return; }
+
+      if(k===38){
+        if(vodRowIdx>0){
+          vodRowIdx--;
+          vodItemIdx=0;
+          renderVODRows();
+        }
+        vodUpdateFocusAndScroll();
+        return;
+      }
+      if(k===40){
+        if(vodRowIdx<vodRows.length-1){
+          vodRowIdx++;
+          vodItemIdx=0;
+          renderVODRows();
+        }
+        vodUpdateFocusAndScroll();
+        return;
+      }
+      if(k===37){
+        if(vodItemIdx>0){
+          vodItemIdx--;
+          vodUpdateFocusAndScroll();
+        }
+        return;
+      }
+      if(k===39){
+        var count=(vodRows[vodRowIdx].items||[]).length;
+        if(vodItemIdx<count-1){
+          vodItemIdx++;
+          vodUpdateFocusAndScroll();
+        }
+        return;
+      }
       if(k===13){ vodPlayCurrent(); return; }
+
       updateFocus();
       return;
     }
