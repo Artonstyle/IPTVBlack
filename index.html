@@ -1067,11 +1067,11 @@
     }else if(idx===1){
       showMain("vod");
       vodMode="movies";
-      if($("vod-title")) $("vod-title").innerText="FILME";
+      $("vod-title").innerText="FILME";
     }else if(idx===2){
       showMain("vod");
       vodMode="series";
-      if($("vod-title")) $("vod-title").innerText="SERIEN";
+      $("vod-title").innerText="SERIEN";
     }else{
       showMain("setup");
     }
@@ -1454,28 +1454,21 @@
   }
 
   function loadM3U(url){
-    var xhr=new XMLHttpRequest();
-    xhr.open("GET", url, true);
-    xhr.timeout=20000;
-    xhr.onreadystatechange=function(){
-      if(xhr.readyState!==4) return;
-      if(xhr.status===200 && xhr.responseText){
-        parseM3U(xhr.responseText);
+    // Many IPTV hosts do NOT send CORS headers. We try direct first,
+    // then fall back to a couple of public CORS proxies.
+    fetchTextSmart(url, 20000)
+      .then(function(text){
+        if(!text){ throw new Error("EMPTY"); }
+        parseM3U(text);
         buildTVCategories();
         filterTVCategory(tvCats[0] ? tvCats[0].key : "ALL");
         $("tv-msg").innerText="OK=Play • 0=Fav • Back=Menu";
-      }else{
-        $("tv-msg").innerText="M3U Fehler ("+xhr.status+")";
+      })
+      .catch(function(err){
+        $("tv-msg").innerText="M3U Fehler (CORS/Netz)";
         tvCats=[]; tvAllChans=[]; tvCurChans=[];
         renderTVLists();
-      }
-    };
-    xhr.ontimeout=function(){
-      $("tv-msg").innerText="M3U Timeout";
-      tvCats=[]; tvAllChans=[]; tvCurChans=[];
-      renderTVLists();
-    };
-    xhr.send();
+      });
   }
 
   function parseM3U(text){
@@ -1571,7 +1564,52 @@
   // -----------------------------
   // VOD (unchanged)
   // -----------------------------
-  function fetchJSON(url){ return fetch(url).then(function(r){ return r.json(); }); }
+  // -----------------------------
+// Network helpers (CORS/Timeout)
+// -----------------------------
+var NET_PROXIES = [
+  function(u){ return u; },
+  // Fallback 1: allOrigins raw endpoint
+  function(u){ return "https://api.allorigins.win/raw?url=" + encodeURIComponent(u); },
+  // Fallback 2: corsproxy.io
+  function(u){ return "https://corsproxy.io/?url=" + encodeURIComponent(u); }
+];
+
+function fetchWithTimeout(url, ms){
+  ms = ms || 20000;
+  try{
+    var ctrl = new AbortController();
+    var t = setTimeout(function(){ try{ ctrl.abort(); }catch(e){} }, ms);
+    return fetch(url, { signal: ctrl.signal, cache: "no-store" })
+      .then(function(r){ clearTimeout(t); return r; })
+      .catch(function(err){ clearTimeout(t); throw err; });
+  }catch(e){
+    // Older Tizen builds: AbortController not supported
+    return fetch(url, { cache: "no-store" });
+  }
+}
+
+function smartFetch(url, timeoutMs){
+  var p = Promise.reject();
+  NET_PROXIES.forEach(function(proxyFn){
+    p = p.catch(function(){
+      var u = proxyFn(url);
+      return fetchWithTimeout(u, timeoutMs).then(function(r){
+        if(!r || !r.ok) throw new Error("HTTP " + (r ? r.status : "0"));
+        return r;
+      });
+    });
+  });
+  return p;
+}
+
+function fetchTextSmart(url, timeoutMs){
+  return smartFetch(url, timeoutMs || 20000).then(function(r){ return r.text(); });
+}
+
+function fetchJSON(url){
+  return smartFetch(url, 20000).then(function(r){ return r.json(); });
+}
 
   function vodReloadFromActiveProfile(){
     vodRows=[];
@@ -2002,20 +2040,13 @@
   // -----------------------------
   // Key Handling
   // -----------------------------
-  // -----------------------------
-  // Key Handling
-  // -----------------------------
-  function onRemoteKey(e){
-    // Prevent TV from swallowing navigation keys
-    try{ e.preventDefault(); }catch(_e){}
-    try{ e.stopPropagation(); }catch(_e){}
-    var k = (e && (e.keyCode || e.which)) || 0;
-    if(k===96) k=48; // numpad 0 -> 0
+  document.addEventListener("keydown", function(e){
+    var k=e.keyCode;
 
     // ✅ Keyboard overlay has priority
     if(handleKbdKeys(k)) return;
 
-    if(k===10009 || k===461 || k===8 || k===27){
+    if(k===10009 || k===27){
       if(tvFullscreen){
         tvToggleFullscreen();
         return;
@@ -2033,7 +2064,7 @@
       if(k===38){ if(tvChanIdx>0) tvChanIdx--; tvPlayCurrent(); return; }
       if(k===40){ if(tvChanIdx<tvCurChans.length-1) tvChanIdx++; tvPlayCurrent(); return; }
       if(k===13){ tvToggleFullscreen(); return; }
-      if(k===48 || k===96){ tvToggleFav(); return; }
+      if(k===48){ tvToggleFav(); return; }
       return;
     }
 
@@ -2250,7 +2281,7 @@
         return;
       }
       if(k===40){ if(tvChanIdx<tvCurChans.length-1) tvChanIdx++; updateFocus(); return; }
-      if(k===48 || k===96){ tvToggleFav(); return; }
+      if(k===48){ tvToggleFav(); return; }
       if(k===13){
         if($("tv-now").innerText=== (tvCurChans[tvChanIdx] ? tvCurChans[tvChanIdx].name : "")){
           tvToggleFullscreen();
@@ -2309,37 +2340,19 @@
       updateFocus();
       return;
     }
-  
-  }
-
-  // Capture on both document + window (Tizen differs by model/browser)
-  document.addEventListener("keydown", onRemoteKey, true);
-  window.addEventListener("keydown", onRemoteKey, true);
-
-  // Hardware BACK key on Tizen (often NOT delivered as keydown)
-  window.addEventListener("tizenhwkey", function(ev){
-    try{ ev.preventDefault(); ev.stopPropagation(); }catch(e){}
-    var name = String((ev && ev.keyName) || "").toLowerCase();
-    if(name==="back" || name==="return"){
-      onRemoteKey({ keyCode:10009, which:10009, preventDefault:function(){}, stopPropagation:function(){} });
-    }
   });
-
 
   // -----------------------------
   // Init
   // -----------------------------
   function init(){
     try{
-      ["Up","Down","Left","Right","Enter","Back","Return","0"].forEach(function(k){
+      ["Up","Down","Left","Right","Enter","Back","0"].forEach(function(k){
         tizen.tvinputdevice.registerKey(k);
       });
     }catch(e){}
 
     normalizeProfiles();
-
-    // Ensure the document receives remote key events
-    try{ document.body.tabIndex = 0; document.documentElement.tabIndex = 0; window.focus(); document.body.focus(); }catch(e){}
 
     initPlayer();
     setTimeout(function(){ applyPlayerRect(false); }, 50);
