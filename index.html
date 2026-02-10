@@ -197,140 +197,6 @@
     }
     body.is-fullscreen video{ object-fit:contain; }
 
-
-    /* -----------------------------
-       VOD VIEW (Netflix Rows)
-    ----------------------------- */
-    .vod-root{
-      height:100%;
-      display:flex;
-      flex-direction:column;
-      gap:14px;
-      padding:18px 22px;
-    }
-    .vod-topbar{
-      background: rgba(0,0,0,.22);
-      border:1px solid rgba(0,210,255,.14);
-      border-radius:22px;
-      padding:14px 18px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:14px;
-    }
-    .vod-title{
-      font-size:30px;
-      font-weight:900;
-      letter-spacing:.4px;
-    }
-    .vod-sub{
-      color:rgba(255,255,255,.62);
-      font-size:18px;
-      font-weight:800;
-    }
-    .vod-rows{
-      flex:1;
-      overflow-y:auto;
-      padding-right:6px;
-    }
-    .vod-rows::-webkit-scrollbar{ width:0; }
-
-    .row{ margin:14px 0 18px 0; }
-    .row-h{
-      font-size:24px;
-      font-weight:900;
-      color:var(--cyan);
-      letter-spacing:2px;
-      margin:0 0 10px 8px;
-      text-transform:uppercase;
-    }
-    .strip{
-      position:relative;
-      overflow:hidden;
-      border-radius:18px;
-      padding:10px 10px;
-      background: rgba(0,0,0,.18);
-      border:1px solid rgba(0,210,255,.10);
-    }
-    .strip-inner{
-      display:flex;
-      gap:14px;
-      transition: transform .15s ease-out;
-      will-change: transform;
-    }
-    .card{
-      width:260px;
-      height:150px;
-      border-radius:16px;
-      overflow:hidden;
-      position:relative;
-      background: rgba(0,0,0,.35);
-      border:1px solid rgba(0,210,255,.12);
-      flex:0 0 auto;
-      transition:.12s;
-    }
-    .card img{
-      width:100%; height:100%;
-      object-fit:cover;
-      display:block;
-      background:#000;
-    }
-    .card .cap{
-      position:absolute;
-      left:0; right:0; bottom:0;
-      padding:10px 10px;
-      font-size:14px;
-      font-weight:900;
-      background: linear-gradient(to top, rgba(0,0,0,.92), rgba(0,0,0,0));
-      text-shadow:0 2px 10px rgba(0,0,0,.75);
-      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-      letter-spacing:.3px;
-    }
-    .card.focused{
-      border-color: rgba(0,210,255,.85);
-      box-shadow:0 0 18px rgba(0,210,255,.12);
-      transform: scale(1.10);
-      z-index:2;
-    }
-
-    .vod-player-wrap{
-      display:flex;
-      gap:18px;
-      margin-top:8px;
-      align-items:stretch;
-    }
-    .vod-player{
-      flex:1;
-      background:#000;
-      border:2px solid rgba(0,210,255,.22);
-      border-radius:22px;
-      overflow:hidden;
-      height:320px;
-    }
-    .vod-info{
-      width:520px;
-      background: rgba(0,0,0,.22);
-      border:1px solid rgba(0,210,255,.14);
-      border-radius:22px;
-      padding:16px;
-      overflow:hidden;
-    }
-    .vod-info h3{
-      margin:0;
-      color:var(--cyan);
-      font-size:14px;
-      letter-spacing:3px;
-      text-transform:uppercase;
-    }
-    .vod-info .big{ margin-top:10px; font-weight:900; font-size:28px; }
-    .vod-info .small{
-      margin-top:10px;
-      color:rgba(255,255,255,.6);
-      font-size:18px;
-      font-weight:800;
-      line-height:1.35;
-    }
-
     /* -----------------------------
        SETUP VIEW (Tabs + Content)
     ----------------------------- */
@@ -414,6 +280,12 @@
       transition:.12s;
       color:rgba(255,255,255,.92);
     }
+    .card2.focused{
+      border-color: rgba(0,210,255,.70);
+      box-shadow:0 0 22px rgba(0,210,255,.12);
+      transform: scale(1.01);
+      background: rgba(0,69,255,.18);
+    }
     .card2-title{ font-weight:900; font-size:30px; }
     .card2-sub{ margin-top:10px; color:rgba(255,255,255,.65); font-size:24px; word-break:break-all; }
 
@@ -444,6 +316,11 @@
       color:#fff;
       font-size:24px;
     }
+    .input.focused{
+      border-color: rgba(0,210,255,.80);
+      box-shadow:0 0 18px rgba(0,210,255,.12);
+      background: rgba(0,69,255,.14);
+    }
 
     .btnrow{ display:flex; gap:12px; margin-top:14px; }
     .btn{
@@ -456,8 +333,13 @@
       font-weight:900;
       font-size:22px;
       transition:.12s;
-      user-select:none;
     }
+    .btn.focused{
+      background: var(--blue);
+      box-shadow:0 0 18px rgba(0,69,255,.35);
+      transform:scale(1.02);
+    }
+
     .divider{ height:1px; background: rgba(0,210,255,.18); margin:16px 0; }
 
     /* Background tiles (5 spalten) */
@@ -472,6 +354,11 @@
       transition:.12s;
     }
     .tile::before{ content:""; display:block; padding-top:56.25%; }
+    .tile.focused{
+      border-color: rgba(0,210,255,.85);
+      box-shadow:0 0 18px rgba(0,210,255,.12);
+      transform: scale(1.05);
+    }
     .tile img{
       position:absolute; top:0; left:0; right:0; bottom:0;
       width:100%; height:100%;
@@ -491,165 +378,124 @@
       letter-spacing:.5px;
     }
 
-    /* -----------------------------
-       SETUP 2-COLUMN LAYOUT (M3U / XTREAM)
-    ----------------------------- */
-    .setup-grid{
+    /* =============================
+       VOD (FILME / SERIEN) NETFLIX GRID
+       - Topbar weg
+       - Player weg
+       - Rows weg
+       - Links Kategorien, rechts Grid
+    ============================== */
+    .vod-netflix-root{
+      height:100%;
       display:flex;
-      gap:18px;
-      align-items:stretch;
-    }
-    .setup-left{
-      width:58%;
-      min-width:58%;
-    }
-    .setup-right{
-      flex:1;
-    }
-    .mini-row{
-      display:flex;
-      gap:12px;
-      margin-top:12px;
-      align-items:center;
-      flex-wrap:wrap;
-    }
-    .btn-mini{
-      padding:12px 14px;
-      border-radius:12px;
-      border:1px solid rgba(0,210,255,.22);
-      background: rgba(0,69,255,.18);
-      font-weight:900;
-      font-size:18px;
-      letter-spacing:.3px;
-      user-select:none;
-      min-width:160px;
-      text-align:center;
-      transition:.12s;
-    }
-    .btn-mini.danger{
-      border-color: rgba(255,77,77,.35);
-      background: rgba(255,77,77,.12);
+      gap:24px;
+      padding:22px;
     }
 
-    /* -----------------------------
-       STRONG BLUE FOCUS (wie Menü, kräftiger)
-    ----------------------------- */
-    .focusable.focused{
-      border-color: #00d2ff !important;
-      box-shadow:
-        0 0 0 4px rgba(0,210,255,1),
-        0 0 34px rgba(0,210,255,.75);
-      background: rgba(0,69,255,.32);
-      transform: scale(1.03);
-    }
-    .btn-mini.focused, .btn.focused{
-      border-color:#00d2ff !important;
-      box-shadow:
-        0 0 0 4px rgba(0,210,255,1),
-        0 0 34px rgba(0,210,255,.85);
-      background: linear-gradient(180deg, rgba(0,210,255,.55), rgba(0,69,255,.95));
-      color:#fff;
-      transform: scale(1.06);
-    }
-    .btn-mini.danger.focused{
-      border-color: #ff4d4d !important;
-      box-shadow:
-        0 0 0 4px rgba(255,77,77,1),
-        0 0 34px rgba(255,77,77,.85);
-      background: linear-gradient(180deg, rgba(255,77,77,.65), rgba(180,0,0,.95));
-      color:#fff;
-    }
-    .card2.is-active{
-      border-color:#00d2ff;
-      box-shadow:0 0 28px rgba(0,210,255,.55);
-    }
-
-    /* -----------------------------
-       VIRTUAL KEYBOARD (Overlay)
-    ----------------------------- */
-    #kb-overlay{
-      position:fixed;
-      left:0; top:0;
-      width:1920px; height:1080px;
-      z-index:20000;
-      display:none;
-      background: rgba(0,0,0,.72);
-      backdrop-filter: blur(6px);
-    }
-    #kb-wrap{
-      position:absolute;
-      left:50%;
-      top:56%;
-      transform: translate(-50%,-50%);
-      width:1500px;
-      border-radius:28px;
-      border:1px solid rgba(0,210,255,.22);
-      background: rgba(0,0,0,.35);
-      box-shadow: 0 0 48px rgba(0,210,255,.18);
-      overflow:hidden;
-    }
-    #kb-top{
-      padding:18px 22px;
-      border-bottom:1px solid rgba(0,210,255,.14);
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:16px;
-    }
-    #kb-title{
-      font-weight:900;
-      letter-spacing:2px;
-      color:var(--cyan);
-      font-size:16px;
-      text-transform:uppercase;
-    }
-    #kb-hint{
-      font-weight:900;
-      color:rgba(255,255,255,.65);
-      font-size:16px;
-    }
-    #kb-preview{
-      padding:16px 22px;
-      font-size:28px;
-      font-weight:900;
-      letter-spacing:.3px;
-      color:#fff;
-      background: rgba(0,0,0,.28);
-      border-bottom:1px solid rgba(0,210,255,.12);
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-    #kb-grid{
-      padding:18px;
+    .vod-cats{
+      width:420px;
+      background:rgba(0,0,0,.25);
+      border:1px solid rgba(0,210,255,.18);
+      border-radius:26px;
       display:flex;
       flex-direction:column;
-      gap:12px;
+      overflow:hidden;
     }
-    .kb-row{
-      display:flex;
-      gap:12px;
-      justify-content:center;
-    }
-    .kb-key{
-      min-width:96px;
-      padding:16px 14px;
-      border-radius:16px;
-      border:1px solid rgba(0,210,255,.18);
-      background: rgba(0,0,0,.24);
-      text-align:center;
+
+    .vod-cats-title{
+      padding:18px 20px;
+      color:var(--cyan);
       font-weight:900;
-      font-size:22px;
-      user-select:none;
+      letter-spacing:3px;
+      font-size:14px;
+      text-transform:uppercase;
+      border-bottom:1px solid rgba(0,210,255,.14);
+    }
+
+    .vod-cat-list{
+      flex:1;
+      overflow-y:auto;
+      padding:14px;
+    }
+    .vod-cat-list::-webkit-scrollbar{ width:0; }
+
+    .vod-cat{
+      padding:18px;
+      margin-bottom:12px;
+      border-radius:16px;
+      background:rgba(0,0,0,.28);
+      border:2px solid rgba(0,210,255,.14);
+      font-size:26px;
+      font-weight:900;
+      color:rgba(255,255,255,.85);
       transition:.12s;
     }
-    .kb-key.wide{ min-width:190px; }
-    .kb-key.xwide{ min-width:300px; }
-    .kb-key.focused{
+
+    /* kräftiger als Menü */
+    .vod-cat.focused{
+      background:rgba(0,69,255,.35);
       border-color:#00d2ff;
-      box-shadow:0 0 0 4px rgba(0,210,255,1), 0 0 34px rgba(0,210,255,.85);
-      background: linear-gradient(180deg, rgba(0,210,255,.55), rgba(0,69,255,.95));
-      transform: scale(1.05);
+      box-shadow:0 0 38px rgba(0,210,255,.95);
+      color:#fff;
+      transform:scale(1.02);
+    }
+
+    .vod-grid-wrap{
+      flex:1;
+      overflow-y:auto;
+      padding-right:6px;
+    }
+    .vod-grid-wrap::-webkit-scrollbar{ width:0; }
+
+    .vod-grid{
+      display:grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap:22px;
+    }
+
+    .vod-tile{
+      height:260px;
+      border-radius:22px;
+      overflow:hidden;
+      background:#000;
+      border:2px solid rgba(0,210,255,.15);
+      position:relative;
+      transition:.15s;
+      transform-origin:center;
+    }
+
+    .vod-tile img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+      background:#000;
+    }
+
+    .vod-tile .cap{
+      position:absolute;
+      left:0; right:0; bottom:0;
+      padding:14px;
+      font-size:18px;
+      font-weight:900;
+      background:linear-gradient(to top, rgba(0,0,0,.95), rgba(0,0,0,0));
+      text-shadow:0 2px 10px rgba(0,0,0,.8);
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+
+    /* kräftiger Fokus */
+    .vod-tile.focused{
+      transform:scale(1.14);
+      z-index:3;
+      border-color:#00d2ff;
+      box-shadow:0 0 48px rgba(0,210,255,1);
+    }
+
+    .vod-empty{
+      padding:22px;
+      color:rgba(255,255,255,.7);
+      font-weight:900;
+      font-size:26px;
     }
   </style>
 </head>
@@ -706,29 +552,21 @@
         </div>
       </div>
 
-      <!-- VOD -->
+      <!-- VOD (FILME / SERIEN) -> Netflix-Grid, KEIN Player, KEINE Topbar -->
       <div id="vod-view">
-        <div class="vod-root">
-          <div class="vod-topbar">
-            <div>
-              <div class="vod-title" id="vod-title">FILME</div>
-              <div class="vod-sub" id="vod-sub">Aktives Xtream Profil wird benötigt (EINSTELLUNG → XTREAM PROFILE)</div>
-            </div>
-            <div class="vod-sub" id="vod-hint">Navigation: ▲/▼ Row • ◀/▶ Items • OK=Play • Back=Menu</div>
+        <div class="vod-netflix-root">
+
+          <!-- LEFT: Kategorien -->
+          <div class="vod-cats">
+            <div class="vod-cats-title">KATEGORIEN</div>
+            <div id="vod-cat-list" class="vod-cat-list"></div>
           </div>
 
-          <div class="vod-rows" id="vod-rows"></div>
-
-          <div class="vod-player-wrap">
-            <div class="vod-player">
-              <video id="vod-video" autoplay></video>
-            </div>
-            <div class="vod-info">
-              <h3>INFO</h3>
-              <div class="big" id="vod-info-title">-</div>
-              <div class="small" id="vod-info-sub">-</div>
-            </div>
+          <!-- RIGHT: Grid -->
+          <div class="vod-grid-wrap" id="vod-grid-wrap">
+            <div id="vod-grid" class="vod-grid"></div>
           </div>
+
         </div>
       </div>
 
@@ -753,30 +591,7 @@
     </div>
   </main>
 
-  <!-- VIRTUAL KEYBOARD OVERLAY -->
-  <div id="kb-overlay">
-    <div id="kb-wrap">
-      <div id="kb-top">
-        <div id="kb-title">EINGABE</div>
-        <div id="kb-hint">▲/▼/◀/▶ wählen • OK = tippen • Back = schließen</div>
-      </div>
-      <div id="kb-preview">-</div>
-      <div id="kb-grid"></div>
-    </div>
-  </div>
-
 <script>
-  // -----------------------------
-  // Helpers
-  // -----------------------------
-  function $(id){ return document.getElementById(id); }
-  function esc(s){
-    return String(s||"")
-      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-  }
-  function nowBust(){ return "t=" + Date.now(); }
-  function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
-  function uuid(){ return "id_" + Date.now() + "_" + Math.floor(Math.random()*100000); }
 
   // -----------------------------
   // Player (Samsung Tizen AVPlay + fallback)
@@ -789,8 +604,10 @@
     tvUseAvplay = !!(window.webapis && webapis.avplay);
     if(tvUseAvplay){
       av = webapis.avplay;
+      // show AVPlay object, hide HTML5 video
       try{ $("av-player").style.display="block"; }catch(e){}
       try{ $("tv-video").style.display="none"; }catch(e){}
+      // basic listeners (optional)
       try{
         av.setListener({
           onbufferingstart: function(){},
@@ -803,9 +620,17 @@
         });
       }catch(e){}
     }else{
+      // browser/emulator
       try{ $("tv-video").style.display="block"; }catch(e){}
       try{ $("av-player").style.display="none"; }catch(e){}
     }
+  }
+
+  function getVideoBoxRect(){
+    var box = $("tv-video-box");
+    if(!box) return {x:0,y:0,w:1920,h:1080};
+    var r = box.getBoundingClientRect();
+    return {x: Math.round(r.left), y: Math.round(r.top), w: Math.round(r.width), h: Math.round(r.height)};
   }
 
   function applyPlayerRect(full){
@@ -820,12 +645,14 @@
         h=Math.round(r.height);
       }
     }
+
     try{
       if(window.tizen && tizen.tvwindow){
         tizen.tvwindow.show(function(){}, function(){});
         tizen.tvwindow.setRect(x,y,w,h);
       }
     }catch(e){}
+
     if(av){
       try{ av.setDisplayRect(x,y,w,h); }catch(e){}
       try{ av.setDisplayMethod(full ? "PLAYER_DISPLAY_MODE_FULL_SCREEN" : "PLAYER_DISPLAY_MODE_AUTO"); }catch(e){}
@@ -844,9 +671,6 @@
     if(v){ try{ v.pause(); v.removeAttribute("src"); v.load(); }catch(e){} }
   }
 
-  var tvHls = null;
-  var tvFullscreen = false;
-
   function playUrl(url){
     if(!url) return;
     tvLastUrl = url;
@@ -857,8 +681,9 @@
       try{
         av.open(url);
         av.setStreamingProperty && av.setStreamingProperty("ADAPTIVE_INFO", "BITRATE=5000");
+
         av.prepareAsync(function(){
-          applyPlayerRect(tvFullscreen); // wichtig: nach prepare
+          applyPlayerRect(tvFullscreen);
           try{ av.play(); }catch(e){}
         }, function(){
           try{ av.play(); }catch(e){}
@@ -869,8 +694,10 @@
 
     var v=$("tv-video");
     if(!v) return;
+
     if(tvHls){ try{ tvHls.destroy(); }catch(e){} tvHls=null; }
     try{ v.pause(); v.removeAttribute("src"); v.load(); }catch(e){}
+
     if(window.Hls && Hls.isSupported()){
       tvHls = new Hls({enableWorker:true, lowLatencyMode:true, backBufferLength:30});
       tvHls.loadSource(url);
@@ -882,14 +709,11 @@
     }
   }
 
-  // -----------------------------
-  // App state
-  // -----------------------------
   var GH_OWNER = "Artonstyle";
   var GH_REPO  = "IPTVBlack";
   var GH_BG_DIR = "hintergrund";
 
-  var area = "menu"; // menu | tvCats | tvChans | tabs | setupContent | vod | kb
+  var area = "menu"; // menu | tvCats | tvChans | tabs | setupContent | vod
   var menuIdx = 0;
 
   var tabIdx = 0;
@@ -908,212 +732,34 @@
   var tvCatIdx = 0;
   var tvChanIdx = 0;
   var tvFavs = JSON.parse(localStorage.getItem("iptv_tv_favs") || "[]");
+  var tvHls = null;
+  var tvFullscreen = false;
 
-  var vodMode = "movies";
-  var vodRows = [];
-  var vodRowIdx = 0;
-  var vodItemIdx = 0;
-  var vodHls = null;
+  // --------- VOD Netflix Grid State ----------
+  var vodMode = "movies";     // movies | series
+  var vodCats = [];
+  var vodCatIdx = 0;
+  var vodGridItems = [];
+  var vodGridIdx = 0;
+  var vodCols = 5;
+  var vodFocus = "cats";      // cats | grid
 
-  // -----------------------------
-  // Virtual Keyboard
-  // -----------------------------
-  var kbOpen = false;
-  var kbTargetId = "";
-  var kbTitle = "";
-  var kbValue = "";
-  var kbRow = 0;
-  var kbCol = 0;
-
-  // Rows of keys (Samsung remote friendly)
-  var KB = [
-    ["1","2","3","4","5","6","7","8","9","0"],
-    ["q","w","e","r","t","y","u","i","o","p"],
-    ["a","s","d","f","g","h","j","k","l","@"],
-    ["z","x","c","v","b","n","m",".","-","_"],
-    ["http://","https://","/","?",":","=","&","%","~","#"],
-    ["SPACE","BACK","CLEAR","OK","CLOSE"]
-  ];
-
-  function kbKeyIsWide(k){ return (k==="SPACE"); }
-  function kbKeyIsXWide(k){ return (k==="http://" || k==="https://"); }
-
-  function openKeyboard(targetId, title){
-    kbTargetId = targetId || "";
-    kbTitle = title || "EINGABE";
-    var el = $(kbTargetId);
-    kbValue = el ? (el.value||"") : "";
-    kbRow = 0; kbCol = 0;
-    kbOpen = true;
-    area = "kb";
-    $("kb-title").innerText = kbTitle;
-    renderKeyboard();
-    $("kb-overlay").style.display = "block";
+  function $(id){ return document.getElementById(id); }
+  function esc(s){
+    return String(s||"")
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
   }
+  function nowBust(){ return "t=" + Date.now(); }
+  function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+  function uuid(){ return "id_" + Date.now() + "_" + Math.floor(Math.random()*100000); }
 
-  function closeKeyboard(apply){
-    if(apply){
-      var el = $(kbTargetId);
-      if(el) el.value = kbValue;
-    }
-    kbOpen = false;
-    $("kb-overlay").style.display = "none";
-    area = "setupContent";
-    updateFocus();
-  }
-
-  function renderKeyboard(){
-    $("kb-preview").innerText = kbValue || "";
-    var host = $("kb-grid");
-    var html = "";
-
-    for(var r=0;r<KB.length;r++){
-      html += '<div class="kb-row">';
-      for(var c=0;c<KB[r].length;c++){
-        var k = KB[r][c];
-        var cls = "kb-key";
-        if(kbKeyIsWide(k)) cls += " wide";
-        if(kbKeyIsXWide(k)) cls += " xwide";
-        if(r===kbRow && c===kbCol) cls += " focused";
-        html += '<div class="'+cls+'">'+esc(k)+'</div>';
-      }
-      html += '</div>';
-    }
-    host.innerHTML = html;
-  }
-
-  function kbMove(dr, dc){
-    kbRow = clamp(kbRow + dr, 0, KB.length-1);
-    kbCol = clamp(kbCol + dc, 0, KB[kbRow].length-1);
-    renderKeyboard();
-  }
-
-  function kbPress(){
-    var k = KB[kbRow][kbCol];
-    if(k==="SPACE"){ kbValue += " "; renderKeyboard(); return; }
-    if(k==="BACK"){
-      kbValue = kbValue.slice(0, Math.max(0, kbValue.length-1));
-      renderKeyboard();
-      return;
-    }
-    if(k==="CLEAR"){ kbValue = ""; renderKeyboard(); return; }
-    if(k==="OK"){ closeKeyboard(true); return; }
-    if(k==="CLOSE"){ closeKeyboard(false); return; }
-
-    // Insert
-    kbValue += k;
-    renderKeyboard();
-  }
-
-  // -----------------------------
-  // Profiles utils (M3U / XC)
-  // -----------------------------
   function normalizeProfiles(){
     if(!Array.isArray(m3uProfiles)) m3uProfiles=[];
     if(!Array.isArray(xcProfiles))  xcProfiles=[];
     localStorage.setItem("iptv_m3u_profiles", JSON.stringify(m3uProfiles));
     localStorage.setItem("iptv_xc_profiles",  JSON.stringify(xcProfiles));
   }
-  function saveM3UProfiles(){ localStorage.setItem("iptv_m3u_profiles", JSON.stringify(m3uProfiles)); }
-  function saveXCProfiles(){ localStorage.setItem("iptv_xc_profiles", JSON.stringify(xcProfiles)); }
 
-  function setActiveM3U(id){
-    activeM3UId = id || "";
-    localStorage.setItem("iptv_active_m3u_id", activeM3UId);
-  }
-  function setActiveXC(id){
-    activeXCId = id || "";
-    localStorage.setItem("iptv_active_xc_id", activeXCId);
-  }
-
-  function addM3UProfile(name,url){
-    name=(name||"").trim();
-    url=(url||"").trim();
-    if(!name) name="M3U Profil";
-    if(!url) return false;
-    var p={ id: uuid(), name:name, url:url };
-    m3uProfiles.unshift(p);
-    if(m3uProfiles.length>30) m3uProfiles = m3uProfiles.slice(0,30);
-    saveM3UProfiles();
-    setActiveM3U(p.id);
-    return true;
-  }
-  function updateM3UProfile(index, name, url){
-    if(index<0 || index>=m3uProfiles.length) return false;
-    name=(name||"").trim();
-    url=(url||"").trim();
-    if(!name) name="M3U Profil";
-    if(!url) return false;
-    m3uProfiles[index].name = name;
-    m3uProfiles[index].url  = url;
-    saveM3UProfiles();
-    return true;
-  }
-  function deleteM3UProfile(index){
-    if(index<0 || index>=m3uProfiles.length) return;
-    var id = m3uProfiles[index].id;
-    m3uProfiles.splice(index,1);
-    saveM3UProfiles();
-    if(activeM3UId===id){
-      setActiveM3U(m3uProfiles[0] ? m3uProfiles[0].id : "");
-    }
-  }
-  function getActiveM3U(){
-    for(var i=0;i<m3uProfiles.length;i++){
-      if(m3uProfiles[i].id===activeM3UId) return m3uProfiles[i];
-    }
-    return null;
-  }
-
-  function addXCProfile(name,user,pass,url){
-    name=(name||"").trim();
-    user=(user||"").trim();
-    pass=(pass||"").trim();
-    url=(url||"").trim();
-    if(!name) name="Xtream Profil";
-    if(!user || !pass || !url) return false;
-    url = url.replace(/\/+$/,"");
-    var p={ id: uuid(), name:name, user:user, pass:pass, url:url };
-    xcProfiles.unshift(p);
-    if(xcProfiles.length>30) xcProfiles = xcProfiles.slice(0,30);
-    saveXCProfiles();
-    setActiveXC(p.id);
-    return true;
-  }
-  function updateXCProfile(index, name, user, pass, url){
-    if(index<0 || index>=xcProfiles.length) return false;
-    name=(name||"").trim();
-    user=(user||"").trim();
-    pass=(pass||"").trim();
-    url=(url||"").trim().replace(/\/+$/,"");
-    if(!name) name="Xtream Profil";
-    if(!user || !pass || !url) return false;
-    xcProfiles[index].name = name;
-    xcProfiles[index].user = user;
-    xcProfiles[index].pass = pass;
-    xcProfiles[index].url  = url;
-    saveXCProfiles();
-    return true;
-  }
-  function deleteXCProfile(index){
-    if(index<0 || index>=xcProfiles.length) return;
-    var id = xcProfiles[index].id;
-    xcProfiles.splice(index,1);
-    saveXCProfiles();
-    if(activeXCId===id){
-      setActiveXC(xcProfiles[0] ? xcProfiles[0].id : "");
-    }
-  }
-  function getActiveXC(){
-    for(var i=0;i<xcProfiles.length;i++){
-      if(xcProfiles[i].id===activeXCId) return xcProfiles[i];
-    }
-    return null;
-  }
-
-  // -----------------------------
-  // Views / Menu
-  // -----------------------------
   function showMain(which){
     $("tv-view").style.display    = (which==="tv")    ? "block" : "none";
     $("vod-view").style.display   = (which==="vod")   ? "block" : "none";
@@ -1125,24 +771,20 @@
     }else if(idx===1){
       showMain("vod");
       vodMode="movies";
-      $("vod-title").innerText="FILME";
     }else if(idx===2){
       showMain("vod");
       vodMode="series";
-      $("vod-title").innerText="SERIEN";
     }else{
       showMain("setup");
     }
   }
+
   function renderMenuFocus(){
     for(var i=0;i<4;i++){
       $("m"+i).classList.toggle("focused", area==="menu" && i===menuIdx);
     }
   }
 
-  // -----------------------------
-  // Backgrounds
-  // -----------------------------
   function loadBackgroundsFromGitHub(){
     var url="https://api.github.com/repos/"+encodeURIComponent(GH_OWNER)+"/"+encodeURIComponent(GH_REPO)+"/contents/"+encodeURIComponent(GH_BG_DIR)+"?"+nowBust();
     fetch(url)
@@ -1168,6 +810,7 @@
         if(menuIdx===3) renderSetupTabPreview();
       });
   }
+
   function setBackground(url){
     if(!url){
       document.body.style.backgroundImage="";
@@ -1180,27 +823,26 @@
     document.body.style.backgroundPosition="center";
   }
 
-  // -----------------------------
-  // Setup Tabs
-  // -----------------------------
   function renderSetupTabs(){
     for(var i=0;i<4;i++){
       $("t"+i).classList.toggle("focused", area==="tabs" && i===tabIdx);
     }
   }
+
   function setSetupTitle(){
     var titles=["HINTERGRUND","M3U PROFILE","XTREAM PROFILE","MAC ADRESSE"];
     $("content-title").innerText = titles[tabIdx];
 
     if(area==="setupContent"){
       if(tabIdx===0) $("content-hint").innerText = "OK = Hintergrund setzen • 0 = Standard • Zurück = Tabs";
-      else if(tabIdx===1) $("content-hint").innerText = "▲/▼ Karte • ◀/▶ Buttons • OK = Aktion • Zurück = Tabs";
-      else if(tabIdx===2) $("content-hint").innerText = "▲/▼ Karte • ◀/▶ Buttons • OK = Aktion • Zurück = Tabs";
+      else if(tabIdx===1) $("content-hint").innerText = "OK = Aktivieren • → = Löschen • Zurück = Tabs";
+      else if(tabIdx===2) $("content-hint").innerText = "OK = Aktivieren • → = Löschen • Zurück = Tabs";
       else $("content-hint").innerText = "OK = Aktualisieren • Zurück = Tabs";
     }else{
       $("content-hint").innerText = "Tabs: ←/→ • OK = rein • Zurück = Menü";
     }
   }
+
   function renderSetupTabPreview(){
     setSetupTitle();
     setupFocusIdx=0;
@@ -1212,6 +854,7 @@
 
     updateFocus();
   }
+
   function getSetupFocusables(){
     return $("content-body").querySelectorAll(".focusable");
   }
@@ -1257,144 +900,164 @@
       '</div>';
   }
 
-  // -----------------------------
-  // NEW: M3U TAB (2 columns + buttons)
-  // -----------------------------
-  var m3uEditIndex = -1; // -1 = new
-
+  function saveM3UProfiles(){ localStorage.setItem("iptv_m3u_profiles", JSON.stringify(m3uProfiles)); }
+  function setActiveM3U(id){
+    activeM3UId = id || "";
+    localStorage.setItem("iptv_active_m3u_id", activeM3UId);
+  }
+  function addM3UProfile(name,url){
+    name=(name||"").trim();
+    url=(url||"").trim();
+    if(!name) name="M3U Profil";
+    if(!url) return false;
+    var p={ id: uuid(), name:name, url:url };
+    m3uProfiles.unshift(p);
+    if(m3uProfiles.length>30) m3uProfiles = m3uProfiles.slice(0,30);
+    saveM3UProfiles();
+    setActiveM3U(p.id);
+    return true;
+  }
+  function deleteM3UProfile(index){
+    if(index<0 || index>=m3uProfiles.length) return;
+    var id = m3uProfiles[index].id;
+    m3uProfiles.splice(index,1);
+    saveM3UProfiles();
+    if(activeM3UId===id){
+      setActiveM3U(m3uProfiles[0] ? m3uProfiles[0].id : "");
+    }
+  }
+  function getActiveM3U(){
+    for(var i=0;i<m3uProfiles.length;i++){
+      if(m3uProfiles[i].id===activeM3UId) return m3uProfiles[i];
+    }
+    return null;
+  }
   function renderM3UTab(){
     var host=$("content-body");
-    var formTitle = (m3uEditIndex>=0) ? "M3U PROFIL BEARBEITEN" : "NEUES M3U PROFIL";
-    var nameVal = (m3uEditIndex>=0 && m3uProfiles[m3uEditIndex]) ? (m3uProfiles[m3uEditIndex].name||"") : "";
-    var urlVal  = (m3uEditIndex>=0 && m3uProfiles[m3uEditIndex]) ? (m3uProfiles[m3uEditIndex].url||"") : "";
+    var html='';
+    html +=
+      '<div class="card2">'+
+        '<div class="card2-title">Neues M3U Profil</div>'+
+        '<div class="label2">NAME</div>'+
+        '<input id="m3u-name" class="input focusable" data-kind="m3u-input" data-idx="0" placeholder="z.B. Zuhause" />'+
+        '<div class="label2">M3U URL</div>'+
+        '<input id="m3u-url" class="input focusable" data-kind="m3u-input" data-idx="1" placeholder="https://example.com/list.m3u" />'+
+        '<div class="btnrow">'+
+          '<div id="m3u-save" class="btn focusable" data-kind="m3u-save" data-idx="2">Speichern</div>'+
+        '</div>'+
+        '<div class="card2-sub" style="font-size:20px; margin-top:12px;">OK auf Profil = Aktivieren • → auf Profil = Löschen</div>'+
+      '</div>';
 
-    var html = '';
-    html += '<div class="setup-grid">';
-      // LEFT: List
-      html += '<div class="setup-left">';
-        html += '<div class="card2">';
-          html += '<div class="card2-title">GESPEICHERTE M3U LISTEN <span class="badge">'+m3uProfiles.length+'</span></div>';
-          html += '<div class="card2-sub" style="font-size:18px;margin-top:8px;color:rgba(255,255,255,.55)">▲/▼ Karte • ◀/▶ Buttons • OK = Aktion</div>';
-        html += '</div>';
+    html += '<div class="divider"></div>';
 
-        if(!m3uProfiles.length){
-          html += '<div class="card2"><div class="card2-title">Keine Profile</div><div class="card2-sub">Rechts eine M3U URL eingeben und speichern.</div></div>';
-        }else{
-          for(var i=0;i<m3uProfiles.length;i++){
-            var p=m3uProfiles[i];
-            var isActive = (p.id && p.id===activeM3UId);
-            html += '<div class="card2'+(isActive?' is-active':'')+'">';
-              html += '<div class="card2-title">'+esc(p.name||("Profil "+(i+1)))+(isActive?'<span class="badge active">AKTIV</span>':'')+'</div>';
-              html += '<div class="card2-sub" style="font-size:18px">'+esc(p.url||"")+'</div>';
-              html += '<div class="mini-row">';
-                html += '<div class="btn-mini focusable" data-kind="m3u-activate" data-idx="'+i+'">AKTIVIEREN</div>';
-                html += '<div class="btn-mini focusable" data-kind="m3u-edit" data-idx="'+i+'">BEARBEITEN</div>';
-                html += '<div class="btn-mini danger focusable" data-kind="m3u-del" data-idx="'+i+'">LÖSCHEN</div>';
-              html += '</div>';
-            html += '</div>';
-          }
-        }
-      html += '</div>';
+    if(!m3uProfiles.length){
+      html +=
+        '<div class="card2">'+
+          '<div class="card2-title">Keine Profile</div>'+
+          '<div class="card2-sub">Lege oben ein M3U Profil an.</div>'+
+        '</div>';
+      host.innerHTML = html;
+      return;
+    }
 
-      // RIGHT: Form
-      html += '<div class="setup-right">';
-        html += '<div class="card2">';
-          html += '<div class="card2-title">'+formTitle+'</div>';
-
-          html += '<div class="label2">NAME</div>';
-          html += '<input id="m3u-name" class="input focusable" data-kind="m3u-input" data-idx="0" value="'+esc(nameVal)+'" placeholder="z.B. Zuhause" readonly />';
-
-          html += '<div class="label2">M3U URL</div>';
-          html += '<input id="m3u-url" class="input focusable" data-kind="m3u-input" data-idx="1" value="'+esc(urlVal)+'" placeholder="https://example.com/list.m3u" readonly />';
-
-          html += '<div class="btnrow">';
-            html += '<div class="btn focusable" data-kind="m3u-save" data-idx="2">'+((m3uEditIndex>=0) ? 'ÄNDERUNGEN SPEICHERN' : 'SPEICHERN')+'</div>';
-            html += '<div class="btn focusable" data-kind="m3u-cancel" data-idx="3">'+((m3uEditIndex>=0) ? 'ABBRECHEN' : 'LEEREN')+'</div>';
-          html += '</div>';
-
-          html += '<div class="card2-sub" style="font-size:18px; margin-top:12px;color:rgba(255,255,255,.55)">OK auf Feld = Tastatur • Back = Tabs</div>';
-        html += '</div>';
-      html += '</div>';
-
-    html += '</div>';
+    for(var i=0;i<m3uProfiles.length;i++){
+      var p=m3uProfiles[i];
+      var isActive = (p.id && p.id===activeM3UId);
+      html +=
+        '<div class="card2 focusable" data-kind="m3u-prof" data-idx="'+i+'">'+
+          '<div class="card2-title">'+esc(p.name||("Profil "+(i+1)))+
+            (isActive ? '<span class="badge active">AKTIV</span>' : '')+
+          '</div>'+
+          '<div class="card2-sub">'+esc(p.url||"")+'</div>'+
+        '</div>';
+    }
 
     host.innerHTML = html;
   }
 
-  // -----------------------------
-  // NEW: XTREAM TAB (2 columns + buttons)
-  // -----------------------------
-  var xcEditIndex = -1; // -1 = new
-
+  function saveXCProfiles(){ localStorage.setItem("iptv_xc_profiles", JSON.stringify(xcProfiles)); }
+  function setActiveXC(id){
+    activeXCId = id || "";
+    localStorage.setItem("iptv_active_xc_id", activeXCId);
+  }
+  function addXCProfile(name,user,pass,url){
+    name=(name||"").trim();
+    user=(user||"").trim();
+    pass=(pass||"").trim();
+    url=(url||"").trim();
+    if(!name) name="Xtream Profil";
+    if(!user || !pass || !url) return false;
+    url = url.replace(/\/+$/,"");
+    var p={ id: uuid(), name:name, user:user, pass:pass, url:url };
+    xcProfiles.unshift(p);
+    if(xcProfiles.length>30) xcProfiles = xcProfiles.slice(0,30);
+    saveXCProfiles();
+    setActiveXC(p.id);
+    return true;
+  }
+  function deleteXCProfile(index){
+    if(index<0 || index>=xcProfiles.length) return;
+    var id = xcProfiles[index].id;
+    xcProfiles.splice(index,1);
+    saveXCProfiles();
+    if(activeXCId===id){
+      setActiveXC(xcProfiles[0] ? xcProfiles[0].id : "");
+    }
+  }
+  function getActiveXC(){
+    for(var i=0;i<xcProfiles.length;i++){
+      if(xcProfiles[i].id===activeXCId) return xcProfiles[i];
+    }
+    return null;
+  }
   function renderXCTab(){
     var host=$("content-body");
-    var formTitle = (xcEditIndex>=0) ? "XTREAM PROFIL BEARBEITEN" : "NEUES XTREAM PROFIL";
-    var base = (xcEditIndex>=0 && xcProfiles[xcEditIndex]) ? xcProfiles[xcEditIndex] : {name:"",user:"",pass:"",url:""};
-
     var html='';
-    html += '<div class="setup-grid">';
+    html +=
+      '<div class="card2">'+
+        '<div class="card2-title">Neues Xtream Profil</div>'+
+        '<div class="label2">NAME</div>'+
+        '<input id="xc-name" class="input focusable" data-kind="xc-input" data-idx="0" placeholder="z.B. Anbieter A" />'+
+        '<div class="label2">BENUTZERNAME</div>'+
+        '<input id="xc-user" class="input focusable" data-kind="xc-input" data-idx="1" placeholder="username" />'+
+        '<div class="label2">PASSWORT</div>'+
+        '<input id="xc-pass" class="input focusable" data-kind="xc-input" data-idx="2" placeholder="password" />'+
+        '<div class="label2">URL</div>'+
+        '<input id="xc-url" class="input focusable" data-kind="xc-input" data-idx="3" placeholder="http://server:port" />'+
+        '<div class="btnrow">'+
+          '<div id="xc-save" class="btn focusable" data-kind="xc-save" data-idx="4">Speichern</div>'+
+        '</div>'+
+        '<div class="card2-sub" style="font-size:20px; margin-top:12px;">OK auf Profil = Aktivieren • → auf Profil = Löschen</div>'+
+      '</div>';
 
-      // LEFT
-      html += '<div class="setup-left">';
-        html += '<div class="card2">';
-          html += '<div class="card2-title">GESPEICHERTE XTREAM PROFILE <span class="badge">'+xcProfiles.length+'</span></div>';
-          html += '<div class="card2-sub" style="font-size:18px;margin-top:8px;color:rgba(255,255,255,.55)">▲/▼ Karte • ◀/▶ Buttons • OK = Aktion</div>';
-        html += '</div>';
+    html += '<div class="divider"></div>';
 
-        if(!xcProfiles.length){
-          html += '<div class="card2"><div class="card2-title">Keine Profile</div><div class="card2-sub">Rechts Daten eingeben und speichern.</div></div>';
-        }else{
-          for(var i=0;i<xcProfiles.length;i++){
-            var p=xcProfiles[i];
-            var isActive = (p.id && p.id===activeXCId);
-            html += '<div class="card2'+(isActive?' is-active':'')+'">';
-              html += '<div class="card2-title">'+esc(p.name||("Xtream "+(i+1)))+(isActive?'<span class="badge active">AKTIV</span>':'')+'</div>';
-              html += '<div class="card2-sub" style="font-size:18px">User: '+esc(p.user||"")+'</div>';
-              html += '<div class="card2-sub" style="font-size:18px">URL: '+esc(p.url||"")+'</div>';
-              html += '<div class="mini-row">';
-                html += '<div class="btn-mini focusable" data-kind="xc-activate" data-idx="'+i+'">AKTIVIEREN</div>';
-                html += '<div class="btn-mini focusable" data-kind="xc-edit" data-idx="'+i+'">BEARBEITEN</div>';
-                html += '<div class="btn-mini danger focusable" data-kind="xc-del" data-idx="'+i+'">LÖSCHEN</div>';
-              html += '</div>';
-            html += '</div>';
-          }
-        }
-      html += '</div>';
+    if(!xcProfiles.length){
+      html +=
+        '<div class="card2">'+
+          '<div class="card2-title">Keine Profile</div>'+
+          '<div class="card2-sub">Lege oben ein Xtream Profil an.</div>'+
+        '</div>';
+      host.innerHTML = html;
+      return;
+    }
 
-      // RIGHT
-      html += '<div class="setup-right">';
-        html += '<div class="card2">';
-          html += '<div class="card2-title">'+formTitle+'</div>';
-
-          html += '<div class="label2">NAME</div>';
-          html += '<input id="xc-name" class="input focusable" data-kind="xc-input" data-idx="0" value="'+esc(base.name||"")+'" placeholder="z.B. Anbieter A" readonly />';
-
-          html += '<div class="label2">BENUTZERNAME</div>';
-          html += '<input id="xc-user" class="input focusable" data-kind="xc-input" data-idx="1" value="'+esc(base.user||"")+'" placeholder="username" readonly />';
-
-          html += '<div class="label2">PASSWORT</div>';
-          html += '<input id="xc-pass" class="input focusable" data-kind="xc-input" data-idx="2" value="'+esc(base.pass||"")+'" placeholder="password" readonly />';
-
-          html += '<div class="label2">URL</div>';
-          html += '<input id="xc-url" class="input focusable" data-kind="xc-input" data-idx="3" value="'+esc(base.url||"")+'" placeholder="http://server:port" readonly />';
-
-          html += '<div class="btnrow">';
-            html += '<div class="btn focusable" data-kind="xc-save" data-idx="4">'+((xcEditIndex>=0) ? 'ÄNDERUNGEN SPEICHERN' : 'SPEICHERN')+'</div>';
-            html += '<div class="btn focusable" data-kind="xc-cancel" data-idx="5">'+((xcEditIndex>=0) ? 'ABBRECHEN' : 'LEEREN')+'</div>';
-          html += '</div>';
-
-          html += '<div class="card2-sub" style="font-size:18px; margin-top:12px;color:rgba(255,255,255,.55)">OK auf Feld = Tastatur • Back = Tabs</div>';
-        html += '</div>';
-      html += '</div>';
-
-    html += '</div>';
+    for(var i=0;i<xcProfiles.length;i++){
+      var p=xcProfiles[i];
+      var isActive = (p.id && p.id===activeXCId);
+      html +=
+        '<div class="card2 focusable" data-kind="xc-prof" data-idx="'+i+'">'+
+          '<div class="card2-title">'+esc(p.name||("Xtream "+(i+1)))+
+            (isActive ? '<span class="badge active">AKTIV</span>' : '')+
+          '</div>'+
+          '<div class="card2-sub">User: '+esc(p.user||"")+'</div>'+
+          '<div class="card2-sub">URL: '+esc(p.url||"")+'</div>'+
+        '</div>';
+    }
 
     host.innerHTML = html;
   }
 
-  // -----------------------------
-  // TV: Load + Parse M3U
-  // -----------------------------
   function tvReloadFromActiveProfile(){
     var p=getActiveM3U();
     tvCats=[]; tvAllChans=[]; tvCurChans=[];
@@ -1508,8 +1171,10 @@
   function tvPlayCurrent(){
     if(!tvCurChans || !tvCurChans.length || !tvCurChans[tvChanIdx]) return;
     var ch = tvCurChans[tvChanIdx];
+
     $("tv-now").innerText = ch.name || "Kanal";
     $("tv-msg").innerText = "OK=Play • 0=Fav • Back=Menu • OK(2x)=Fullscreen";
+
     playUrl(ch.url);
   }
 
@@ -1531,226 +1196,123 @@
   }
 
   // -----------------------------
-  // VOD
+  // Xtream helpers
   // -----------------------------
   function fetchJSON(url){ return fetch(url).then(function(r){ return r.json(); }); }
-
-  function vodReloadFromActiveProfile(){
-    vodRows=[];
-    vodRowIdx=0; vodItemIdx=0;
-    $("vod-info-title").innerText="-";
-    $("vod-info-sub").innerText="-";
-
-    var xc=getActiveXC();
-    if(!xc){
-      $("vod-sub").innerText="Aktives Xtream Profil wird benötigt (EINSTELLUNG → XTREAM PROFILE)";
-      $("vod-rows").innerHTML = '<div style="padding:24px;color:rgba(255,255,255,.7);font-weight:900;font-size:26px">Kein aktives Xtream Profil</div>';
-      return;
-    }
-    $("vod-sub").innerText="Lade Inhalte von: "+xc.name;
-    vodLoadRows(xc, vodMode);
-  }
-
   function xtreamApi(xc, action){
     return xc.url + "/player_api.php?username=" + encodeURIComponent(xc.user) + "&password=" + encodeURIComponent(xc.pass) + "&action=" + encodeURIComponent(action);
   }
-  function vodStreamUrlMovie(xc, streamId){
-    return xc.url + "/movie/" + encodeURIComponent(xc.user) + "/" + encodeURIComponent(xc.pass) + "/" + encodeURIComponent(streamId) + ".mp4";
+
+  // -----------------------------
+  // VOD Netflix Grid
+  // -----------------------------
+  function vodClearUI(msg){
+    try{ $("vod-cat-list").innerHTML=""; }catch(e){}
+    try{ $("vod-grid").innerHTML = '<div class="vod-empty">'+esc(msg||"")+'</div>'; }catch(e){}
   }
 
-  function vodLoadRows(xc, mode){
-    var rowsHost=$("vod-rows");
-    rowsHost.innerHTML = '<div style="padding:24px;color:rgba(255,255,255,.7);font-weight:900;font-size:26px">Lade…</div>';
-
-    if(mode==="movies"){
-      fetchJSON(xtreamApi(xc, "get_vod_categories"))
-        .then(function(cats){
-          if(!Array.isArray(cats)) cats=[];
-          cats = cats.slice(0, 12);
-          var chain = Promise.resolve([]);
-          cats.forEach(function(cat){
-            chain = chain.then(function(acc){
-              var catId = cat.category_id;
-              return fetchJSON(xtreamApi(xc, "get_vod_streams") + "&category_id=" + encodeURIComponent(catId))
-                .then(function(items){
-                  if(!Array.isArray(items)) items=[];
-                  items = items.slice(0, 20);
-                  var rowItems = items.map(function(it){
-                    return {
-                      name: it.name || "Unbekannt",
-                      poster: it.stream_icon || "",
-                      url: vodStreamUrlMovie(xc, it.stream_id),
-                      meta: "Movie • ID " + (it.stream_id||"")
-                    };
-                  });
-                  acc.push({ title: cat.category_name || "Kategorie", items: rowItems });
-                  return acc;
-                })
-                .catch(function(){
-                  acc.push({ title: cat.category_name || "Kategorie", items: [] });
-                  return acc;
-                });
-            });
-          });
-
-          return chain.then(function(rows){
-            vodRows = rows;
-            renderVODRows();
-          });
-        })
-        .catch(function(){
-          rowsHost.innerHTML = '<div style="padding:24px;color:rgba(255,255,255,.75);font-weight:900;font-size:26px">Xtream Fehler beim Laden (Filme)</div>';
-        });
-    }else{
-      fetchJSON(xtreamApi(xc, "get_series_categories"))
-        .then(function(cats){
-          if(!Array.isArray(cats)) cats=[];
-          cats = cats.slice(0, 12);
-          var chain = Promise.resolve([]);
-          cats.forEach(function(cat){
-            chain = chain.then(function(acc){
-              var catId = cat.category_id;
-              return fetchJSON(xtreamApi(xc, "get_series") + "&category_id=" + encodeURIComponent(catId))
-                .then(function(items){
-                  if(!Array.isArray(items)) items=[];
-                  items = items.slice(0, 20);
-                  var rowItems = items.map(function(it){
-                    return {
-                      name: it.name || "Unbekannt",
-                      poster: it.cover || it.stream_icon || "",
-                      url: "",
-                      meta: "Serie • ID " + (it.series_id||""),
-                      series_id: it.series_id
-                    };
-                  });
-                  acc.push({ title: cat.category_name || "Kategorie", items: rowItems });
-                  return acc;
-                })
-                .catch(function(){
-                  acc.push({ title: cat.category_name || "Kategorie", items: [] });
-                  return acc;
-                });
-            });
-          });
-
-          return chain.then(function(rows){
-            vodRows = rows;
-            renderVODRows();
-          });
-        })
-        .catch(function(){
-          rowsHost.innerHTML = '<div style="padding:24px;color:rgba(255,255,255,.75);font-weight:900;font-size:26px">Xtream Fehler beim Laden (Serien)</div>';
-        });
+  function vodRenderCats(){
+    var h="";
+    for(var i=0;i<vodCats.length;i++){
+      var c=vodCats[i];
+      h += '<div class="vod-cat'+((vodFocus==="cats" && i===vodCatIdx)?' focused':'')+'" data-idx="'+i+'">'+esc(c.category_name||"Kategorie")+'</div>';
     }
-  }
+    $("vod-cat-list").innerHTML = h || '<div class="vod-empty">Keine Kategorien</div>';
 
-  function renderVODRows(){
-    var host=$("vod-rows");
-    if(!vodRows.length){
-      host.innerHTML = '<div style="padding:24px;color:rgba(255,255,255,.75);font-weight:900;font-size:26px">Keine Inhalte gefunden</div>';
-      return;
-    }
-
-    var html="";
-    for(var r=0;r<vodRows.length;r++){
-      var row=vodRows[r];
-      html += '<div class="row" data-row="'+r+'">'+
-                '<div class="row-h">'+esc(row.title)+'</div>'+
-                '<div class="strip">'+
-                  '<div class="strip-inner" id="strip-'+r+'">';
-      var items=row.items||[];
-      for(var i=0;i<items.length;i++){
-        var it=items[i];
-        var poster = it.poster ? (it.poster + (it.poster.indexOf("?")>-1 ? "&" : "?") + nowBust()) : "";
-        html += '<div class="card vod-card" data-row="'+r+'" data-idx="'+i+'">'+
-                  (poster ? '<img src="'+poster+'" onerror="this.src=\'\';this.style.background=\'#000\';" />' : '<div style="width:100%;height:100%;background:#000"></div>')+
-                  '<div class="cap">'+esc(it.name)+'</div>'+
-                '</div>';
+    // scroll focused
+    if(vodFocus==="cats"){
+      var nodes = $("vod-cat-list").getElementsByClassName("vod-cat");
+      if(nodes && nodes[vodCatIdx]){
+        try{ nodes[vodCatIdx].scrollIntoView({block:"center"}); }catch(e){}
       }
-      html +=       '</div>'+
-                '</div>'+
-              '</div>';
     }
-
-    host.innerHTML = html;
-    vodRowIdx=clamp(vodRowIdx,0,vodRows.length-1);
-    vodItemIdx=0;
-
-    vodUpdateFocusAndScroll();
-    vodUpdateInfoPanel();
   }
 
-  function vodUpdateInfoPanel(){
-    var row=vodRows[vodRowIdx];
-    if(!row || !row.items || !row.items[vodItemIdx]){
-      $("vod-info-title").innerText="-";
-      $("vod-info-sub").innerText="-";
+  function vodRenderGrid(){
+    var host = $("vod-grid");
+    if(!vodGridItems || !vodGridItems.length){
+      host.innerHTML = '<div class="vod-empty">Keine Inhalte</div>';
       return;
     }
-    var it=row.items[vodItemIdx];
-    $("vod-info-title").innerText=it.name;
-    $("vod-info-sub").innerText=it.meta || "";
-  }
 
-  function vodUpdateFocusAndScroll(){
-    var cards=document.getElementsByClassName("vod-card");
-    for(var i=0;i<cards.length;i++) cards[i].classList.remove("focused");
-
-    var selector='.vod-card[data-row="'+vodRowIdx+'"][data-idx="'+vodItemIdx+'"]';
-    var el=document.querySelector(selector);
-    if(el) el.classList.add("focused");
-
-    var rowEl = document.querySelector('.row[data-row="'+vodRowIdx+'"]');
-    if(rowEl){
-      try{ rowEl.scrollIntoView({block:"center"}); }catch(e){}
+    var h="";
+    for(var i=0;i<vodGridItems.length;i++){
+      var it = vodGridItems[i] || {};
+      var img = it.stream_icon || it.cover || it.poster || "";
+      var focus = (vodFocus==="grid" && i===vodGridIdx) ? " focused" : "";
+      h += '<div class="vod-tile'+focus+'" data-idx="'+i+'">'+
+              (img ? '<img src="'+img+(img.indexOf("?")>-1 ? "&" : "?")+nowBust()+'" onerror="this.style.opacity=\'0\';this.style.background=\'#000\';" />' : '<div style="width:100%;height:100%;background:#000"></div>')+
+              '<div class="cap">'+esc(it.name||"")+'</div>'+
+           '</div>';
     }
+    host.innerHTML = h;
 
-    var strip = $("strip-"+vodRowIdx);
-    if(strip){
-      var offset = vodItemIdx * (260 + 14);
-      var tx = Math.max(0, offset - 3*(260+14));
-      strip.style.transform = "translateX(" + (-tx) + "px)";
+    // scroll focused tile into view
+    if(vodFocus==="grid"){
+      var tiles = host.getElementsByClassName("vod-tile");
+      if(tiles && tiles[vodGridIdx]){
+        try{ tiles[vodGridIdx].scrollIntoView({block:"center", inline:"center"}); }catch(e){}
+      }
     }
   }
 
-  function vodStopVideo(){
-    var v=$("vod-video");
-    if(vodHls){ try{ vodHls.destroy(); }catch(e){} vodHls=null; }
-    try{ v.pause(); v.removeAttribute("src"); v.load(); }catch(e){}
-  }
-
-  function vodPlayUrl(url){
-    var v=$("vod-video");
-    vodStopVideo();
-    if(window.Hls && Hls.isSupported()){
-      vodHls = new Hls({ enableWorker:true, lowLatencyMode:true, backBufferLength:30 });
-      vodHls.loadSource(url);
-      vodHls.attachMedia(v);
-      vodHls.on(Hls.Events.MANIFEST_PARSED, function(){
-        v.play().catch(function(){});
-      });
-    }else{
-      v.src=url;
-      v.play().catch(function(){});
-    }
-  }
-
-  function vodPlayCurrent(){
+  function vodLoadCats(){
+    vodCats=[]; vodCatIdx=0; vodGridItems=[]; vodGridIdx=0;
+    vodFocus="cats";
     var xc=getActiveXC();
-    if(!xc) return;
-    var row=vodRows[vodRowIdx];
-    if(!row || !row.items || !row.items[vodItemIdx]) return;
-    var it=row.items[vodItemIdx];
-    if(vodMode==="movies"){
-      if(!it.url) return;
-      vodPlayUrl(it.url);
+    if(!xc){
+      vodClearUI("Kein aktives Xtream Profil (EINSTELLUNG → XTREAM PROFILE)");
       return;
     }
-    $("vod-info-sub").innerText="Serien-Play kommt als nächstes (Episode-Auswahl).";
+
+    vodClearUI("Lade Kategorien…");
+
+    var action = (vodMode==="movies") ? "get_vod_categories" : "get_series_categories";
+    fetchJSON(xtreamApi(xc, action))
+      .then(function(cats){
+        vodCats = Array.isArray(cats) ? cats : [];
+        vodCatIdx = 0;
+        vodFocus="cats";
+        vodRenderCats();
+        // direkt erste Kategorie laden (Grid vorbereiten)
+        vodLoadCategory(vodCatIdx);
+      })
+      .catch(function(){
+        vodClearUI("Xtream Fehler: Kategorien");
+      });
+  }
+
+  function vodLoadCategory(idx){
+    vodGridItems=[]; vodGridIdx=0;
+    var xc=getActiveXC();
+    var cat=vodCats[idx];
+    if(!xc || !cat){ vodRenderGrid(); return; }
+
+    $("vod-grid").innerHTML = '<div class="vod-empty">Lade Inhalte…</div>';
+
+    var catId = cat.category_id;
+    var url = (vodMode==="movies")
+      ? (xtreamApi(xc,"get_vod_streams") + "&category_id=" + encodeURIComponent(catId))
+      : (xtreamApi(xc,"get_series") + "&category_id=" + encodeURIComponent(catId));
+
+    fetchJSON(url)
+      .then(function(items){
+        vodGridItems = Array.isArray(items) ? items : [];
+        vodGridIdx = 0;
+        vodRenderGrid();
+      })
+      .catch(function(){
+        vodGridItems=[];
+        vodRenderGrid();
+      });
+  }
+
+  function vodReloadFromActiveProfile(){
+    vodLoadCats();
   }
 
   // -----------------------------
-  // Focus update
+  // Focus renderer (global)
   // -----------------------------
   function updateFocus(){
     renderMenuFocus();
@@ -1783,9 +1345,10 @@
       }
     }
 
+    // VOD Netflix focus refresh
     if($("vod-view").style.display==="block" && area==="vod"){
-      vodUpdateFocusAndScroll();
-      vodUpdateInfoPanel();
+      vodRenderCats();
+      vodRenderGrid();
     }
   }
 
@@ -1795,29 +1358,28 @@
   document.addEventListener("keydown", function(e){
     var k=e.keyCode;
 
-    // Virtual keyboard first
-    if(area==="kb" && kbOpen){
-      if(k===10009 || k===27){ closeKeyboard(false); return; }
-      if(k===37){ kbMove(0,-1); return; }
-      if(k===39){ kbMove(0, 1); return; }
-      if(k===38){ kbMove(-1,0); return; }
-      if(k===40){ kbMove( 1,0); return; }
-      if(k===13){ kbPress(); return; }
-      return;
-    }
-
-    // Back
     if(k===10009 || k===27){
-      if(tvFullscreen){ tvToggleFullscreen(); return; }
+      var ae=document.activeElement;
+      if(ae && ae.tagName==="INPUT"){
+        try{ ae.blur(); }catch(ex){}
+        updateFocus();
+        return;
+      }
+
+      if(tvFullscreen){
+        tvToggleFullscreen();
+        return;
+      }
+
       if(area==="setupContent"){ area="tabs"; updateFocus(); return; }
       if(area==="tabs"){ area="menu"; updateFocus(); return; }
       if(area==="tvCats" || area==="tvChans"){ area="menu"; updateFocus(); return; }
-      if(area==="vod"){ area="menu"; vodStopVideo(); updateFocus(); return; }
+      if(area==="vod"){ area="menu"; updateFocus(); return; }
+
       try{ tizen.application.getCurrentApplication().exit(); }catch(ex){}
       return;
     }
 
-    // Fullscreen TV navigation
     if(tvFullscreen){
       if(k===38){ if(tvChanIdx>0) tvChanIdx--; tvPlayCurrent(); return; }
       if(k===40){ if(tvChanIdx<tvCurChans.length-1) tvChanIdx++; tvPlayCurrent(); return; }
@@ -1831,35 +1393,61 @@
       if(k===37){
         menuIdx = (menuIdx>0)?menuIdx-1:3;
         showMainByMenu(menuIdx);
+
         if(menuIdx===0) tvReloadFromActiveProfile();
         if(menuIdx===1 || menuIdx===2) vodReloadFromActiveProfile();
         if(menuIdx===3){ renderSetupTabs(); renderSetupTabPreview(); }
+
         updateFocus();
         return;
       }
       if(k===39){
         menuIdx = (menuIdx<3)?menuIdx+1:0;
         showMainByMenu(menuIdx);
+
         if(menuIdx===0) tvReloadFromActiveProfile();
         if(menuIdx===1 || menuIdx===2) vodReloadFromActiveProfile();
         if(menuIdx===3){ renderSetupTabs(); renderSetupTabPreview(); }
+
         updateFocus();
         return;
       }
+
       if(k===13 || k===40){
         if(menuIdx===0){ area="tvCats"; updateFocus(); return; }
-        if(menuIdx===1 || menuIdx===2){ area="vod"; updateFocus(); return; }
+        if(menuIdx===1 || menuIdx===2){
+          area="vod";
+          vodFocus="cats";
+          updateFocus();
+          return;
+        }
         if(menuIdx===3){ area="tabs"; updateFocus(); return; }
       }
+
       updateFocus();
       return;
     }
 
     // Tabs
     if(area==="tabs"){
-      if(k===37){ tabIdx=(tabIdx>0)?tabIdx-1:3; renderSetupTabs(); renderSetupTabPreview(); return; }
-      if(k===39){ tabIdx=(tabIdx<3)?tabIdx+1:0; renderSetupTabs(); renderSetupTabPreview(); return; }
-      if(k===13 || k===40){ area="setupContent"; setupFocusIdx=0; updateFocus(); return; }
+      if(k===37){
+        tabIdx=(tabIdx>0)?tabIdx-1:3;
+        renderSetupTabs();
+        renderSetupTabPreview();
+        return;
+      }
+      if(k===39){
+        tabIdx=(tabIdx<3)?tabIdx+1:0;
+        renderSetupTabs();
+        renderSetupTabPreview();
+        return;
+      }
+      if(k===13 || k===40){
+        area="setupContent";
+        setupFocusIdx=0;
+        updateFocus();
+        return;
+      }
       updateFocus();
       return;
     }
@@ -1869,10 +1457,11 @@
       var f=getSetupFocusables();
       var len=f.length;
 
-      // BG reset
-      if(tabIdx===0 && k===48){ setBackground(null); return; }
+      if(tabIdx===0 && k===48){
+        setBackground(null);
+        return;
+      }
 
-      // Up / Down
       if(k===38){
         if(setupFocusIdx===0){ area="tabs"; updateFocus(); return; }
         setupFocusIdx=Math.max(0, setupFocusIdx-1);
@@ -1885,7 +1474,6 @@
         return;
       }
 
-      // Background grid navigation
       if(tabIdx===0){
         var cols=5;
         if(k===37){ if(len) setupFocusIdx=Math.max(0, setupFocusIdx-1); updateFocus(); return; }
@@ -1901,143 +1489,78 @@
           if(dn<=len-1){ setupFocusIdx=dn; updateFocus(); }
           return;
         }
-      }
-
-      // LEFT/RIGHT: within same card row of buttons / inputs
-      if((k===37 || k===39) && len){
-        var cur = f[setupFocusIdx];
-        var parent = null;
-        try{ parent = cur.closest(".card2"); }catch(e){}
-        if(parent){
-          var row = parent.querySelectorAll(".focusable");
-          var pos = Array.prototype.indexOf.call(row, cur);
-          if(k===37 && pos>0){ setupFocusIdx -= 1; updateFocus(); return; }
-          if(k===39 && pos<row.length-1){ setupFocusIdx += 1; updateFocus(); return; }
+      }else{
+        if(k===39 && len){
+          var el=f[setupFocusIdx];
+          var kind=el.getAttribute("data-kind")||"";
+          var idx=parseInt(el.getAttribute("data-idx")||"-1",10);
+          if(kind==="m3u-prof"){
+            deleteM3UProfile(idx);
+            renderSetupTabPreview();
+            area="setupContent";
+            setupFocusIdx=clamp(setupFocusIdx,0,getSetupFocusables().length-1);
+            updateFocus();
+            tvReloadFromActiveProfile();
+            return;
+          }
+          if(kind==="xc-prof"){
+            deleteXCProfile(idx);
+            renderSetupTabPreview();
+            area="setupContent";
+            setupFocusIdx=clamp(setupFocusIdx,0,getSetupFocusables().length-1);
+            updateFocus();
+            vodReloadFromActiveProfile();
+            return;
+          }
         }
       }
 
-      // OK action
       if(k===13 && len){
         var el2=f[setupFocusIdx];
         var kind2=el2.getAttribute("data-kind")||"";
         var idx2=parseInt(el2.getAttribute("data-idx")||"-1",10);
 
-        // Background set
-        if(kind2==="bg" && bgItems[idx2]){ setBackground(bgItems[idx2].url); return; }
-
-        // MAC refresh
-        if(kind2==="mac"){ renderMACTab(); area="setupContent"; setupFocusIdx=0; updateFocus(); return; }
-
-        // M3U inputs -> open keyboard
-        if(kind2==="m3u-input"){
-          openKeyboard(el2.id, (idx2===0 ? "M3U NAME" : "M3U URL"));
+        if(kind2==="bg" && bgItems[idx2]){
+          setBackground(bgItems[idx2].url);
           return;
         }
-
-        // M3U actions
-        if(kind2==="m3u-activate"){
-          var p = m3uProfiles[idx2];
-          if(p && p.id){
-            setActiveM3U(p.id);
-            tvReloadFromActiveProfile();
-            renderM3UTab();
-            area="setupContent";
-            setupFocusIdx=clamp(setupFocusIdx,0,getSetupFocusables().length-1);
-            updateFocus();
-          }
-          return;
-        }
-        if(kind2==="m3u-edit"){
-          m3uEditIndex = idx2;
-          renderM3UTab();
+        if(kind2==="mac"){
+          renderMACTab();
           area="setupContent";
           setupFocusIdx=0;
           updateFocus();
           return;
         }
-        if(kind2==="m3u-del"){
-          deleteM3UProfile(idx2);
-          m3uEditIndex = -1;
-          renderM3UTab();
-          tvReloadFromActiveProfile();
-          area="setupContent";
-          setupFocusIdx=clamp(setupFocusIdx,0,getSetupFocusables().length-1);
-          updateFocus();
+        if(kind2==="m3u-input"){
+          try{ el2.focus(); }catch(ex){}
           return;
         }
         if(kind2==="m3u-save"){
           var name = ($("m3u-name") ? $("m3u-name").value : "");
           var url  = ($("m3u-url") ? $("m3u-url").value : "");
-          if(m3uEditIndex>=0){
-            if(updateM3UProfile(m3uEditIndex, name, url)){
-              m3uEditIndex = -1;
-              renderM3UTab();
-              tvReloadFromActiveProfile();
-              area="setupContent";
-              setupFocusIdx=0;
-              updateFocus();
-            }
-          }else{
-            if(addM3UProfile(name, url)){
-              renderM3UTab();
-              tvReloadFromActiveProfile();
-              area="setupContent";
-              setupFocusIdx=0;
-              updateFocus();
-            }
-          }
-          return;
-        }
-        if(kind2==="m3u-cancel"){
-          if(m3uEditIndex>=0){
-            m3uEditIndex = -1;
-            renderM3UTab();
-          }else{
-            if($("m3u-name")) $("m3u-name").value="";
-            if($("m3u-url")) $("m3u-url").value="";
-          }
-          area="setupContent";
-          setupFocusIdx=0;
-          updateFocus();
-          return;
-        }
-
-        // XC inputs -> open keyboard
-        if(kind2==="xc-input"){
-          var titles = ["XTREAM NAME","USERNAME","PASSWORT","SERVER URL"];
-          openKeyboard(el2.id, titles[idx2] || "EINGABE");
-          return;
-        }
-
-        // XC actions
-        if(kind2==="xc-activate"){
-          var xp = xcProfiles[idx2];
-          if(xp && xp.id){
-            setActiveXC(xp.id);
-            vodReloadFromActiveProfile();
-            renderXCTab();
+          if(addM3UProfile(name,url)){
+            renderSetupTabPreview();
             area="setupContent";
-            setupFocusIdx=clamp(setupFocusIdx,0,getSetupFocusables().length-1);
+            setupFocusIdx=3;
             updateFocus();
+            tvReloadFromActiveProfile();
           }
           return;
         }
-        if(kind2==="xc-edit"){
-          xcEditIndex = idx2;
-          renderXCTab();
-          area="setupContent";
-          setupFocusIdx=0;
-          updateFocus();
+        if(kind2==="m3u-prof"){
+          var p=m3uProfiles[idx2];
+          if(p && p.id){
+            setActiveM3U(p.id);
+            renderSetupTabPreview();
+            area="setupContent";
+            updateFocus();
+            tvReloadFromActiveProfile();
+          }
           return;
         }
-        if(kind2==="xc-del"){
-          deleteXCProfile(idx2);
-          xcEditIndex = -1;
-          renderXCTab();
-          vodReloadFromActiveProfile();
-          area="setupContent";
-          setupFocusIdx=clamp(setupFocusIdx,0,getSetupFocusables().length-1);
-          updateFocus();
+
+        if(kind2==="xc-input"){
+          try{ el2.focus(); }catch(ex){}
           return;
         }
         if(kind2==="xc-save"){
@@ -2045,39 +1568,24 @@
           var u = ($("xc-user") ? $("xc-user").value : "");
           var p2 = ($("xc-pass") ? $("xc-pass").value : "");
           var s = ($("xc-url")  ? $("xc-url").value  : "");
-          if(xcEditIndex>=0){
-            if(updateXCProfile(xcEditIndex, n,u,p2,s)){
-              xcEditIndex=-1;
-              renderXCTab();
-              vodReloadFromActiveProfile();
-              area="setupContent";
-              setupFocusIdx=0;
-              updateFocus();
-            }
-          }else{
-            if(addXCProfile(n,u,p2,s)){
-              renderXCTab();
-              vodReloadFromActiveProfile();
-              area="setupContent";
-              setupFocusIdx=0;
-              updateFocus();
-            }
+          if(addXCProfile(n,u,p2,s)){
+            renderSetupTabPreview();
+            area="setupContent";
+            setupFocusIdx=5;
+            updateFocus();
+            vodReloadFromActiveProfile();
           }
           return;
         }
-        if(kind2==="xc-cancel"){
-          if(xcEditIndex>=0){
-            xcEditIndex = -1;
-            renderXCTab();
-          }else{
-            if($("xc-name")) $("xc-name").value="";
-            if($("xc-user")) $("xc-user").value="";
-            if($("xc-pass")) $("xc-pass").value="";
-            if($("xc-url"))  $("xc-url").value="";
+        if(kind2==="xc-prof"){
+          var xp=xcProfiles[idx2];
+          if(xp && xp.id){
+            setActiveXC(xp.id);
+            renderSetupTabPreview();
+            area="setupContent";
+            updateFocus();
+            vodReloadFromActiveProfile();
           }
-          area="setupContent";
-          setupFocusIdx=0;
-          updateFocus();
           return;
         }
       }
@@ -2103,7 +1611,12 @@
     }
     if(area==="tvChans"){
       if(k===37){ area="tvCats"; updateFocus(); return; }
-      if(k===38){ if(tvChanIdx>0) tvChanIdx--; updateFocus(); tvPlayCurrent(); return; }
+      if(k===38){
+        if(tvChanIdx>0) tvChanIdx--;
+        updateFocus();
+        tvPlayCurrent();
+        return;
+      }
       if(k===40){ if(tvChanIdx<tvCurChans.length-1) tvChanIdx++; updateFocus(); return; }
       if(k===48){ tvToggleFav(); return; }
       if(k===13){
@@ -2118,45 +1631,92 @@
       return;
     }
 
-    // VOD nav
+    // VOD Netflix nav
     if(area==="vod"){
-      if(!vodRows.length){
-        if(k===13){ vodReloadFromActiveProfile(); return; }
+      // Back to menu with LEFT from cats (wie Netflix)
+      if(vodFocus==="cats"){
         if(k===37){ area="menu"; updateFocus(); return; }
+        if(k===39){ vodFocus="grid"; updateFocus(); return; }
+        if(k===38){ if(vodCatIdx>0) vodCatIdx--; vodLoadCategory(vodCatIdx); updateFocus(); return; }
+        if(k===40){ if(vodCatIdx<vodCats.length-1) vodCatIdx++; vodLoadCategory(vodCatIdx); updateFocus(); return; }
+        if(k===13){
+          // OK = rein ins Grid
+          vodLoadCategory(vodCatIdx);
+          vodFocus="grid";
+          vodGridIdx=0;
+          updateFocus();
+          return;
+        }
+        updateFocus();
         return;
       }
-      if(k===38){ if(vodRowIdx>0){ vodRowIdx--; vodItemIdx=clamp(vodItemIdx,0,(vodRows[vodRowIdx].items||[]).length-1); } vodUpdateFocusAndScroll(); vodUpdateInfoPanel(); return; }
-      if(k===40){ if(vodRowIdx<vodRows.length-1){ vodRowIdx++; vodItemIdx=clamp(vodItemIdx,0,(vodRows[vodRowIdx].items||[]).length-1); } vodUpdateFocusAndScroll(); vodUpdateInfoPanel(); return; }
-      if(k===37){ if(vodItemIdx>0) vodItemIdx--; vodUpdateFocusAndScroll(); vodUpdateInfoPanel(); return; }
-      if(k===39){ var count=(vodRows[vodRowIdx].items||[]).length; if(vodItemIdx<count-1) vodItemIdx++; vodUpdateFocusAndScroll(); vodUpdateInfoPanel(); return; }
-      if(k===13){ vodPlayCurrent(); return; }
+
+      // grid focus
+      if(vodFocus==="grid"){
+        if(k===37){ vodFocus="cats"; updateFocus(); return; }
+        if(k===39){ /* rechts bleibt im grid */ return; }
+        if(k===38){
+          if(vodGridIdx - vodCols >= 0) vodGridIdx -= vodCols;
+          updateFocus(); return;
+        }
+        if(k===40){
+          if(vodGridIdx + vodCols < vodGridItems.length) vodGridIdx += vodCols;
+          updateFocus(); return;
+        }
+        if(k===37){ vodFocus="cats"; updateFocus(); return; }
+        if(k===39){
+          // next tile
+          if(vodGridIdx < vodGridItems.length-1) vodGridIdx++;
+          updateFocus(); return;
+        }
+        if(k===13){
+          // KEIN Player (gewünscht). Du kannst hier später Detail/Play bauen.
+          // Für jetzt: nur Fokus lassen.
+          return;
+        }
+
+        // Left/Right innerhalb Grid normal:
+        if(k===37){
+          vodFocus="cats"; updateFocus(); return;
+        }
+        if(k===39){
+          if(vodGridIdx < vodGridItems.length-1) vodGridIdx++;
+          updateFocus(); return;
+        }
+        if(k===37){
+          if(vodGridIdx>0) vodGridIdx--;
+          updateFocus(); return;
+        }
+        // (Samsung: wir lassen cat-switch auf LEFT wie oben)
+        updateFocus();
+        return;
+      }
+
       updateFocus();
       return;
     }
   });
 
-  // -----------------------------
-  // Init
-  // -----------------------------
   function init(){
     try{
       ["Up","Down","Left","Right","Enter","Back","0"].forEach(function(k){
         tizen.tvinputdevice.registerKey(k);
       });
     }catch(e){}
-
     normalizeProfiles();
 
     initPlayer();
-    setTimeout(function(){ applyPlayerRect(false); }, 60);
+    setTimeout(function(){ applyPlayerRect(false); }, 50);
 
     menuIdx=0;
     area="menu";
+
     showMainByMenu(menuIdx);
 
     renderMenuFocus();
     renderSetupTabs();
     renderSetupTabPreview();
+
     loadBackgroundsFromGitHub();
 
     tvReloadFromActiveProfile();
