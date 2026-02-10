@@ -194,87 +194,100 @@
     }
     body.is-fullscreen video{ object-fit:contain; }
 
-    /* =============================
-   NETFLIX STYLE VOD LAYOUT
-============================= */
-.vod-root{
-  display:flex;
-  flex-direction:row;
-  gap:22px;
-  padding:22px;
-}
+    /* -----------------------------
+       VOD VIEW
+    ----------------------------- */
+    .vod-root{
+      height:100%;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      padding:18px 22px;
+    }
+    .vod-topbar{
+      background: rgba(0,0,0,.22);
+      border:1px solid rgba(0,210,255,.14);
+      border-radius:22px;
+      padding:14px 18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+    }
+    .vod-title{
+      font-size:30px;
+      font-weight:900;
+      letter-spacing:.4px;
+    }
+    .vod-sub{
+      color:rgba(255,255,255,.62);
+      font-size:18px;
+      font-weight:800;
+    }
+    .vod-rows{
+      flex:1;
+      overflow-y:auto;
+      padding-right:6px;
+    }
+    .vod-rows::-webkit-scrollbar{ width:0; }
 
-/* Kategorien links */
-.vod-cats{
-  width:420px;
-  background: rgba(0,0,0,.22);
-  border:1px solid rgba(0,210,255,.14);
-  border-radius:26px;
-  overflow:hidden;
-  display:flex;
-  flex-direction:column;
-}
-
-.vod-cats .list{
-  padding:14px;
-  overflow-y:auto;
-}
-
-/* Grid rechts */
-.vod-grid-wrap{
-  flex:1;
-  background: rgba(0,0,0,.18);
-  border:1px solid rgba(0,210,255,.14);
-  border-radius:26px;
-  padding:18px;
-  overflow:hidden;
-}
-
-.vod-grid{
-  display:grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap:18px;
-}
-
-.vod-tile{
-  position:relative;
-  border-radius:18px;
-  overflow:hidden;
-  background:#000;
-  border:1px solid rgba(0,210,255,.18);
-  transition:.12s;
-}
-
-.vod-tile::before{
-  content:"";
-  display:block;
-  padding-top:150%;
-}
-
-.vod-tile img{
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-  object-fit:cover;
-}
-
-.vod-tile .label{
-  position:absolute;
-  left:0; right:0; bottom:0;
-  padding:12px;
-  font-size:18px;
-  font-weight:900;
-  background:linear-gradient(to top, rgba(0,0,0,.95), transparent);
-}
-
-.vod-tile.focused{
-  transform:scale(1.12);
-  border-color:var(--cyan);
-  box-shadow:0 0 28px rgba(0,210,255,.35);
-  z-index:5;
-}
-
+    .row{ margin:14px 0 18px 0; }
+    .row-h{
+      font-size:24px;
+      font-weight:900;
+      color:var(--cyan);
+      letter-spacing:2px;
+      margin:0 0 10px 8px;
+      text-transform:uppercase;
+    }
+    .strip{
+      position:relative;
+      overflow:hidden;
+      border-radius:18px;
+      padding:10px 10px;
+      background: rgba(0,0,0,.18);
+      border:1px solid rgba(0,210,255,.10);
+    }
+    .strip-inner{
+      display:flex;
+      gap:14px;
+      transition: transform .15s ease-out;
+      will-change: transform;
+    }
+    .card{
+      width:260px;
+      height:150px;
+      border-radius:16px;
+      overflow:hidden;
+      position:relative;
+      background: rgba(0,0,0,.35);
+      border:1px solid rgba(0,210,255,.12);
+      flex:0 0 auto;
+      transition:.12s;
+    }
+    .card img{
+      width:100%; height:100%;
+      object-fit:cover;
+      display:block;
+      background:#000;
+    }
+    .card .cap{
+      position:absolute;
+      left:0; right:0; bottom:0;
+      padding:10px 10px;
+      font-size:14px;
+      font-weight:900;
+      background: linear-gradient(to top, rgba(0,0,0,.92), rgba(0,0,0,0));
+      text-shadow:0 2px 10px rgba(0,0,0,.75);
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      letter-spacing:.3px;
+    }
+    .card.focused{
+      border-color: rgba(0,210,255,.85);
+      box-shadow:0 0 18px rgba(0,210,255,.12);
+      transform: scale(1.10);
+      z-index:2;
+    }
 
     .vod-player-wrap{
       display:flex;
@@ -314,7 +327,81 @@
       line-height:1.35;
     }
 
+    
     /* -----------------------------
+       VOD VIEW (Netflix Grid)
+    ----------------------------- */
+    .vod-netflix{
+      height:100%;
+      display:flex;
+      gap:24px;
+      padding:22px;
+    }
+    .vod-cat-col{
+      width:420px;
+      background: rgba(0,0,0,.22);
+      border:1px solid rgba(0,210,255,.14);
+      border-radius:26px;
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+    }
+    .vod-grid-col{
+      flex:1;
+      background: rgba(0,0,0,.18);
+      border:1px solid rgba(0,210,255,.14);
+      border-radius:26px;
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+    }
+    .vod-grid-scroll{
+      flex:1;
+      overflow-y:auto;
+      padding:16px;
+    }
+    .vod-grid-scroll::-webkit-scrollbar{ width:0; }
+
+    .vod-grid{
+      display:grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap:18px;
+    }
+    .vod-tile{
+      position:relative;
+      border-radius:18px;
+      overflow:hidden;
+      background: rgba(0,0,0,.35);
+      border:1px solid rgba(0,210,255,.12);
+      transition:.12s;
+    }
+    .vod-tile::before{ content:""; display:block; padding-top:150%; }
+    .vod-tile img{
+      position:absolute; top:0; left:0; right:0; bottom:0;
+      width:100%; height:100%;
+      object-fit:cover;
+      display:block;
+      background:#000;
+    }
+    .vod-tile .cap{
+      position:absolute;
+      left:0; right:0; bottom:0;
+      padding:12px 12px;
+      font-size:18px;
+      font-weight:900;
+      background: linear-gradient(to top, rgba(0,0,0,.92), rgba(0,0,0,0));
+      text-shadow:0 2px 10px rgba(0,0,0,.75);
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      letter-spacing:.3px;
+    }
+    .vod-tile.focused{
+      border-color: rgba(0,210,255,.85);
+      box-shadow:0 0 18px rgba(0,210,255,.12);
+      transform: scale(1.10);
+      z-index:2;
+    }
+
+/* -----------------------------
        SETUP VIEW (Tabs + Content)
     ----------------------------- */
     #setup-view{
@@ -731,21 +818,38 @@
 
       <!-- VOD -->
       <div id="vod-view">
-  <div class="vod-root">
+        <div class="vod-netflix">
+          <!-- LEFT: Kategorien -->
+          <div class="vod-cat-col">
+            <div class="col-h">
+              <span id="vod-cat-title">Kategorien</span>
+              <span id="vod-cat-count" style="color:rgba(255,255,255,.5);font-weight:900;font-size:14px"></span>
+            </div>
+            <div id="vod-cat-list" class="list"></div>
+          </div>
 
-    <!-- Kategorien -->
-    <div class="vod-cats">
-      <div class="col-h">KATEGORIEN</div>
-      <div id="vod-cat-list" class="list"></div>
-    </div>
+          <!-- RIGHT: Netflix Grid -->
+          <div class="vod-grid-col">
+            <div class="col-h">
+              <span id="vod-grid-title">Inhalte</span>
+              <span id="vod-grid-count" style="color:rgba(255,255,255,.5);font-weight:900;font-size:14px"></span>
+            </div>
 
-    <!-- Netflix Grid -->
-    <div class="vod-grid-wrap">
-      <div id="vod-grid" class="vod-grid"></div>
-    </div>
+            <div class="vod-grid-scroll" id="vod-grid-scroll">
+              <div id="vod-grid" class="vod-grid"></div>
+            </div>
 
-  </div>
-</div>
+            <!-- Hidden player (keine UI, aber Playback bleibt möglich) -->
+            <video id="vod-video" autoplay style="display:none;"></video>
+            <!-- Legacy hidden elements (für Fernbedienung/JS-Kompatibilität) -->
+            <div id="vod-sub" style="display:none"></div>
+            <div id="vod-rows" style="display:none"></div>
+            <div id="vod-info-title" style="display:none"></div>
+            <div id="vod-info-sub" style="display:none"></div>
+
+          </div>
+        </div>
+      </div>
 
       <!-- SETUP -->
       <div id="setup-view">
@@ -1579,64 +1683,79 @@
   }
 
   function renderVODRows(){
-  const catHost = $("vod-cat-list");
-  const gridHost = $("vod-grid");
+    // LEFT: Kategorien (vodRows = Kategorienliste)
+    var catHost = $("vod-cat-list");
+    var gridHost = $("vod-grid");
 
-  // Kategorien links
-  let ch = "";
-  vodRows.forEach((r,i)=>{
-    ch += `<div class="entry ${i===vodRowIdx?'focused':''}" data-idx="${i}">
-             ${esc(r.title)}
-           </div>`;
-  });
-  catHost.innerHTML = ch;
-
-  // Grid rechts
-  const row = vodRows[vodRowIdx];
-  if(!row){ gridHost.innerHTML=""; return; }
-
-  let gh="";
-  row.items.forEach((it,i)=>{
-    gh += `
-      <div class="vod-tile ${i===vodItemIdx?'focused':''}" data-idx="${i}">
-        <img src="${it.poster||''}" />
-        <div class="label">${esc(it.name)}</div>
-      </div>`;
-  });
-  gridHost.innerHTML = gh;
-}
-
-
-  function vodUpdateInfoPanel(){
-    var row=vodRows[vodRowIdx];
-    if(!row || !row.items || !row.items[vodItemIdx]){
-      $("vod-info-title").innerText="-";
-      $("vod-info-sub").innerText="-";
+    if(!catHost || !gridHost){
+      // Fallback: falls HTML nicht geladen ist
       return;
     }
-    var it=row.items[vodItemIdx];
-    $("vod-info-title").innerText=it.name;
-    $("vod-info-sub").innerText=it.meta || "";
+
+    if(!vodRows.length){
+      catHost.innerHTML = '<div style="padding:16px;color:rgba(255,255,255,.6);font-weight:900">Keine Kategorien</div>';
+      gridHost.innerHTML = '';
+      if($("vod-cat-count")) $("vod-cat-count").innerText = "";
+      if($("vod-grid-count")) $("vod-grid-count").innerText = "";
+      return;
+    }
+
+    vodRowIdx = clamp(vodRowIdx, 0, vodRows.length-1);
+    var row = vodRows[vodRowIdx];
+    var items = (row && row.items) ? row.items : [];
+    vodItemIdx = clamp(vodItemIdx, 0, Math.max(0, items.length-1));
+
+    var ch = "";
+    for(var i=0;i<vodRows.length;i++){
+      ch += '<div class="entry vod-cat focusable' + (i===vodRowIdx ? ' focused' : '') + '" data-idx="'+i+'">' +
+              esc(vodRows[i].title) +
+            '</div>';
+    }
+    catHost.innerHTML = ch;
+
+    var gh = "";
+    for(var j=0;j<items.length;j++){
+      var it = items[j] || {};
+      var poster = it.poster ? (it.poster + (it.poster.indexOf("?")>-1 ? "&" : "?") + nowBust()) : "";
+      gh += '<div class="vod-tile focusable' + (j===vodItemIdx ? ' focused' : '') + '" data-idx="'+j+'">' +
+              (poster ? '<img src="'+poster+'" onerror="this.src='';this.style.background='#000';" />' : '<div style="position:absolute;inset:0;background:#000"></div>') +
+              '<div class="cap">'+esc(it.name||"")+'</div>' +
+            '</div>';
+    }
+    gridHost.innerHTML = gh || '<div style="padding:16px;color:rgba(255,255,255,.6);font-weight:900">Keine Inhalte</div>';
+
+    if($("vod-cat-count")) $("vod-cat-count").innerText = vodRows.length ? (vodRows.length+"") : "";
+    if($("vod-grid-count")) $("vod-grid-count").innerText = items.length ? (items.length+"") : "";
+
+    // optional: Titel oben rechts anpassen
+    if($("vod-grid-title")) $("vod-grid-title").innerText = row ? row.title : "Inhalte";
+  }
+
+  function vodUpdateInfoPanel(){
+    // UI wurde entfernt – Funktion bleibt als Guard, damit kein Fehler kommt
+    return;
   }
 
   function vodUpdateFocusAndScroll(){
-    var cards=document.getElementsByClassName("vod-card");
-    for(var i=0;i<cards.length;i++) cards[i].classList.remove("focused");
-
-    var selector='.vod-card[data-row="'+vodRowIdx+'"][data-idx="'+vodItemIdx+'"]';
-    var el=document.querySelector(selector);
-    if(el) el.classList.add("focused");
-
-    var rowEl = document.querySelector('.row[data-row="'+vodRowIdx+'"]');
-    if(rowEl){
-      try{ rowEl.scrollIntoView({block:"center"}); }catch(e){}
+    // Kategorien Fokus
+    var cats = $("vod-cat-list") ? $("vod-cat-list").getElementsByClassName("vod-cat") : [];
+    for(var i=0;i<cats.length;i++){
+      cats[i].classList.toggle("focused", i===vodRowIdx);
+      if(i===vodRowIdx){
+        try{ cats[i].scrollIntoView({block:"center"}); }catch(e){}
+      }
     }
 
-    var strip = $("strip-"+vodRowIdx);
-    if(strip){
-      var offset = vodItemIdx * (260 + 14);
-      var tx = Math.max(0, offset - 3*(260+14));
-      strip.style.transform = "translateX(" + (-tx) + "px)";
+    // Tiles Fokus
+    var grid = $("vod-grid");
+    if(!grid) return;
+
+    var tiles = grid.getElementsByClassName("vod-tile");
+    for(var j=0;j<tiles.length;j++){
+      tiles[j].classList.toggle("focused", j===vodItemIdx);
+      if(j===vodItemIdx){
+        try{ tiles[j].scrollIntoView({block:"nearest", inline:"nearest"}); }catch(e){}
+      }
     }
   }
 
@@ -1884,12 +2003,16 @@
   // Key Handling
   // -----------------------------
   document.addEventListener("keydown", function(e){
-    var k=e.keyCode;
+    // Prevent TV from swallowing navigation keys
+    try{ e.preventDefault(); }catch(_e){}
+    try{ e.stopPropagation(); }catch(_e){}
+    var k = (e && (e.keyCode || e.which)) || 0;
+    if(k===96) k=48; // numpad 0 -> 0
 
     // ✅ Keyboard overlay has priority
     if(handleKbdKeys(k)) return;
 
-    if(k===10009 || k===27){
+    if(k===10009 || k===461 || k===8 || k===27){
       if(tvFullscreen){
         tvToggleFullscreen();
         return;
@@ -1907,7 +2030,7 @@
       if(k===38){ if(tvChanIdx>0) tvChanIdx--; tvPlayCurrent(); return; }
       if(k===40){ if(tvChanIdx<tvCurChans.length-1) tvChanIdx++; tvPlayCurrent(); return; }
       if(k===13){ tvToggleFullscreen(); return; }
-      if(k===48){ tvToggleFav(); return; }
+      if(k===48 || k===96){ tvToggleFav(); return; }
       return;
     }
 
@@ -2124,7 +2247,7 @@
         return;
       }
       if(k===40){ if(tvChanIdx<tvCurChans.length-1) tvChanIdx++; updateFocus(); return; }
-      if(k===48){ tvToggleFav(); return; }
+      if(k===48 || k===96){ tvToggleFav(); return; }
       if(k===13){
         if($("tv-now").innerText=== (tvCurChans[tvChanIdx] ? tvCurChans[tvChanIdx].name : "")){
           tvToggleFullscreen();
@@ -2144,11 +2267,42 @@
         if(k===37){ area="menu"; updateFocus(); return; }
         return;
       }
-      if(k===38){ if(vodRowIdx>0){ vodRowIdx--; vodItemIdx=clamp(vodItemIdx,0,(vodRows[vodRowIdx].items||[]).length-1); } vodUpdateFocusAndScroll(); vodUpdateInfoPanel(); return; }
-      if(k===40){ if(vodRowIdx<vodRows.length-1){ vodRowIdx++; vodItemIdx=clamp(vodItemIdx,0,(vodRows[vodRowIdx].items||[]).length-1); } vodUpdateFocusAndScroll(); vodUpdateInfoPanel(); return; }
-      if(k===37){ if(vodItemIdx>0) vodItemIdx--; vodUpdateFocusAndScroll(); vodUpdateInfoPanel(); return; }
-      if(k===39){ var count=(vodRows[vodRowIdx].items||[]).length; if(vodItemIdx<count-1) vodItemIdx++; vodUpdateFocusAndScroll(); vodUpdateInfoPanel(); return; }
+
+      if(k===38){
+        if(vodRowIdx>0){
+          vodRowIdx--;
+          vodItemIdx=0;
+          renderVODRows();
+        }
+        vodUpdateFocusAndScroll();
+        return;
+      }
+      if(k===40){
+        if(vodRowIdx<vodRows.length-1){
+          vodRowIdx++;
+          vodItemIdx=0;
+          renderVODRows();
+        }
+        vodUpdateFocusAndScroll();
+        return;
+      }
+      if(k===37){
+        if(vodItemIdx>0){
+          vodItemIdx--;
+          vodUpdateFocusAndScroll();
+        }
+        return;
+      }
+      if(k===39){
+        var count=(vodRows[vodRowIdx].items||[]).length;
+        if(vodItemIdx<count-1){
+          vodItemIdx++;
+          vodUpdateFocusAndScroll();
+        }
+        return;
+      }
       if(k===13){ vodPlayCurrent(); return; }
+
       updateFocus();
       return;
     }
@@ -2159,12 +2313,15 @@
   // -----------------------------
   function init(){
     try{
-      ["Up","Down","Left","Right","Enter","Back","0"].forEach(function(k){
+      ["Up","Down","Left","Right","Enter","Back","Return","0"].forEach(function(k){
         tizen.tvinputdevice.registerKey(k);
       });
     }catch(e){}
 
     normalizeProfiles();
+
+    // Ensure the document receives remote key events
+    try{ document.body.tabIndex = 0; document.body.focus(); }catch(e){}
 
     initPlayer();
     setTimeout(function(){ applyPlayerRect(false); }, 50);
