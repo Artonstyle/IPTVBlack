@@ -17,6 +17,7 @@
       --muted2:rgba(255,255,255,.40);
       --danger:#ff4d4d;
       --gold:#ffcc00;
+      --ok:#25d366;
     }
     *{box-sizing:border-box; outline:none}
     body{
@@ -176,6 +177,7 @@
     body.is-fullscreen #tv-left,
     body.is-fullscreen #tv-mid,
     body.is-fullscreen .pinfo{ display:none!important; }
+
     body.is-fullscreen main{
       padding:0!important;
       margin:0!important;
@@ -193,7 +195,7 @@
     body.is-fullscreen video{ object-fit:contain; }
 
     /* -----------------------------
-       VOD VIEW (Netflix Rows)
+       VOD VIEW
     ----------------------------- */
     .vod-root{
       height:100%;
@@ -415,7 +417,7 @@
       background: rgba(0,69,255,.18);
     }
     .card2-title{ font-weight:900; font-size:30px; }
-    .card2-sub{ margin-top:10px; color:rgba(255,255,255,.65); font-size:24px; word-break:break-all; }
+    .card2-sub{ margin-top:10px; color:rgba(255,255,255,.65); font-size:22px; word-break:break-all; }
 
     .badge{
       display:inline-block;
@@ -433,9 +435,9 @@
 
     .label2{ color:var(--cyan); font-weight:900; letter-spacing:2px; font-size:14px; margin-top:10px; text-transform:uppercase; }
 
+    /* Inputs: readonly (damit Samsung Keyboard NICHT aufgeht) */
     .input{
-      width:720px;
-      max-width:100%;
+      width:100%;
       padding:18px 16px;
       margin-top:10px;
       border-radius:14px;
@@ -461,12 +463,17 @@
       font-weight:900;
       font-size:22px;
       transition:.12s;
+      user-select:none;
     }
+    .btn.danger{ border-color: rgba(255,77,77,.45); background: rgba(255,77,77,.15); }
+    .btn.ok{ border-color: rgba(37,211,102,.45); background: rgba(37,211,102,.12); }
     .btn.focused{
       background: var(--blue);
       box-shadow:0 0 18px rgba(0,69,255,.35);
       transform:scale(1.02);
     }
+    .btn.danger.focused{ background: rgba(255,77,77,.35); box-shadow:0 0 18px rgba(255,77,77,.25); }
+    .btn.ok.focused{ background: rgba(37,211,102,.28); box-shadow:0 0 18px rgba(37,211,102,.18); }
 
     .divider{ height:1px; background: rgba(0,210,255,.18); margin:16px 0; }
 
@@ -507,97 +514,178 @@
     }
 
     /* -----------------------------
-       VIRTUELLE TASTATUR (Samsung TV)
+       M3U/Xtream: 2 Spalten Layout
     ----------------------------- */
-    #kb-overlay{
-      position:fixed; inset:0;
-      background: rgba(0,0,0,.72);
-      z-index: 20000;
-      display:none;
-      align-items:flex-end;
-      justify-content:center;
-      padding:30px 40px;
-    }
-    #kb{
-      width: 1720px;
-      border-radius: 28px;
-      border:1px solid rgba(0,210,255,.22);
-      background: rgba(0,20,60,.65);
-      box-shadow: 0 0 40px rgba(0,210,255,.12);
-      overflow:hidden;
-    }
-    #kb-top{
-      padding:16px 18px;
-      border-bottom:1px solid rgba(0,210,255,.14);
+    .two-col{
       display:flex;
-      align-items:center;
-      gap:14px;
+      gap:16px;
+      align-items:stretch;
+      min-height:100%;
     }
-    #kb-title{
+    .left-col{
+      width:48%;
+      background: rgba(0,0,0,.18);
+      border:1px solid rgba(0,210,255,.12);
+      border-radius:18px;
+      padding:14px;
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+    }
+    .right-col{
+      width:52%;
+      background: rgba(0,0,0,.18);
+      border:1px solid rgba(0,210,255,.12);
+      border-radius:18px;
+      padding:14px;
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+    }
+    .col-title{
+      color:var(--cyan);
       font-weight:900;
       letter-spacing:2px;
-      color:var(--cyan);
-      text-transform:uppercase;
       font-size:14px;
-      flex:0 0 auto;
+      text-transform:uppercase;
+      margin:4px 4px 10px 4px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
     }
-    #kb-value{
+    .profiles-scroll{
       flex:1;
-      font-size:28px;
-      font-weight:900;
-      padding:12px 14px;
+      overflow-y:auto;
+      padding-right:6px;
+    }
+    .profiles-scroll::-webkit-scrollbar{ width:0; }
+
+    .prof-row{
       border-radius:16px;
-      border:1px solid rgba(0,210,255,.18);
-      background: rgba(0,0,0,.25);
+      border:1px solid rgba(0,210,255,.14);
+      background: rgba(0,0,0,.22);
+      padding:14px;
+      margin-bottom:12px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      transition:.12s;
+    }
+    .prof-row.active{
+      border-color: rgba(0,210,255,.55);
+      box-shadow:0 0 18px rgba(0,210,255,.10);
+    }
+    .prof-head{
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+    .prof-name{
+      font-weight:900;
+      font-size:26px;
+      flex:1;
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
     }
-    #kb-hint{
-      flex:0 0 auto;
-      color:rgba(255,255,255,.7);
+    .prof-url{
+      color:rgba(255,255,255,.65);
       font-weight:800;
-      font-size:16px;
+      font-size:18px;
+      word-break:break-all;
     }
-    #kb-grid{
-      padding:18px;
-      display:grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap:12px;
+    .prof-actions{
+      display:flex;
+      gap:10px;
     }
-    .kb-key{
-      user-select:none;
-      text-align:center;
-      padding:16px 10px;
-      border-radius:16px;
-      border:1px solid rgba(0,210,255,.16);
-      background: rgba(0,0,0,.22);
+
+    .focusable{ }
+
+    /* -----------------------------
+       Virtual Keyboard Overlay
+    ----------------------------- */
+    #kbd-overlay{
+      position:fixed;
+      left:0; top:0;
+      width:1920px; height:1080px;
+      background: rgba(0,0,0,.72);
+      display:none;
+      z-index:20000;
+      padding:60px 80px;
+    }
+    #kbd-overlay.active{ display:block; }
+
+    #kbd-panel{
+      width:100%;
+      height:100%;
+      border-radius:26px;
+      border:1px solid rgba(0,210,255,.22);
+      background: rgba(0,0,0,.35);
+      padding:20px;
+      display:flex;
+      flex-direction:column;
+    }
+
+    #kbd-head{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      border-bottom:1px solid rgba(0,210,255,.16);
+      padding-bottom:14px;
+      margin-bottom:14px;
+    }
+    #kbd-title{
+      color:var(--cyan);
       font-weight:900;
-      font-size:22px;
-      transition:.12s;
+      letter-spacing:3px;
+      font-size:14px;
+      text-transform:uppercase;
     }
-    .kb-key.w2{ grid-column: span 2; }
-    .kb-key.w3{ grid-column: span 3; }
-    .kb-key.w4{ grid-column: span 4; }
-    .kb-key.w6{ grid-column: span 6; }
-    .kb-key.w8{ grid-column: span 8; }
-    .kb-key.focused{
+    #kbd-preview{
+      font-weight:900;
+      font-size:30px;
+      padding:14px;
+      border-radius:14px;
+      background: rgba(0,0,0,.35);
+      border:1px solid rgba(0,210,255,.16);
+      min-height:60px;
+      overflow:hidden;
+      white-space:nowrap;
+      text-overflow:ellipsis;
+    }
+
+    #kbd-rows{
+      flex:1;
+      overflow:hidden;
+      padding-top:10px;
+    }
+
+    .kbtn{
+      border-radius:14px;
+      border:1px solid rgba(0,210,255,.18);
+      background: rgba(0,0,0,.28);
+      padding:16px 10px;
+      text-align:center;
+      font-weight:900;
+      font-size:24px;
+      user-select:none;
+      transition:.10s;
+    }
+    .kbtn.danger{
+      border-color: rgba(255,77,77,.35);
+      background: rgba(255,77,77,.12);
+    }
+    .kbtn.focused{
       border-color: rgba(0,210,255,.85);
       box-shadow:0 0 18px rgba(0,210,255,.12);
-      transform: scale(1.04);
-      background: rgba(0,69,255,.22);
+      background: rgba(0,69,255,.18);
+      transform: scale(1.03);
     }
-    .kb-key.danger{
-      border-color: rgba(255,77,77,.35);
-      background: rgba(255,77,77,.10);
-    }
-    .kb-key.ok{
-      border-color: rgba(0,210,255,.35);
-      background: rgba(0,210,255,.10);
-    }
-    .kb-key.alt{
-      border-color: rgba(255,204,0,.28);
-      background: rgba(255,204,0,.08);
+    .kbtn.danger.focused{
+      border-color: rgba(255,77,77,.85);
+      box-shadow:0 0 18px rgba(255,77,77,.20);
+      background: rgba(255,77,77,.25);
     }
   </style>
 </head>
@@ -701,25 +789,41 @@
     </div>
   </main>
 
-  <!-- VIRTUELLE TASTATUR OVERLAY -->
-  <div id="kb-overlay">
-    <div id="kb">
-      <div id="kb-top">
-        <div id="kb-title">EINGABE</div>
-        <div id="kb-value"></div>
-        <div id="kb-hint">▲/▼/◀/▶ • OK=Tippen • Zurück=Schließen</div>
+  <!-- Virtual Keyboard -->
+  <div id="kbd-overlay">
+    <div id="kbd-panel">
+      <div id="kbd-head">
+        <div id="kbd-title">TASTATUR</div>
+        <div id="kbd-preview">-</div>
       </div>
-      <div id="kb-grid"></div>
+      <div id="kbd-rows"></div>
+      <div style="margin-top:10px; color:rgba(255,255,255,.65); font-weight:900; font-size:18px;">
+        Navigation: ▲/▼/◀/▶ • OK = Eingabe • BACK = Schließen
+      </div>
     </div>
   </div>
 
 <script>
+  // -----------------------------
+  // Helpers
+  // -----------------------------
+  function $(id){ return document.getElementById(id); }
+  function esc(s){
+    return String(s||"")
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+  function nowBust(){ return "t=" + Date.now(); }
+  function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+  function uuid(){ return "id_" + Date.now() + "_" + Math.floor(Math.random()*100000); }
+
   // -----------------------------
   // Player (Samsung Tizen AVPlay + fallback)
   // -----------------------------
   var tvUseAvplay = false;
   var av = null;           // webapis.avplay
   var tvLastUrl = "";
+  var tvHls = null;
+  var tvFullscreen = false;
 
   function initPlayer(){
     tvUseAvplay = !!(window.webapis && webapis.avplay);
@@ -742,13 +846,6 @@
       try{ $("tv-video").style.display="block"; }catch(e){}
       try{ $("av-player").style.display="none"; }catch(e){}
     }
-  }
-
-  function getVideoBoxRect(){
-    var box = $("tv-video-box");
-    if(!box) return {x:0,y:0,w:1920,h:1080};
-    var r = box.getBoundingClientRect();
-    return {x: Math.round(r.left), y: Math.round(r.top), w: Math.round(r.width), h: Math.round(r.height)};
   }
 
   function applyPlayerRect(full){
@@ -798,7 +895,7 @@
         av.open(url);
         av.setStreamingProperty && av.setStreamingProperty("ADAPTIVE_INFO", "BITRATE=5000");
         av.prepareAsync(function(){
-          applyPlayerRect(tvFullscreen);
+          applyPlayerRect(tvFullscreen);   // ✅ wichtig
           try{ av.play(); }catch(e){}
         }, function(){
           try{ av.play(); }catch(e){}
@@ -824,11 +921,20 @@
     }
   }
 
+  function tvToggleFullscreen(){
+    tvFullscreen = !tvFullscreen;
+    document.body.classList.toggle("is-fullscreen", tvFullscreen);
+    applyPlayerRect(tvFullscreen);
+  }
+
+  // -----------------------------
+  // App State
+  // -----------------------------
   var GH_OWNER = "Artonstyle";
   var GH_REPO  = "IPTVBlack";
   var GH_BG_DIR = "hintergrund";
 
-  var area = "menu"; // menu | tvCats | tvChans | tabs | setupContent | vod | keyboard
+  var area = "menu"; // menu | tvCats | tvChans | tabs | setupContent | vod | kbd
   var menuIdx = 0;
 
   var tabIdx = 0;
@@ -841,29 +947,21 @@
   var activeM3UId = localStorage.getItem("iptv_active_m3u_id") || "";
   var activeXCId  = localStorage.getItem("iptv_active_xc_id")  || "";
 
+  var m3uEditId = "";   // wenn gesetzt: bearbeiten statt neu
+  var xcEditId = "";
+
   var tvCats = [];
   var tvAllChans = [];
   var tvCurChans = [];
   var tvCatIdx = 0;
   var tvChanIdx = 0;
   var tvFavs = JSON.parse(localStorage.getItem("iptv_tv_favs") || "[]");
-  var tvHls = null;
-  var tvFullscreen = false;
 
   var vodMode = "movies";
   var vodRows = [];
   var vodRowIdx = 0;
   var vodItemIdx = 0;
   var vodHls = null;
-
-  function $(id){ return document.getElementById(id); }
-  function esc(s){
-    return String(s||"")
-      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-  }
-  function nowBust(){ return "t=" + Date.now(); }
-  function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
-  function uuid(){ return "id_" + Date.now() + "_" + Math.floor(Math.random()*100000); }
 
   function normalizeProfiles(){
     if(!Array.isArray(m3uProfiles)) m3uProfiles=[];
@@ -872,6 +970,9 @@
     localStorage.setItem("iptv_xc_profiles",  JSON.stringify(xcProfiles));
   }
 
+  // -----------------------------
+  // UI show/hide
+  // -----------------------------
   function showMain(which){
     $("tv-view").style.display    = (which==="tv")    ? "block" : "none";
     $("vod-view").style.display   = (which==="vod")   ? "block" : "none";
@@ -899,6 +1000,9 @@
     }
   }
 
+  // -----------------------------
+  // Backgrounds (GitHub)
+  // -----------------------------
   function loadBackgroundsFromGitHub(){
     var url="https://api.github.com/repos/"+encodeURIComponent(GH_OWNER)+"/"+encodeURIComponent(GH_REPO)+"/contents/"+encodeURIComponent(GH_BG_DIR)+"?"+nowBust();
     fetch(url)
@@ -937,6 +1041,9 @@
     document.body.style.backgroundPosition="center";
   }
 
+  // -----------------------------
+  // Setup Tabs
+  // -----------------------------
   function renderSetupTabs(){
     for(var i=0;i<4;i++){
       $("t"+i).classList.toggle("focused", area==="tabs" && i===tabIdx);
@@ -949,8 +1056,8 @@
 
     if(area==="setupContent"){
       if(tabIdx===0) $("content-hint").innerText = "OK = Hintergrund setzen • 0 = Standard • Zurück = Tabs";
-      else if(tabIdx===1) $("content-hint").innerText = "OK = Feld öffnen • Speichern = anlegen";
-      else if(tabIdx===2) $("content-hint").innerText = "OK = Feld öffnen • Speichern = anlegen";
+      else if(tabIdx===1) $("content-hint").innerText = "OK = Öffnen • Buttons: OK • Zurück = Tabs";
+      else if(tabIdx===2) $("content-hint").innerText = "OK = Öffnen • Buttons: OK • Zurück = Tabs";
       else $("content-hint").innerText = "OK = Aktualisieren • Zurück = Tabs";
     }else{
       $("content-hint").innerText = "Tabs: ←/→ • OK = rein • Zurück = Menü";
@@ -973,6 +1080,9 @@
     return $("content-body").querySelectorAll(".focusable");
   }
 
+  // -----------------------------
+  // BG Tab
+  // -----------------------------
   function renderBGTab(){
     var host=$("content-body");
     if(!bgItems.length){
@@ -995,6 +1105,9 @@
     host.innerHTML=html;
   }
 
+  // -----------------------------
+  // MAC Tab
+  // -----------------------------
   function getSamsungMac(){
     var mac="unbekannt";
     try{
@@ -1004,6 +1117,7 @@
     }catch(e){}
     return mac;
   }
+
   function renderMACTab(){
     var mac = getSamsungMac();
     $("content-body").innerHTML =
@@ -1014,31 +1128,13 @@
       '</div>';
   }
 
+  // -----------------------------
+  // Profiles (M3U)
+  // -----------------------------
   function saveM3UProfiles(){ localStorage.setItem("iptv_m3u_profiles", JSON.stringify(m3uProfiles)); }
   function setActiveM3U(id){
     activeM3UId = id || "";
     localStorage.setItem("iptv_active_m3u_id", activeM3UId);
-  }
-  function addM3UProfile(name,url){
-    name=(name||"").trim();
-    url=(url||"").trim();
-    if(!name) name="M3U Profil";
-    if(!url) return false;
-    var p={ id: uuid(), name:name, url:url };
-    m3uProfiles.unshift(p);
-    if(m3uProfiles.length>30) m3uProfiles = m3uProfiles.slice(0,30);
-    saveM3UProfiles();
-    setActiveM3U(p.id);
-    return true;
-  }
-  function deleteM3UProfile(index){
-    if(index<0 || index>=m3uProfiles.length) return;
-    var id = m3uProfiles[index].id;
-    m3uProfiles.splice(index,1);
-    saveM3UProfiles();
-    if(activeM3UId===id){
-      setActiveM3U(m3uProfiles[0] ? m3uProfiles[0].id : "");
-    }
   }
   function getActiveM3U(){
     for(var i=0;i<m3uProfiles.length;i++){
@@ -1046,77 +1142,108 @@
     }
     return null;
   }
+  function findM3UById(id){
+    for(var i=0;i<m3uProfiles.length;i++) if(m3uProfiles[i].id===id) return m3uProfiles[i];
+    return null;
+  }
+  function deleteM3UById(id){
+    var ix=-1;
+    for(var i=0;i<m3uProfiles.length;i++){ if(m3uProfiles[i].id===id){ ix=i; break; } }
+    if(ix<0) return;
+    m3uProfiles.splice(ix,1);
+    saveM3UProfiles();
+    if(activeM3UId===id){
+      setActiveM3U(m3uProfiles[0] ? m3uProfiles[0].id : "");
+    }
+    if(m3uEditId===id) m3uEditId="";
+  }
+  function upsertM3U(id, name, url){
+    name=(name||"").trim();
+    url=(url||"").trim();
+    if(!name) name="M3U Profil";
+    if(!url) return false;
+
+    if(id){
+      var p=findM3UById(id);
+      if(!p) return false;
+      p.name=name; p.url=url;
+      saveM3UProfiles();
+      return true;
+    }else{
+      var p2={ id: uuid(), name:name, url:url };
+      m3uProfiles.unshift(p2);
+      if(m3uProfiles.length>30) m3uProfiles = m3uProfiles.slice(0,30);
+      saveM3UProfiles();
+      setActiveM3U(p2.id);
+      return true;
+    }
+  }
+
   function renderM3UTab(){
     var host=$("content-body");
-    var html='';
-    html +=
-      '<div class="card2">'+
-        '<div class="card2-title">Neues M3U Profil</div>'+
-        '<div class="label2">NAME</div>'+
-        '<input id="m3u-name" class="input focusable" data-kind="m3u-input" data-idx="0" placeholder="z.B. Zuhause" readonly />'+
-        '<div class="label2">M3U URL</div>'+
-        '<input id="m3u-url" class="input focusable" data-kind="m3u-input" data-idx="1" placeholder="https://example.com/list.m3u" readonly />'+
-        '<div class="btnrow">'+
-          '<div id="m3u-save" class="btn focusable" data-kind="m3u-save" data-idx="2">Speichern</div>'+
-        '</div>'+
-        '<div class="card2-sub" style="font-size:20px; margin-top:12px;">OK auf Feld = Tastatur öffnen</div>'+
-      '</div>';
 
-    html += '<div class="divider"></div>';
+    var edit = m3uEditId ? findM3UById(m3uEditId) : null;
+    var formTitle = edit ? "M3U PROFIL BEARBEITEN" : "NEUES M3U PROFIL";
+
+    var html='';
+    html += '<div class="two-col">';
+
+    // LEFT: list
+    html += '<div class="left-col">';
+    html += '<div class="col-title"><span>GESPEICHERTE M3U</span><span style="color:rgba(255,255,255,.6);font-weight:900;">'+m3uProfiles.length+'</span></div>';
+    html += '<div class="profiles-scroll">';
 
     if(!m3uProfiles.length){
-      html +=
-        '<div class="card2">'+
-          '<div class="card2-title">Keine Profile</div>'+
-          '<div class="card2-sub">Lege oben ein M3U Profil an.</div>'+
-        '</div>';
-      host.innerHTML = html;
-      return;
+      html += '<div class="card2"><div class="card2-title">Keine Profile</div><div class="card2-sub">Rechts ein Profil anlegen.</div></div>';
+    }else{
+      for(var i=0;i<m3uProfiles.length;i++){
+        var p=m3uProfiles[i];
+        var isActive = (p.id && p.id===activeM3UId);
+        html += '<div class="prof-row '+(isActive?'active':'')+'">';
+        html +=   '<div class="prof-head">';
+        html +=     '<div class="prof-name">'+esc(p.name||("Profil "+(i+1)))+(isActive?'<span class="badge active">AKTIV</span>':'')+'</div>';
+        html +=   '</div>';
+        html +=   '<div class="prof-url">'+esc(p.url||"")+'</div>';
+        html +=   '<div class="prof-actions">';
+        html +=     '<div class="btn focusable" data-kind="m3u-activate" data-id="'+esc(p.id)+'">Aktivieren</div>';
+        html +=     '<div class="btn focusable" data-kind="m3u-edit" data-id="'+esc(p.id)+'">Bearbeiten</div>';
+        html +=     '<div class="btn danger focusable" data-kind="m3u-del" data-id="'+esc(p.id)+'">Löschen</div>';
+        html +=   '</div>';
+        html += '</div>';
+      }
     }
 
-    for(var i=0;i<m3uProfiles.length;i++){
-      var p=m3uProfiles[i];
-      var isActive = (p.id && p.id===activeM3UId);
-      html +=
-        '<div class="card2 focusable" data-kind="m3u-prof" data-idx="'+i+'">'+
-          '<div class="card2-title">'+esc(p.name||("Profil "+(i+1)))+
-            (isActive ? '<span class="badge active">AKTIV</span>' : '')+
-          '</div>'+
-          '<div class="card2-sub">'+esc(p.url||"")+'</div>'+
-          '<div class="card2-sub" style="font-size:18px;opacity:.9">OK = Aktivieren • → = Löschen (später Buttons möglich)</div>'+
-        '</div>';
-    }
+    html += '</div>'; // scroll
+    html += '</div>'; // left
+
+    // RIGHT: form
+    html += '<div class="right-col">';
+    html +=   '<div class="col-title"><span>'+formTitle+'</span><span style="color:rgba(255,255,255,.6);font-weight:900;">OK = Tastatur</span></div>';
+    html +=   '<div class="card2" style="margin-bottom:0;">';
+    html +=     '<div class="label2">NAME</div>';
+    html +=     '<input id="m3u-name" class="input focusable" readonly data-kind="m3u-input" data-field="name" placeholder="z.B. Zuhause" value="'+esc(edit?edit.name:"")+'" />';
+    html +=     '<div class="label2">M3U URL</div>';
+    html +=     '<input id="m3u-url" class="input focusable" readonly data-kind="m3u-input" data-field="url" placeholder="https://example.com/list.m3u" value="'+esc(edit?edit.url:"")+'" />';
+    html +=     '<div class="btnrow">';
+    html +=       '<div id="m3u-save" class="btn ok focusable" data-kind="m3u-save">'+(edit?'Speichern':'Anlegen')+'</div>';
+    html +=       '<div id="m3u-cancel" class="btn focusable" data-kind="m3u-cancel">Abbrechen</div>';
+    html +=     '</div>';
+    html +=     '<div class="card2-sub" style="font-size:18px; margin-top:12px;">Tipp: OK auf Feld → virtuelle Tastatur</div>';
+    html +=   '</div>';
+    html += '</div>'; // right
+
+    html += '</div>'; // two-col
+
     host.innerHTML = html;
   }
 
+  // -----------------------------
+  // Profiles (Xtream)
+  // -----------------------------
   function saveXCProfiles(){ localStorage.setItem("iptv_xc_profiles", JSON.stringify(xcProfiles)); }
   function setActiveXC(id){
     activeXCId = id || "";
     localStorage.setItem("iptv_active_xc_id", activeXCId);
-  }
-  function addXCProfile(name,user,pass,url){
-    name=(name||"").trim();
-    user=(user||"").trim();
-    pass=(pass||"").trim();
-    url=(url||"").trim();
-    if(!name) name="Xtream Profil";
-    if(!user || !pass || !url) return false;
-    url = url.replace(/\/+$/,"");
-    var p={ id: uuid(), name:name, user:user, pass:pass, url:url };
-    xcProfiles.unshift(p);
-    if(xcProfiles.length>30) xcProfiles = xcProfiles.slice(0,30);
-    saveXCProfiles();
-    setActiveXC(p.id);
-    return true;
-  }
-  function deleteXCProfile(index){
-    if(index<0 || index>=xcProfiles.length) return;
-    var id = xcProfiles[index].id;
-    xcProfiles.splice(index,1);
-    saveXCProfiles();
-    if(activeXCId===id){
-      setActiveXC(xcProfiles[0] ? xcProfiles[0].id : "");
-    }
   }
   function getActiveXC(){
     for(var i=0;i<xcProfiles.length;i++){
@@ -1124,54 +1251,111 @@
     }
     return null;
   }
+  function findXCById(id){
+    for(var i=0;i<xcProfiles.length;i++) if(xcProfiles[i].id===id) return xcProfiles[i];
+    return null;
+  }
+  function deleteXCById(id){
+    var ix=-1;
+    for(var i=0;i<xcProfiles.length;i++){ if(xcProfiles[i].id===id){ ix=i; break; } }
+    if(ix<0) return;
+    xcProfiles.splice(ix,1);
+    saveXCProfiles();
+    if(activeXCId===id){
+      setActiveXC(xcProfiles[0] ? xcProfiles[0].id : "");
+    }
+    if(xcEditId===id) xcEditId="";
+  }
+  function upsertXC(id, name, user, pass, url){
+    name=(name||"").trim();
+    user=(user||"").trim();
+    pass=(pass||"").trim();
+    url=(url||"").trim();
+    if(!name) name="Xtream Profil";
+    if(!user || !pass || !url) return false;
+    url = url.replace(/\/+$/,"");
+
+    if(id){
+      var p=findXCById(id);
+      if(!p) return false;
+      p.name=name; p.user=user; p.pass=pass; p.url=url;
+      saveXCProfiles();
+      return true;
+    }else{
+      var p2={ id: uuid(), name:name, user:user, pass:pass, url:url };
+      xcProfiles.unshift(p2);
+      if(xcProfiles.length>30) xcProfiles = xcProfiles.slice(0,30);
+      saveXCProfiles();
+      setActiveXC(p2.id);
+      return true;
+    }
+  }
+
   function renderXCTab(){
     var host=$("content-body");
-    var html='';
-    html +=
-      '<div class="card2">'+
-        '<div class="card2-title">Neues Xtream Profil</div>'+
-        '<div class="label2">NAME</div>'+
-        '<input id="xc-name" class="input focusable" data-kind="xc-input" data-idx="0" placeholder="z.B. Anbieter A" readonly />'+
-        '<div class="label2">BENUTZERNAME</div>'+
-        '<input id="xc-user" class="input focusable" data-kind="xc-input" data-idx="1" placeholder="username" readonly />'+
-        '<div class="label2">PASSWORT</div>'+
-        '<input id="xc-pass" class="input focusable" data-kind="xc-input" data-idx="2" placeholder="password" readonly />'+
-        '<div class="label2">URL</div>'+
-        '<input id="xc-url" class="input focusable" data-kind="xc-input" data-idx="3" placeholder="http://server:port" readonly />'+
-        '<div class="btnrow">'+
-          '<div id="xc-save" class="btn focusable" data-kind="xc-save" data-idx="4">Speichern</div>'+
-        '</div>'+
-        '<div class="card2-sub" style="font-size:20px; margin-top:12px;">OK auf Feld = Tastatur öffnen</div>'+
-      '</div>';
 
-    html += '<div class="divider"></div>';
+    var edit = xcEditId ? findXCById(xcEditId) : null;
+    var formTitle = edit ? "XTREAM PROFIL BEARBEITEN" : "NEUES XTREAM PROFIL";
+
+    var html='';
+    html += '<div class="two-col">';
+
+    // LEFT
+    html += '<div class="left-col">';
+    html += '<div class="col-title"><span>GESPEICHERTE XTREAM</span><span style="color:rgba(255,255,255,.6);font-weight:900;">'+xcProfiles.length+'</span></div>';
+    html += '<div class="profiles-scroll">';
 
     if(!xcProfiles.length){
-      html +=
-        '<div class="card2">'+
-          '<div class="card2-title">Keine Profile</div>'+
-          '<div class="card2-sub">Lege oben ein Xtream Profil an.</div>'+
-        '</div>';
-      host.innerHTML = html;
-      return;
+      html += '<div class="card2"><div class="card2-title">Keine Profile</div><div class="card2-sub">Rechts ein Profil anlegen.</div></div>';
+    }else{
+      for(var i=0;i<xcProfiles.length;i++){
+        var p=xcProfiles[i];
+        var isActive = (p.id && p.id===activeXCId);
+        html += '<div class="prof-row '+(isActive?'active':'')+'">';
+        html +=   '<div class="prof-head">';
+        html +=     '<div class="prof-name">'+esc(p.name||("Xtream "+(i+1)))+(isActive?'<span class="badge active">AKTIV</span>':'')+'</div>';
+        html +=   '</div>';
+        html +=   '<div class="prof-url">User: '+esc(p.user||"")+'</div>';
+        html +=   '<div class="prof-url">URL: '+esc(p.url||"")+'</div>';
+        html +=   '<div class="prof-actions">';
+        html +=     '<div class="btn focusable" data-kind="xc-activate" data-id="'+esc(p.id)+'">Aktivieren</div>';
+        html +=     '<div class="btn focusable" data-kind="xc-edit" data-id="'+esc(p.id)+'">Bearbeiten</div>';
+        html +=     '<div class="btn danger focusable" data-kind="xc-del" data-id="'+esc(p.id)+'">Löschen</div>';
+        html +=   '</div>';
+        html += '</div>';
+      }
     }
 
-    for(var i=0;i<xcProfiles.length;i++){
-      var p=xcProfiles[i];
-      var isActive = (p.id && p.id===activeXCId);
-      html +=
-        '<div class="card2 focusable" data-kind="xc-prof" data-idx="'+i+'">'+
-          '<div class="card2-title">'+esc(p.name||("Xtream "+(i+1)))+
-            (isActive ? '<span class="badge active">AKTIV</span>' : '')+
-          '</div>'+
-          '<div class="card2-sub">User: '+esc(p.user||"")+'</div>'+
-          '<div class="card2-sub">URL: '+esc(p.url||"")+'</div>'+
-          '<div class="card2-sub" style="font-size:18px;opacity:.9">OK = Aktivieren • → = Löschen (später Buttons möglich)</div>'+
-        '</div>';
-    }
+    html += '</div></div>'; // scroll + left
+
+    // RIGHT
+    html += '<div class="right-col">';
+    html +=   '<div class="col-title"><span>'+formTitle+'</span><span style="color:rgba(255,255,255,.6);font-weight:900;">OK = Tastatur</span></div>';
+    html +=   '<div class="card2" style="margin-bottom:0;">';
+    html +=     '<div class="label2">NAME</div>';
+    html +=     '<input id="xc-name" class="input focusable" readonly data-kind="xc-input" data-field="name" placeholder="z.B. Anbieter A" value="'+esc(edit?edit.name:"")+'" />';
+    html +=     '<div class="label2">BENUTZERNAME</div>';
+    html +=     '<input id="xc-user" class="input focusable" readonly data-kind="xc-input" data-field="user" placeholder="username" value="'+esc(edit?edit.user:"")+'" />';
+    html +=     '<div class="label2">PASSWORT</div>';
+    html +=     '<input id="xc-pass" class="input focusable" readonly data-kind="xc-input" data-field="pass" placeholder="password" value="'+esc(edit?edit.pass:"")+'" />';
+    html +=     '<div class="label2">URL</div>';
+    html +=     '<input id="xc-url" class="input focusable" readonly data-kind="xc-input" data-field="url" placeholder="http://server:port" value="'+esc(edit?edit.url:"")+'" />';
+    html +=     '<div class="btnrow">';
+    html +=       '<div id="xc-save" class="btn ok focusable" data-kind="xc-save">'+(edit?'Speichern':'Anlegen')+'</div>';
+    html +=       '<div id="xc-cancel" class="btn focusable" data-kind="xc-cancel">Abbrechen</div>';
+    html +=     '</div>';
+    html +=     '<div class="card2-sub" style="font-size:18px; margin-top:12px;">Tipp: OK auf Feld → virtuelle Tastatur</div>';
+    html +=   '</div>';
+    html += '</div>'; // right
+
+    html += '</div>'; // two-col
+
     host.innerHTML = html;
   }
 
+  // -----------------------------
+  // TV: M3U load/parse
+  // -----------------------------
   function tvReloadFromActiveProfile(){
     var p=getActiveM3U();
     tvCats=[]; tvAllChans=[]; tvCurChans=[];
@@ -1301,12 +1485,9 @@
     filterTVCategory(catKey);
   }
 
-  function tvToggleFullscreen(){
-    tvFullscreen = !tvFullscreen;
-    document.body.classList.toggle("is-fullscreen", tvFullscreen);
-    applyPlayerRect(tvFullscreen);
-  }
-
+  // -----------------------------
+  // VOD (unchanged)
+  // -----------------------------
   function fetchJSON(url){ return fetch(url).then(function(r){ return r.json(); }); }
 
   function vodReloadFromActiveProfile(){
@@ -1523,164 +1704,175 @@
     $("vod-info-sub").innerText="Serien-Play kommt als nächstes (Episode-Auswahl).";
   }
 
-  /* =========================================================
-     VIRTUELLE TASTATUR LOGIK (sichtbar + Remote steuerbar)
-  ========================================================= */
-  var kbOpen = false;
-  var kbTarget = null;        // input element
-  var kbValue = "";
-  var kbShift = false;
-  var kbCaps  = false;
-  var kbIdx = 0;
-  var kbCols = 12;
-  var kbKeys = [];            // DOM keys
-  var areaBeforeKB = "setupContent";
+  // -----------------------------
+  // Virtual Keyboard (FIXED)
+  // -----------------------------
+  var kbdActive = false;
+  var kbdTargetId = "";
+  var kbdCaps = false;
+  var kbdRow = 0;
+  var kbdCol = 0;
+  var kbdLayout = [];
 
-  function kbLayoutLetters(){
-    // 12 Spalten Raster -> möglichst TV friendly
-    return [
-      {t:"1"},{t:"2"},{t:"3"},{t:"4"},{t:"5"},{t:"6"},{t:"7"},{t:"8"},{t:"9"},{t:"0"},{t:"-"},{t:"_"},
-      {t:"q"},{t:"w"},{t:"e"},{t:"r"},{t:"t"},{t:"z"},{t:"u"},{t:"i"},{t:"o"},{t:"p"},{t:"@"},{t:"."},
-      {t:"a"},{t:"s"},{t:"d"},{t:"f"},{t:"g"},{t:"h"},{t:"j"},{t:"k"},{t:"l"},{t:":"},{t:"/"},{t:"?"},
-      {t:"SHIFT", w:"w2", cls:"alt", act:"shift"},
-      {t:"y"},{t:"x"},{t:"c"},{t:"v"},{t:"b"},{t:"n"},{t:"m"},
-      {t:"<--", w:"w2", cls:"danger", act:"backspace"},
-      {t:"CLEAR", w:"w2", cls:"danger", act:"clear"},
-      {t:"SPACE", w:"w4", act:"space"},
-      {t:"OK", w:"w2", cls:"ok", act:"ok"}
+  function buildKbdLayout(){
+    var r1 = "1234567890".split("").map(function(ch){ return {t:ch,a:"char"}; });
+    r1.push({t:".",a:"char"},{t:"-",a:"char"},{t:"_",a:"char"},{t:":",a:"char"},{t:"/",a:"char"});
+
+    var r2 = "qwertyuiop".split("").map(function(ch){ return {t:ch,a:"char"}; });
+    r2.push({t:"?",a:"char"},{t:"&",a:"char"},{t:"=",a:"char"},{t:"@",a:"char"});
+
+    var r3 = "asdfghjkl".split("").map(function(ch){ return {t:ch,a:"char"}; });
+    r3.push({t:"+",a:"char"},{t:"(",a:"char"},{t:")",a:"char"},{t:"[",a:"char"},{t:"]",a:"char"});
+
+    var r4 = "zxcvbnm".split("").map(function(ch){ return {t:ch,a:"char"}; });
+    r4.push({t:"%",a:"char"},{t:"#",a:"char"},{t:"!",a:"char"});
+
+    var r5 = [
+      {t:"CAPS", a:"caps"},
+      {t:"SPACE", a:"space"},
+      {t:"BACK", a:"backspace", danger:true},
+      {t:"CLEAR", a:"clear", danger:true},
+      {t:"DONE", a:"done"}
     ];
+    return [r1,r2,r3,r4,r5];
   }
 
-  function kbApplyCase(ch){
-    if(ch.length!==1) return ch;
-    var upper = kbCaps ^ kbShift; // XOR
-    return upper ? ch.toUpperCase() : ch.toLowerCase();
-  }
+  function renderKeyboard(){
+    kbdLayout = buildKbdLayout();
+    var host = $("kbd-rows");
+    var html = "";
 
-  function kbBuild(){
-    var grid = $("kb-grid");
-    grid.innerHTML = "";
-    kbKeys = [];
-    kbCols = 12;
-    var layout = kbLayoutLetters();
-
-    for(var i=0;i<layout.length;i++){
-      var k = layout[i];
-      var div = document.createElement("div");
-      div.className = "kb-key";
-      if(k.w) div.classList.add(k.w);
-      if(k.cls) div.classList.add(k.cls);
-
-      div.setAttribute("data-act", k.act || "char");
-      div.setAttribute("data-val", k.t);
-
-      var label = k.t;
-      if((k.act||"char")==="char" && k.t.length===1){
-        label = kbApplyCase(k.t);
+    for(var r=0; r<kbdLayout.length; r++){
+      html += '<div class="kbd-row" style="display:flex; gap:10px; margin-bottom:10px;">';
+      for(var c=0; c<kbdLayout[r].length; c++){
+        var k = kbdLayout[r][c];
+        var cls = "kbtn";
+        if(k.danger) cls += " danger";
+        var style = "";
+        if(k.a==="space") style = "flex:1.6;";
+        else if(k.a==="caps" || k.a==="done") style = "flex:1.0;";
+        else style = "flex:0.65;";
+        html += '<div class="'+cls+'" style="'+style+'" data-r="'+r+'" data-c="'+c+'">'+esc(k.t)+'</div>';
       }
-      div.innerText = label;
-
-      grid.appendChild(div);
-      kbKeys.push(div);
+      html += "</div>";
     }
 
-    kbIdx = clamp(kbIdx, 0, kbKeys.length-1);
-    kbRenderFocus();
+    host.innerHTML = html;
+    kbdRow = clamp(kbdRow, 0, kbdLayout.length-1);
+    kbdCol = clamp(kbdCol, 0, kbdLayout[kbdRow].length-1);
+    kbdUpdateFocus();
   }
 
-  function kbRenderFocus(){
-    for(var i=0;i<kbKeys.length;i++){
-      kbKeys[i].classList.toggle("focused", i===kbIdx);
-      // refresh labels for case
-      var act = kbKeys[i].getAttribute("data-act") || "char";
-      var val = kbKeys[i].getAttribute("data-val") || "";
-      if(act==="char" && val.length===1){
-        kbKeys[i].innerText = kbApplyCase(val);
-      }else{
-        kbKeys[i].innerText = val;
-      }
-    }
-    $("kb-value").innerText = kbValue || "";
+  function kbdUpdatePreview(){
+    var inp = $(kbdTargetId);
+    $("kbd-preview").innerText = inp ? (inp.value || "") : "";
   }
 
-  function openKeyboard(inputEl, title){
-    kbTarget = inputEl;
-    kbValue = (inputEl && typeof inputEl.value==="string") ? inputEl.value : "";
-    kbShift = false;
-    kbCaps = false;
-    kbIdx = 0;
-
-    areaBeforeKB = area;
-    area = "keyboard";
-
-    $("kb-title").innerText = (title || "EINGABE").toUpperCase();
-    $("kb-overlay").style.display = "flex";
-    kbOpen = true;
-
-    kbBuild();
-    kbRenderFocus();
+  function kbdUpdateFocus(){
+    var btns = $("kbd-rows").querySelectorAll(".kbtn");
+    for(var i=0;i<btns.length;i++) btns[i].classList.remove("focused");
+    var sel = '.kbtn[data-r="'+kbdRow+'"][data-c="'+kbdCol+'"]';
+    var el = document.querySelector(sel);
+    if(el) el.classList.add("focused");
+    $("kbd-title").innerText = "TASTATUR" + (kbdCaps ? " (CAPS)" : "");
+    kbdUpdatePreview();
   }
 
-  function closeKeyboard(apply){
-    if(apply && kbTarget){
-      kbTarget.value = kbValue;
-    }
-    kbOpen = false;
-    $("kb-overlay").style.display = "none";
-    area = areaBeforeKB || "setupContent";
-    kbTarget = null;
+  function openKeyboard(inputId){
+    kbdTargetId = inputId;
+    kbdActive = true;
+    area = "kbd";
+    $("kbd-overlay").classList.add("active");
+    kbdRow = 0; kbdCol = 0;
+    renderKeyboard();
+  }
+
+  function closeKeyboard(){
+    kbdActive = false;
+    $("kbd-overlay").classList.remove("active");
+    area = "setupContent";
     updateFocus();
   }
 
-  function kbPressCurrent(){
-    if(!kbKeys.length) return;
-    var el = kbKeys[kbIdx];
-    var act = el.getAttribute("data-act") || "char";
-    var val = el.getAttribute("data-val") || "";
-
-    if(act==="shift"){
-      kbShift = !kbShift;
-      kbRenderFocus();
-      return;
-    }
-    if(act==="backspace"){
-      kbValue = kbValue.slice(0, Math.max(0, kbValue.length-1));
-      kbRenderFocus();
-      return;
-    }
-    if(act==="clear"){
-      kbValue = "";
-      kbRenderFocus();
-      return;
-    }
-    if(act==="space"){
-      kbValue += " ";
-      kbRenderFocus();
-      return;
-    }
-    if(act==="ok"){
-      closeKeyboard(true);
-      return;
-    }
-
-    // char
-    if(val.length===1){
-      kbValue += kbApplyCase(val);
-      if(kbShift) kbShift = false; // shift nur 1x
-      kbRenderFocus();
-    }
+  function kbdGetKey(){
+    if(!kbdLayout.length) return null;
+    if(!kbdLayout[kbdRow]) return null;
+    return kbdLayout[kbdRow][kbdCol] || null;
   }
 
-  /* ========================================================= */
+  function kbdPutChar(ch){
+    var inp = $(kbdTargetId);
+    if(!inp) return;
+    var out = ch;
+    if(kbdCaps && /^[a-z]$/i.test(out)) out = out.toUpperCase();
+    inp.value = (inp.value || "") + out;
+    kbdUpdatePreview();
+  }
 
+  function kbdBackspace(){
+    var inp = $(kbdTargetId);
+    if(!inp) return;
+    var v = inp.value || "";
+    inp.value = v.slice(0, Math.max(0, v.length-1));
+    kbdUpdatePreview();
+  }
+
+  function kbdClear(){
+    var inp = $(kbdTargetId);
+    if(!inp) return;
+    inp.value = "";
+    kbdUpdatePreview();
+  }
+
+  function kbdSpace(){
+    var inp = $(kbdTargetId);
+    if(!inp) return;
+    inp.value = (inp.value || "") + " ";
+    kbdUpdatePreview();
+  }
+
+  function kbdPress(){
+    var k = kbdGetKey();
+    if(!k) return;
+
+    if(k.a==="char") kbdPutChar(k.t);
+    else if(k.a==="space") kbdSpace();
+    else if(k.a==="backspace") kbdBackspace();
+    else if(k.a==="clear") kbdClear();
+    else if(k.a==="caps") kbdCaps = !kbdCaps;
+    else if(k.a==="done") closeKeyboard();
+
+    kbdUpdateFocus();
+  }
+
+  function handleKbdKeys(keyCode){
+    if(area!=="kbd") return false;
+
+    if(keyCode===37){ kbdCol = Math.max(0, kbdCol-1); kbdUpdateFocus(); return true; }
+    if(keyCode===39){ kbdCol = Math.min(kbdLayout[kbdRow].length-1, kbdCol+1); kbdUpdateFocus(); return true; }
+    if(keyCode===38){
+      kbdRow = Math.max(0, kbdRow-1);
+      kbdCol = Math.min(kbdCol, kbdLayout[kbdRow].length-1);
+      kbdUpdateFocus();
+      return true;
+    }
+    if(keyCode===40){
+      kbdRow = Math.min(kbdLayout.length-1, kbdRow+1);
+      kbdCol = Math.min(kbdCol, kbdLayout[kbdRow].length-1);
+      kbdUpdateFocus();
+      return true;
+    }
+    if(keyCode===13){ kbdPress(); return true; }
+    if(keyCode===10009 || keyCode===27){ closeKeyboard(); return true; }
+
+    return true;
+  }
+
+  // -----------------------------
+  // Focus & Navigation
+  // -----------------------------
   function updateFocus(){
     renderMenuFocus();
-
-    // Keyboard focus
-    if(kbOpen && area==="keyboard"){
-      kbRenderFocus();
-      return;
-    }
 
     if($("setup-view").style.display==="flex"){
       for(var t=0;t<4;t++){
@@ -1717,66 +1909,19 @@
   }
 
   // -----------------------------
-  // KEY HANDLING
+  // Key Handling
   // -----------------------------
   document.addEventListener("keydown", function(e){
     var k=e.keyCode;
 
-    // Wenn Tastatur offen: ALLES hier abfangen
-    if(kbOpen && area==="keyboard"){
-      // Back/Escape schließt ohne übernehmen
-      if(k===10009 || k===27){
-        closeKeyboard(false);
-        return;
-      }
-      // 0 als Space (praktisch)
-      if(k===48){
-        kbValue += " ";
-        kbRenderFocus();
-        return;
-      }
-      if(k===37){ // left
-        if(kbIdx>0) kbIdx--;
-        kbRenderFocus();
-        return;
-      }
-      if(k===39){ // right
-        if(kbIdx<kbKeys.length-1) kbIdx++;
-        kbRenderFocus();
-        return;
-      }
-      if(k===38){ // up
-        kbIdx = kbIdx - kbCols;
-        if(kbIdx<0) kbIdx = 0;
-        kbRenderFocus();
-        return;
-      }
-      if(k===40){ // down
-        kbIdx = kbIdx + kbCols;
-        if(kbIdx>kbKeys.length-1) kbIdx = kbKeys.length-1;
-        kbRenderFocus();
-        return;
-      }
-      if(k===13){
-        kbPressCurrent();
-        return;
-      }
-      return;
-    }
+    // ✅ Keyboard overlay has priority
+    if(handleKbdKeys(k)) return;
 
     if(k===10009 || k===27){
-      var ae=document.activeElement;
-      if(ae && ae.tagName==="INPUT"){
-        try{ ae.blur(); }catch(ex){}
-        updateFocus();
-        return;
-      }
-
       if(tvFullscreen){
         tvToggleFullscreen();
         return;
       }
-
       if(area==="setupContent"){ area="tabs"; updateFocus(); return; }
       if(area==="tabs"){ area="menu"; updateFocus(); return; }
       if(area==="tvCats" || area==="tvChans"){ area="menu"; updateFocus(); return; }
@@ -1868,58 +2013,32 @@
         updateFocus();
         return;
       }
-
-      if(tabIdx===0){
-        var cols=5;
-        if(k===37){ if(len) setupFocusIdx=Math.max(0, setupFocusIdx-1); updateFocus(); return; }
-        if(k===39){ if(len) setupFocusIdx=Math.min(len-1, setupFocusIdx+1); updateFocus(); return; }
-        if(k===38){
-          var up=setupFocusIdx-cols;
-          if(up>=0){ setupFocusIdx=up; updateFocus(); }
-          else { area="tabs"; updateFocus(); }
-          return;
-        }
-        if(k===40){
-          var dn=setupFocusIdx+cols;
-          if(dn<=len-1){ setupFocusIdx=dn; updateFocus(); }
-          return;
-        }
-      }else{
-        if(k===39 && len){
-          var el=f[setupFocusIdx];
-          var kind=el.getAttribute("data-kind")||"";
-          var idx=parseInt(el.getAttribute("data-idx")||"-1",10);
-          if(kind==="m3u-prof"){
-            deleteM3UProfile(idx);
-            renderSetupTabPreview();
-            area="setupContent";
-            setupFocusIdx=clamp(setupFocusIdx,0,getSetupFocusables().length-1);
-            updateFocus();
-            tvReloadFromActiveProfile();
-            return;
-          }
-          if(kind==="xc-prof"){
-            deleteXCProfile(idx);
-            renderSetupTabPreview();
-            area="setupContent";
-            setupFocusIdx=clamp(setupFocusIdx,0,getSetupFocusables().length-1);
-            updateFocus();
-            vodReloadFromActiveProfile();
-            return;
-          }
-        }
+      // Optional left/right: move to neighbor in DOM direction
+      if(k===37){
+        if(len) setupFocusIdx=Math.max(0, setupFocusIdx-1);
+        updateFocus();
+        return;
+      }
+      if(k===39){
+        if(len) setupFocusIdx=Math.min(len-1, setupFocusIdx+1);
+        updateFocus();
+        return;
       }
 
       if(k===13 && len){
-        var el2=f[setupFocusIdx];
-        var kind2=el2.getAttribute("data-kind")||"";
-        var idx2=parseInt(el2.getAttribute("data-idx")||"-1",10);
+        var el=f[setupFocusIdx];
+        var kind=(el.getAttribute("data-kind")||"");
+        var id=(el.getAttribute("data-id")||"");
 
-        if(kind2==="bg" && bgItems[idx2]){
-          setBackground(bgItems[idx2].url);
+        // BG
+        if(kind==="bg"){
+          var idx=parseInt(el.getAttribute("data-idx")||"-1",10);
+          if(bgItems[idx]) setBackground(bgItems[idx].url);
           return;
         }
-        if(kind2==="mac"){
+
+        // MAC
+        if(kind==="mac"){
           renderMACTab();
           area="setupContent";
           setupFocusIdx=0;
@@ -1927,65 +2046,80 @@
           return;
         }
 
-        // >>> WICHTIG: keine native Samsung Tastatur, sondern unsere Overlay Tastatur
-        if(kind2==="m3u-input"){
-          var t = (idx2===0) ? "M3U NAME" : "M3U URL";
-          openKeyboard(el2, t);
+        // M3U
+        if(kind==="m3u-input"){
+          openKeyboard(el.id);
           return;
         }
-        if(kind2==="xc-input"){
-          var tx = ["XTREAM NAME","BENUTZER","PASSWORT","URL"][idx2] || "EINGABE";
-          openKeyboard(el2, tx);
-          return;
-        }
-
-        if(kind2==="m3u-save"){
-          var name = ($("m3u-name") ? $("m3u-name").value : "");
-          var url  = ($("m3u-url") ? $("m3u-url").value : "");
-          if(addM3UProfile(name,url)){
-            renderSetupTabPreview();
-            area="setupContent";
-            setupFocusIdx=3;
+        if(kind==="m3u-save"){
+          var name = $("m3u-name") ? $("m3u-name").value : "";
+          var url  = $("m3u-url") ? $("m3u-url").value : "";
+          if(upsertM3U(m3uEditId, name, url)){
+            if(!m3uEditId){
+              // schon gesetzt in upsertM3U via setActiveM3U bei neu
+            }else{
+              // aktiv lassen
+            }
+            m3uEditId="";
+            renderM3UTab();
             updateFocus();
             tvReloadFromActiveProfile();
           }
           return;
         }
-        if(kind2==="m3u-prof"){
-          var p=m3uProfiles[idx2];
-          if(p && p.id){
-            setActiveM3U(p.id);
-            renderSetupTabPreview();
-            area="setupContent";
-            updateFocus();
-            tvReloadFromActiveProfile();
-          }
+        if(kind==="m3u-cancel"){
+          m3uEditId="";
+          renderM3UTab();
+          updateFocus();
+          return;
+        }
+        if(kind==="m3u-activate"){
+          if(id){ setActiveM3U(id); renderM3UTab(); updateFocus(); tvReloadFromActiveProfile(); }
+          return;
+        }
+        if(kind==="m3u-edit"){
+          if(id){ m3uEditId=id; renderM3UTab(); setupFocusIdx=0; updateFocus(); }
+          return;
+        }
+        if(kind==="m3u-del"){
+          if(id){ deleteM3UById(id); renderM3UTab(); setupFocusIdx=0; updateFocus(); tvReloadFromActiveProfile(); }
           return;
         }
 
-        if(kind2==="xc-save"){
-          var n = ($("xc-name") ? $("xc-name").value : "");
-          var u = ($("xc-user") ? $("xc-user").value : "");
-          var p2 = ($("xc-pass") ? $("xc-pass").value : "");
-          var s = ($("xc-url")  ? $("xc-url").value  : "");
-          if(addXCProfile(n,u,p2,s)){
-            renderSetupTabPreview();
-            area="setupContent";
-            setupFocusIdx=5;
+        // XTREAM
+        if(kind==="xc-input"){
+          openKeyboard(el.id);
+          return;
+        }
+        if(kind==="xc-save"){
+          var n = $("xc-name") ? $("xc-name").value : "";
+          var u = $("xc-user") ? $("xc-user").value : "";
+          var p = $("xc-pass") ? $("xc-pass").value : "";
+          var s = $("xc-url")  ? $("xc-url").value  : "";
+          if(upsertXC(xcEditId, n, u, p, s)){
+            xcEditId="";
+            renderXCTab();
             updateFocus();
             vodReloadFromActiveProfile();
           }
           return;
         }
-        if(kind2==="xc-prof"){
-          var xp=xcProfiles[idx2];
-          if(xp && xp.id){
-            setActiveXC(xp.id);
-            renderSetupTabPreview();
-            area="setupContent";
-            updateFocus();
-            vodReloadFromActiveProfile();
-          }
+        if(kind==="xc-cancel"){
+          xcEditId="";
+          renderXCTab();
+          updateFocus();
+          return;
+        }
+        if(kind==="xc-activate"){
+          if(id){ setActiveXC(id); renderXCTab(); updateFocus(); vodReloadFromActiveProfile(); }
+          return;
+        }
+        if(kind==="xc-edit"){
+          if(id){ xcEditId=id; renderXCTab(); setupFocusIdx=0; updateFocus(); }
+          return;
+        }
+        if(kind==="xc-del"){
+          if(id){ deleteXCById(id); renderXCTab(); setupFocusIdx=0; updateFocus(); vodReloadFromActiveProfile(); }
           return;
         }
       }
@@ -2048,19 +2182,23 @@
     }
   });
 
+  // -----------------------------
+  // Init
+  // -----------------------------
   function init(){
     try{
       ["Up","Down","Left","Right","Enter","Back","0"].forEach(function(k){
         tizen.tvinputdevice.registerKey(k);
       });
     }catch(e){}
+
     normalizeProfiles();
 
     initPlayer();
     setTimeout(function(){ applyPlayerRect(false); }, 50);
+
     menuIdx=0;
     area="menu";
-
     showMainByMenu(menuIdx);
 
     renderMenuFocus();
