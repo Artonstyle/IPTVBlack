@@ -3,96 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IPTV BLACK - Remote Connect</title>
+    <title>IPTV BLACK - Remote Manager 2026</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --green: #3ecf8e; --bg: #050505; --card: #141414; --input: #222; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #fff; padding: 20px; display: flex; flex-direction: column; align-items: center; margin: 0; min-height: 100vh; }
-        
-        .header { text-align: center; margin-bottom: 20px; }
-        h2 { color: var(--green); margin: 0; text-transform: uppercase; letter-spacing: 2px; }
-        p { color: #666; font-size: 12px; margin-top: 5px; }
-
-        .card { background: var(--card); padding: 20px; border-radius: 16px; width: 100%; max-width: 450px; border: 1px solid #333; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-        
-        /* ID Anzeige */
-        .id-box { background: #111; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 20px; border: 1px dashed #444; }
-        .id-label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
-        .id-value { font-size: 18px; font-weight: bold; color: var(--green); letter-spacing: 1px; font-family: monospace; }
-
-        /* Tabs */
-        .tabs { display: flex; border-bottom: 2px solid #222; margin-bottom: 20px; }
-        .tab-btn { flex: 1; padding: 15px; background: none; border: none; color: #666; cursor: pointer; font-weight: bold; transition: 0.3s; font-size: 14px; }
-        .tab-btn.active { color: var(--green); border-bottom: 2px solid var(--green); margin-bottom: -2px; }
-        .tab-content { display: none; animation: fadeIn 0.3s; }
+        :root { --green: #3ecf8e; --bg: #050505; --card: #141414; --input: #222; --text: #eee; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 20px; display: flex; flex-direction: column; align-items: center; margin: 0; min-height: 100vh; }
+        .card { background: var(--card); padding: 25px; border-radius: 20px; width: 100%; max-width: 450px; border: 1px solid #333; box-shadow: 0 20px 50px rgba(0,0,0,0.6); }
+        .id-section { background: #000; padding: 20px; border-radius: 15px; margin-bottom: 25px; border: 1px solid var(--green); text-align: center; }
+        .id-label { font-size: 11px; color: var(--green); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; display: block; }
+        .mac-input-field { width: 100%; background: transparent; border: none; border-bottom: 2px solid #333; color: #fff; font-size: 26px; text-align: center; font-family: monospace; outline: none; }
+        .tabs { display: flex; border-bottom: 2px solid #222; margin-bottom: 25px; }
+        .tab-btn { flex: 1; padding: 15px; background: none; border: none; color: #666; cursor: pointer; font-weight: bold; }
+        .tab-btn.active { color: var(--green); border-bottom: 2px solid var(--green); }
+        .tab-content { display: none; }
         .tab-content.active { display: block; }
-
-        /* Formular */
-        label { display: block; margin-top: 12px; font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 600; margin-bottom: 5px; }
-        input { width: 100%; padding: 14px; margin-bottom: 5px; border-radius: 8px; border: 1px solid #333; background: var(--input); color: #fff; box-sizing: border-box; font-size: 15px; transition: 0.2s; }
-        input:focus { border-color: var(--green); outline: none; background: #000; }
-        
-        .main-btn { width: 100%; padding: 16px; background: var(--green); color: #000; border: none; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 16px; margin-top: 25px; text-transform: uppercase; box-shadow: 0 5px 15px rgba(62, 207, 142, 0.2); }
-        .main-btn:active { transform: scale(0.98); }
-
-        .loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; flex-direction: column; z-index: 999; }
-        .spinner { width: 40px; height: 40px; border: 4px solid #333; border-top: 4px solid var(--green); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
-        
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        label { display: block; margin-top: 15px; font-size: 11px; color: #888; text-transform: uppercase; margin-bottom: 5px; }
+        input { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid #333; background: var(--input); color: #fff; box-sizing: border-box; font-size: 16px; outline: none; }
+        .main-btn { width: 100%; padding: 18px; background: var(--green); color: #000; border: none; border-radius: 10px; font-weight: 800; cursor: pointer; margin-top: 25px; text-transform: uppercase; }
+        .progress-container { width: 100%; background: #000; border-radius: 10px; margin-top: 20px; display: none; border: 1px solid #222; overflow: hidden; }
+        .progress-bar { width: 0%; height: 8px; background: var(--green); transition: width 0.3s; }
     </style>
 </head>
 <body>
 
-<div class="loader" id="loader">
-    <div class="spinner"></div>
-    <div style="color:var(--green)">Sende Daten an TV...</div>
-</div>
-
-<div class="header">
-    <h2>IPTV BLACK</h2>
-    <p>Manager & Sync</p>
+<div style="text-align:center; margin-bottom:30px;">
+    <h1 style="color:var(--green); margin:0; letter-spacing:4px;">IPTV BLACK</h1>
+    <p style="color:#555; font-size:12px;">DATABASE REMOTE SYNC 2026</p>
 </div>
 
 <div class="card">
-    <div class="id-box">
-        <div class="id-label">Verbundener TV (ID)</div>
-        <div class="id-value" id="mac-display">-- NICHT VERBUNDEN --</div>
-        <input type="hidden" id="mac">
+    <div class="id-section">
+        <span class="id-label">TV IDENTIFIKATION (MAC)</span>
+        <input type="text" id="mac-field" class="mac-input-field" placeholder="00:00:00:00:00:00">
     </div>
 
     <div class="tabs">
-        <button class="tab-btn active" onclick="openTab(event, 'tab-m3u')">M3U / DATEI</button>
-        <button class="tab-btn" onclick="openTab(event, 'tab-xtream')">XTREAM CODES</button>
+        <button class="tab-btn active" onclick="openTab('xtream')">XTREAM</button>
+        <button class="tab-btn" onclick="openTab('m3u')">M3U UPLOAD</button>
     </div>
 
-    <div id="tab-m3u" class="tab-content active">
-        <label>Playlist Name</label>
-        <input type="text" id="m3u_name" placeholder="z.B. Meine Liste">
-
-        <label>M3U URL (Link)</label>
-        <input type="text" id="m3u_link" placeholder="http://...">
-
-        <label style="margin-top: 20px;">Oder M3U Datei hochladen</label>
-        <input type="file" id="fileInput" accept=".m3u,.m3u8" style="padding: 10px;">
-        
-        <button class="main-btn" onclick="saveData('m3u')">SENDEN</button>
-    </div>
-
-    <div id="tab-xtream" class="tab-content">
-        <label>Playlist Name</label>
-        <input type="text" id="xc_name" placeholder="z.B. Premium TV">
-
-        <label>Server URL (Host:Port)</label>
+    <div id="tab-xtream" class="tab-content active">
+        <label>Playlist Name (z.B. "Mein TV")</label>
+        <input type="text" id="xc_name_display" placeholder="Eigener Name für die Liste">
+        <label>Server URL</label>
         <input type="text" id="xc_host" placeholder="http://domain.com:8080">
+        <label>Username</label>
+        <input type="text" id="xc_user">
+        <label>Password</label>
+        <input type="password" id="xc_pass">
+        <button class="main-btn" onclick="saveData('xtream')">Speichern</button>
+    </div>
+
+    <div id="tab-m3u" class="tab-content">
+        <label>Anzeigename im TV</label>
+        <input type="text" id="m3u_name_display" placeholder="z.B. Sky Liste">
         
-        <label>Benutzername</label>
-        <input type="text" id="xc_user" placeholder="Username">
+        <label style="margin-top:20px;">Datei wählen</label>
+        <input type="file" id="m3u_file" accept=".m3u,.m3u8">
         
-        <label>Passwort</label>
-        <input type="password" id="xc_pass" placeholder="Password">
+        <div class="progress-container" id="p-container">
+            <div class="progress-bar" id="p-bar"></div>
+        </div>
         
-        <button class="main-btn" onclick="saveData('xtream')">LOGIN SENDEN</button>
+        <button class="main-btn" onclick="saveData('m3u')">Hochladen & Senden</button>
     </div>
 </div>
 
@@ -101,76 +74,52 @@
     const S_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxenJ1ZWlnZHFzcWZzanptemh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNjczMDYsImV4cCI6MjA4Njg0MzMwNn0.V0v5cYENXJ3IxFxqQC9IlD5bQBD8runcgZdKJeVYhvA";
     const supabaseClient = supabase.createClient(S_URL, S_KEY);
 
-    // Beim Laden: ID aus URL holen (vom QR Code)
-    window.onload = function() {
+    window.onload = () => {
         const urlParams = new URLSearchParams(window.location.search);
-        const idFromUrl = urlParams.get('id');
-        
-        if (idFromUrl) {
-            document.getElementById('mac').value = idFromUrl.toUpperCase();
-            document.getElementById('mac-display').innerText = idFromUrl.toUpperCase();
-        } else {
-            // Falls jemand die Seite so öffnet, manuelle Eingabe erlauben
-            let manualID = prompt("Keine ID gefunden. Bitte TV ID manuell eingeben:");
-            if(manualID) {
-                document.getElementById('mac').value = manualID.toUpperCase();
-                document.getElementById('mac-display').innerText = manualID.toUpperCase();
-            }
-        }
+        const id = urlParams.get('id');
+        if (id) document.getElementById('mac-field').value = id.toUpperCase();
     };
 
-    function openTab(evt, tabName) {
-        var i, tabcontent, tablinks;
-        tabcontent = document.getElementsByClassName("tab-content");
-        for (i = 0; i < tabcontent.length; i++) { tabcontent[i].style.display = "none"; }
-        tablinks = document.getElementsByClassName("tab-btn");
-        for (i = 0; i < tablinks.length; i++) { tablinks[i].classList.remove("active"); }
-        document.getElementById(tabName).style.display = "block";
-        evt.currentTarget.classList.add("active");
+    function openTab(name) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.getElementById('tab-' + name).classList.add('active');
     }
 
     async function saveData(mode) {
-        const mac = document.getElementById('mac').value;
-        if(!mac || mac === "-- NICHT VERBUNDEN --") return alert("Fehler: Keine TV ID vorhanden!");
+        const mac = document.getElementById('mac-field').value.trim().toUpperCase();
+        if(!mac) return alert("MAC fehlt!");
 
-        document.getElementById('loader').style.display = "flex";
         let payload = { mac: mac };
+        const pBar = document.getElementById('p-bar');
 
         if(mode === 'm3u') {
-            let finalUrl = document.getElementById('m3u_link').value.trim();
-            const file = document.getElementById('fileInput').files[0];
-            const name = document.getElementById('m3u_name').value.trim() || "M3U Playlist";
-
-            // Datei Upload Logik
-            if(file) {
-                const fileName = `${mac}_${Date.now()}.m3u`;
-                const { error: upErr } = await supabaseClient.storage.from('m3u-files').upload(fileName, file);
-                if(!upErr) {
-                    const { data: pUrl } = supabaseClient.storage.from('m3u-files').getPublicUrl(fileName);
-                    finalUrl = pUrl.publicUrl;
-                }
+            const fileInput = document.getElementById('m3u_file');
+            const customName = document.getElementById('m3u_name_display').value;
+            
+            if(fileInput.files.length > 0) {
+                document.getElementById('p-container').style.display = "block";
+                const file = fileInput.files[0];
+                const fileName = `${mac.replace(/:/g, '')}_${Date.now()}.m3u`;
+                
+                await supabaseClient.storage.from('m3u-files').upload(fileName, file, { upsert: true });
+                pBar.style.width = "60%";
+                
+                const { data } = supabaseClient.storage.from('m3u-files').getPublicUrl(fileName);
+                payload.m3u_url = data.publicUrl;
+                // Wenn kein Name eingegeben wurde, nimm den echten Dateinamen
+                payload.playlist_name = customName || file.name;
             }
-
-            payload.m3u_url = finalUrl;
-            payload.xc_host = null; payload.xc_user = null; payload.xc_pass = null; 
-            // Name speichern wir hier trickreich im xc_user Feld oder Host, wenn es nur M3U ist, 
-            // aber besser: wir verlassen uns auf die URL.
-        } 
-        else {
-            payload.xc_host = document.getElementById('xc_host').value.trim();
-            payload.xc_user = document.getElementById('xc_user').value.trim();
-            payload.xc_pass = document.getElementById('xc_pass').value.trim();
-            payload.m3u_url = null; // M3U Link löschen damit TV weiß es ist Xtream
+        } else {
+            payload.xc_host = document.getElementById('xc_host').value;
+            payload.xc_user = document.getElementById('xc_user').value;
+            payload.xc_pass = document.getElementById('xc_pass').value;
+            payload.playlist_name = document.getElementById('xc_name_display').value || "Xtream Login";
         }
 
         const { error } = await supabaseClient.from('playlists').upsert(payload);
-        document.getElementById('loader').style.display = "none";
-        
         if(!error) {
-            alert("Erfolgreich! Schau jetzt auf deinen Fernseher.");
-            window.close();
-        } else {
-            alert("Fehler: " + error.message);
+            pBar.style.width = "100%";
+            alert("Erfolgreich! Dein TV zeigt nun '" + payload.playlist_name + "' an.");
         }
     }
 </script>
