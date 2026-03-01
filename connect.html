@@ -91,16 +91,10 @@
             transition: 0.25s;
         }
 
-        .tab-btn:hover {
-            color: var(--neon);
-            text-shadow: 0 0 10px rgba(0,240,255,0.55);
-        }
-
         .tab-btn.active {
             color: var(--neon);
             border: 1px solid var(--line);
             border-bottom: 2px solid var(--neon);
-            text-shadow: 0 0 12px rgba(0,240,255,0.75);
             background: rgba(0,240,255,0.04);
         }
 
@@ -114,7 +108,6 @@
             color: var(--muted);
             text-transform: uppercase;
             margin-bottom: 6px;
-            letter-spacing: 0.6px;
         }
 
         input {
@@ -127,14 +120,6 @@
             box-sizing: border-box;
             font-size: 16px;
             outline: none;
-            transition: 0.25s;
-        }
-
-        input::placeholder { color: rgba(224,247,255,0.45); }
-
-        input:focus {
-            border-color: rgba(0,240,255,0.7);
-            box-shadow: 0 0 14px rgba(0,240,255,0.25);
         }
 
         .main-btn {
@@ -148,20 +133,7 @@
             cursor: pointer;
             margin-top: 25px;
             text-transform: uppercase;
-            transition: 0.25s;
             box-shadow: 0 0 16px rgba(0,240,255,0.55);
-        }
-
-        .main-btn:hover {
-            box-shadow: 0 0 28px rgba(0,240,255,0.85);
-            transform: translateY(-2px);
-        }
-
-        .main-btn:disabled {
-            opacity: 0.65;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: 0 0 8px rgba(0,240,255,0.25);
         }
 
         .progress-container {
@@ -170,7 +142,6 @@
             border-radius: 12px;
             margin-top: 20px;
             display: none;
-            border: 1px solid rgba(0,240,255,0.25);
             overflow: hidden;
         }
 
@@ -178,28 +149,10 @@
             width: 0%;
             height: 8px;
             background: linear-gradient(90deg, #00f0ff, #007bff);
-            box-shadow: 0 0 10px rgba(0,240,255,0.7);
-            transition: width 0.3s;
         }
 
-        .brand {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .brand h1 {
-            color: var(--neon);
-            margin: 0;
-            letter-spacing: 4px;
-            text-shadow: 0 0 14px rgba(0,240,255,0.55);
-        }
-
-        .brand p {
-            color: rgba(224,247,255,0.35);
-            font-size: 12px;
-            margin: 6px 0 0 0;
-            letter-spacing: 1px;
-        }
+        .brand { text-align: center; margin-bottom: 30px; }
+        .brand h1 { color: var(--neon); margin: 0; letter-spacing: 4px; }
     </style>
 </head>
 <body>
@@ -221,47 +174,35 @@
         <button class="tab-btn" data-tab="m3uurl" onclick="openTab('m3uurl')">M3U URL</button>
     </div>
 
-    <!-- XTREAM -->
     <div id="tab-xtream" class="tab-content active">
-        <label>Playlist Name (z.B. "Mein TV")</label>
-        <input type="text" id="xc_name_display" placeholder="Eigener Name für die Liste">
-
+        <label>Xtream Anzeigename</label>
+        <input type="text" id="xc_name_display" placeholder="z.B. Mein Xtream Login">
         <label>Server URL</label>
         <input type="text" id="xc_host" placeholder="http://domain.com:8080">
-
         <label>Username</label>
         <input type="text" id="xc_user" placeholder="Benutzername">
-
         <label>Password</label>
         <input type="password" id="xc_pass" placeholder="Passwort">
-
-        <button class="main-btn" id="btn-xtream" onclick="saveData('xtream')">Laden &amp; Senden</button>
+        <button class="main-btn" onclick="saveData('xtream')">Xtream Senden</button>
     </div>
 
-    <!-- M3U UPLOAD -->
     <div id="tab-m3u" class="tab-content">
-        <label>Anzeigename im TV</label>
-        <input type="text" id="m3u_name_display" placeholder="z.B. Sky Liste">
-
+        <label>M3U Datei Anzeigename</label>
+        <input type="text" id="m3u_name_display" placeholder="z.B. Meine M3U Liste">
         <label style="margin-top:20px;">Datei wählen</label>
         <input type="file" id="m3u_file" accept=".m3u,.m3u8">
-
         <div class="progress-container" id="p-container">
             <div class="progress-bar" id="p-bar"></div>
         </div>
-
-        <button class="main-btn" id="btn-m3u" onclick="saveData('m3u')">Hochladen &amp; Senden</button>
+        <button class="main-btn" onclick="saveData('m3u')">Datei Hochladen</button>
     </div>
 
-    <!-- M3U URL -->
     <div id="tab-m3uurl" class="tab-content">
-        <label>Anzeigename im TV</label>
-        <input type="text" id="m3uurl_name_display" placeholder="z.B. Externe Liste">
-
+        <label>M3U URL Anzeigename</label>
+        <input type="text" id="m3uurl_name_display" placeholder="z.B. Externe URL">
         <label>M3U URL</label>
         <input type="text" id="m3uurl_link" placeholder="http://domain.com/playlist.m3u8">
-
-        <button class="main-btn" id="btn-m3uurl" onclick="saveData('m3uurl')">Laden &amp; Senden</button>
+        <button class="main-btn" onclick="saveData('m3uurl')">URL Senden</button>
     </div>
 </div>
 
@@ -269,12 +210,6 @@
     const S_URL = "https://qqzrueigdqsqfsjzmzhv.supabase.co";
     const S_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxenJ1ZWlnZHFzcWZzanptemh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNjczMDYsImV4cCI6MjA4Njg0MzMwNn0.V0v5cYENXJ3IxFxqQC9IlD5bQBD8runcgZdKJeVYhvA";
     const supabaseClient = supabase.createClient(S_URL, S_KEY);
-
-    const BTN_LABELS = {
-        xtream: { idle: "Laden & Senden", busy: "Bitte warten…", done: "Gesendet ✓" },
-        m3u:    { idle: "Hochladen & Senden", busy: "Bitte warten…", done: "Gesendet ✓" },
-        m3uurl: { idle: "Laden & Senden", busy: "Bitte warten…", done: "Gesendet ✓" }
-    };
 
     window.onload = () => {
         const urlParams = new URLSearchParams(window.location.search);
@@ -284,119 +219,64 @@
 
     function openTab(name) {
         document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-        const tab = document.getElementById('tab-' + name);
-        if (tab) tab.classList.add('active');
-
+        document.getElementById('tab-' + name).classList.add('active');
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        const btn = document.querySelector(`.tab-btn[data-tab="${name}"]`);
-        if (btn) btn.classList.add('active');
-
-        // Progressbar nur beim Upload anzeigen (und resetten)
-        const pc = document.getElementById('p-container');
-        const pb = document.getElementById('p-bar');
-        if (name !== 'm3u') {
-            pc.style.display = "none";
-            pb.style.width = "0%";
-        }
-    }
-
-    function getMainButton(mode) {
-        if (mode === 'xtream') return document.getElementById('btn-xtream');
-        if (mode === 'm3u') return document.getElementById('btn-m3u');
-        if (mode === 'm3uurl') return document.getElementById('btn-m3uurl');
-        return null;
-    }
-
-    function setBtnState(mode, state) {
-        const btn = getMainButton(mode);
-        if (!btn) return;
-
-        const labels = BTN_LABELS[mode] || { idle: "Senden", busy: "Bitte warten…", done: "OK" };
-
-        if (state === 'busy') {
-            btn.disabled = true;
-            btn.innerHTML = labels.busy;
-        } else if (state === 'done') {
-            btn.disabled = true;
-            btn.innerHTML = labels.done;
-            setTimeout(() => {
-                btn.disabled = false;
-                btn.innerHTML = labels.idle;
-            }, 1200);
-        } else { // idle
-            btn.disabled = false;
-            btn.innerHTML = labels.idle;
-        }
+        document.querySelector(`.tab-btn[data-tab="${name}"]`).classList.add('active');
     }
 
     async function saveData(mode) {
         const mac = document.getElementById('mac-field').value.trim().toUpperCase();
         if(!mac) return alert("MAC fehlt!");
 
-        let payload = { mac: mac };
-        const pContainer = document.getElementById('p-container');
-        const pBar = document.getElementById('p-bar');
-
-        setBtnState(mode, 'busy');
+        // Payload Reset: Wir leeren alle Felder, damit nichts vom anderen Tab übrig bleibt
+        let payload = { 
+            mac: mac, 
+            playlist_name: "", 
+            m3u_url: null, 
+            xc_host: null, 
+            xc_user: null, 
+            xc_pass: null 
+        };
 
         try {
             if(mode === 'm3u') {
                 const fileInput = document.getElementById('m3u_file');
-                const customName = document.getElementById('m3u_name_display').value.trim();
-
-                if(fileInput.files.length === 0) {
-                    setBtnState(mode, 'idle');
-                    return alert("Bitte eine M3U Datei auswählen!");
-                }
-
-                pContainer.style.display = "block";
-                pBar.style.width = "15%";
+                if(fileInput.files.length === 0) return alert("Datei wählen!");
+                
+                document.getElementById('p-container').style.display = "block";
+                document.getElementById('p-bar').style.width = "30%";
 
                 const file = fileInput.files[0];
                 const fileName = `${mac.replace(/:/g, '')}_${Date.now()}.m3u`;
-
-                const uploadRes = await supabaseClient.storage.from('m3u-files').upload(fileName, file, { upsert: true });
-                if (uploadRes.error) throw uploadRes.error;
-
-                pBar.style.width = "60%";
+                const { error: upErr } = await supabaseClient.storage.from('m3u-files').upload(fileName, file);
+                if (upErr) throw upErr;
 
                 const { data } = supabaseClient.storage.from('m3u-files').getPublicUrl(fileName);
                 payload.m3u_url = data.publicUrl;
-                payload.playlist_name = customName || file.name;
+                payload.playlist_name = document.getElementById('m3u_name_display').value.trim() || "M3U File";
+                document.getElementById('p-bar').style.width = "100%";
 
             } else if (mode === 'm3uurl') {
-                const url = document.getElementById('m3uurl_link').value.trim();
-                const name = document.getElementById('m3uurl_name_display').value.trim();
+                payload.m3u_url = document.getElementById('m3uurl_link').value.trim();
+                payload.playlist_name = document.getElementById('m3uurl_name_display').value.trim() || "M3U URL";
+                if(!payload.m3u_url) return alert("URL fehlt!");
 
-                if(!url) {
-                    setBtnState(mode, 'idle');
-                    return alert("M3U URL fehlt!");
-                }
-
-                payload.m3u_url = url;
-                payload.playlist_name = name || "M3U URL Playlist";
-
-            } else { // xtream
+            } else if (mode === 'xtream') {
                 payload.xc_host = document.getElementById('xc_host').value.trim();
                 payload.xc_user = document.getElementById('xc_user').value.trim();
-                payload.xc_pass = document.getElementById('xc_pass').value;
+                payload.xc_pass = document.getElementById('xc_pass').value.trim();
                 payload.playlist_name = document.getElementById('xc_name_display').value.trim() || "Xtream Login";
+                if(!payload.xc_host) return alert("Host fehlt!");
             }
 
             const { error } = await supabaseClient.from('playlists').upsert(payload);
             if(error) throw error;
 
-            if(mode === 'm3u') pBar.style.width = "100%";
-
-            setBtnState(mode, 'done');
-            alert("Erfolgreich! Dein TV zeigt nun '" + payload.playlist_name + "' an.");
+            alert("Erfolgreich gesendet: " + payload.playlist_name);
         } catch (e) {
-            console.error(e);
-            setBtnState(mode, 'idle');
-            alert("Fehler: " + (e?.message || "Unbekannter Fehler"));
+            alert("Fehler: " + e.message);
         }
     }
 </script>
-
 </body>
 </html>
