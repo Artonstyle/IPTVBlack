@@ -440,6 +440,7 @@
             mac: mac, 
             playlist_name: "", 
             m3u_url: null, 
+            source_type: null,
             xc_host: null, 
             xc_user: null, 
             xc_pass: null 
@@ -461,11 +462,13 @@
                 const { data } = supabaseClient.storage.from('m3u-files').getPublicUrl(fileName);
                 payload.m3u_url = data.publicUrl;
                 payload.playlist_name = document.getElementById('m3u_name_display').value.trim() || "M3U File";
+                payload.source_type = "m3u";
                 document.getElementById('p-bar').style.width = "100%";
 
             } else if (mode === 'm3uurl') {
                 payload.m3u_url = document.getElementById('m3uurl_link').value.trim();
                 payload.playlist_name = document.getElementById('m3uurl_name_display').value.trim() || "M3U URL";
+                payload.source_type = "m3uurl";
                 if(!payload.m3u_url) return alert("URL fehlt!");
 
             } else if (mode === 'xtream') {
@@ -476,6 +479,7 @@
                     mac: mac,
                     playlist_name: entry.name || "Xtream Login",
                     m3u_url: null,
+                    source_type: "xtream",
                     xc_host: entry.host || null,
                     xc_user: entry.user || null,
                     xc_pass: entry.pass || null
@@ -488,7 +492,7 @@
                 return;
             }
 
-            const { error } = await supabaseClient.from('playlists').upsert(payload);
+            const { error } = await supabaseClient.from('playlists').insert(payload);
             if(error) throw error;
 
             alert("Erfolgreich gesendet: " + payload.playlist_name);
