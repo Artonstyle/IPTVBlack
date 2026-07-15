@@ -190,6 +190,28 @@
             box-shadow: none;
         }
 
+        .password-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .password-row input {
+            flex: 1;
+        }
+
+        .password-toggle-btn {
+            width: 52px;
+            height: 52px;
+            border-radius: 12px;
+            border: 1px solid var(--line);
+            background: rgba(0,240,255,0.08);
+            color: var(--neon);
+            font-size: 22px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
         .progress-container {
             width: 100%;
             background: rgba(0,0,0,0.55);
@@ -250,7 +272,10 @@
         <label>Username</label>
         <input type="text" id="xc_user" placeholder="Benutzername">
         <label>Password</label>
-        <input type="text" id="xc_pass" placeholder="Passwort">
+        <div class="password-row">
+            <input type="password" id="xc_pass" placeholder="Passwort">
+            <button class="password-toggle-btn" type="button" id="xc_pass_toggle" onclick="toggleXtreamPassword()" title="Passwort anzeigen">👁</button>
+        </div>
         <button class="main-btn" onclick="saveData('xtream')">Xtream Senden</button>
     </div>
 
@@ -341,7 +366,21 @@
         currentXtreamEntryId = "";
         document.getElementById('xtream_saved_list').value = "";
         setXtreamFormData({});
+        setXtreamPasswordVisibility(false);
         document.getElementById('xc_name_display').focus();
+    }
+
+    function setXtreamPasswordVisibility(isVisible) {
+        const passwordInput = document.getElementById('xc_pass');
+        const toggleButton = document.getElementById('xc_pass_toggle');
+        passwordInput.type = isVisible ? "text" : "password";
+        toggleButton.textContent = isVisible ? "🙈" : "👁";
+        toggleButton.title = isVisible ? "Passwort verbergen" : "Passwort anzeigen";
+    }
+
+    function toggleXtreamPassword() {
+        const passwordInput = document.getElementById('xc_pass');
+        setXtreamPasswordVisibility(passwordInput.type === "password");
     }
 
     function saveCurrentXtreamEntry() {
