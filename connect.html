@@ -276,7 +276,7 @@
             <input type="password" id="xc_pass" placeholder="Passwort">
             <button class="password-toggle-btn" type="button" id="xc_pass_toggle" onclick="toggleXtreamPassword()" title="Passwort anzeigen">👁</button>
         </div>
-        <button class="main-btn" onclick="saveData('xtream')">Xtream Senden</button>
+        <button class="main-btn" onclick="saveData('xtream')">Alle Xtream Listen Senden</button>
     </div>
 
     <div id="tab-m3u" class="tab-content">
@@ -469,11 +469,23 @@
                 if(!payload.m3u_url) return alert("URL fehlt!");
 
             } else if (mode === 'xtream') {
-                payload.xc_host = document.getElementById('xc_host').value.trim();
-                payload.xc_user = document.getElementById('xc_user').value.trim();
-                payload.xc_pass = document.getElementById('xc_pass').value.trim();
-                payload.playlist_name = document.getElementById('xc_name_display').value.trim() || "Xtream Login";
-                if(!payload.xc_host) return alert("Host fehlt!");
+                const savedXtreamLists = getStoredXtreamLists();
+                if(savedXtreamLists.length === 0) return alert("Keine gespeicherte Xtream Liste gefunden!");
+
+                const xtreamPayloads = savedXtreamLists.map((entry) => ({
+                    mac: mac,
+                    playlist_name: entry.name || "Xtream Login",
+                    m3u_url: null,
+                    xc_host: entry.host || null,
+                    xc_user: entry.user || null,
+                    xc_pass: entry.pass || null
+                }));
+
+                const { error } = await supabaseClient.from('playlists').insert(xtreamPayloads);
+                if(error) throw error;
+
+                alert(`${xtreamPayloads.length} Xtream Liste(n) erfolgreich gesendet.`);
+                return;
             }
 
             const { error } = await supabaseClient.from('playlists').upsert(payload);
