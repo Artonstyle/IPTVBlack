@@ -149,6 +149,10 @@
             gap: 8px;
         }
 
+        .xtream-header-actions .icon-btn:nth-child(3) {
+            display: none;
+        }
+
         .sub-label {
             font-size: 11px;
             color: var(--muted);
@@ -176,38 +180,6 @@
             border: 1px solid rgba(0,240,255,0.14);
             background: rgba(6, 20, 43, 0.55);
         }
-        .xtream-check-status {
-            margin: 10px 0 14px 0;
-            padding: 10px 12px;
-            border-radius: 12px;
-            border: 1px solid rgba(0,240,255,0.16);
-            background: rgba(8, 18, 34, 0.7);
-            color: #cfefff;
-            font-size: 13px;
-            font-weight: 800;
-            display: none;
-        }
-        .xtream-check-status.active {
-            display: block;
-        }
-        .xtream-check-status.ok {
-            border-color: rgba(62,207,142,0.45);
-            background: rgba(16, 48, 30, 0.72);
-            color: #baf5d3;
-            box-shadow: 0 0 12px rgba(62,207,142,0.12);
-        }
-        .xtream-check-status.error {
-            border-color: rgba(255,95,95,0.45);
-            background: rgba(52, 18, 18, 0.72);
-            color: #ffd0d0;
-            box-shadow: 0 0 12px rgba(255,95,95,0.10);
-        }
-        .xtream-check-status.info {
-            border-color: rgba(0,240,255,0.28);
-            background: rgba(8, 24, 40, 0.78);
-            color: #d9f7ff;
-        }
-
         .saved-list-actions {
             display: flex;
             gap: 10px;
@@ -219,6 +191,31 @@
             margin-top: 0;
             padding: 13px;
             font-size: 13px;
+        }
+
+        .main-btn.check-btn {
+            margin-top: 12px;
+            font-size: 13px;
+            transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .main-btn.check-btn.info {
+            background: rgba(0,240,255,0.16);
+            color: #dffbff;
+            border: 1px solid rgba(0,240,255,0.28);
+            box-shadow: 0 0 14px rgba(0,240,255,0.18);
+        }
+
+        .main-btn.check-btn.ok {
+            background: linear-gradient(180deg, #2fe39a, #18b96f);
+            color: #062418;
+            box-shadow: 0 0 16px rgba(47,227,154,0.34);
+        }
+
+        .main-btn.check-btn.error {
+            background: linear-gradient(180deg, #ff8181, #e14e4e);
+            color: #2c0707;
+            box-shadow: 0 0 16px rgba(255,95,95,0.28);
         }
 
         .secondary-btn {
@@ -303,10 +300,6 @@
             <select id="xtream_saved_list" onchange="loadXtreamEntry(this.value)">
                 <option value="">Keine gespeicherte Liste</option>
             </select>
-            <div class="saved-list-actions">
-                <button class="main-btn secondary-btn" type="button" onclick="saveCurrentXtreamEntry()">Lokal Speichern</button>
-                <button class="main-btn secondary-btn" type="button" onclick="deleteCurrentXtreamEntry()">Liste L&ouml;schen</button>
-            </div>
             <input type="file" id="xtream_import_file" accept=".json,application/json" style="display:none" onchange="importXtreamLists(event)">
         </div>
         <div id="xtream_check_status" class="xtream-check-status"></div>
@@ -322,6 +315,11 @@
             <button class="password-toggle-btn" type="button" id="xc_pass_toggle" onclick="toggleXtreamPassword()" title="Passwort anzeigen">👁</button>
         </div>
         <button class="main-btn" onclick="saveData('xtream')">Alle Xtream Listen Senden</button>
+        <button id="xtream_check_btn" class="main-btn check-btn" type="button" onclick="testCurrentXtreamEntry()">Xtream Pr&uuml;fen</button>
+        <div class="saved-list-actions">
+            <button class="main-btn secondary-btn" type="button" onclick="saveCurrentXtreamEntry()">Lokal Speichern</button>
+            <button class="main-btn secondary-btn" type="button" onclick="deleteCurrentXtreamEntry()">Liste L&ouml;schen</button>
+        </div>
     </div>
 
     <div id="tab-m3u" class="tab-content">
@@ -429,10 +427,16 @@
     }
 
     function setXtreamCheckStatus(type, text) {
+        const btn = document.getElementById('xtream_check_btn');
         const box = document.getElementById('xtream_check_status');
-        if (!box) return;
-        box.className = 'xtream-check-status active ' + String(type || 'info');
-        box.textContent = String(text || '');
+        if (box) {
+            box.className = 'xtream-check-status';
+            box.textContent = '';
+            box.style.display = 'none';
+        }
+        if (!btn) return;
+        btn.className = 'main-btn check-btn ' + String(type || 'info');
+        btn.textContent = String(text || 'Xtream Prüfen');
     }
 
     function tryParseJson(text) {
