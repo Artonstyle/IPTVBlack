@@ -176,6 +176,37 @@
             border: 1px solid rgba(0,240,255,0.14);
             background: rgba(6, 20, 43, 0.55);
         }
+        .xtream-check-status {
+            margin: 10px 0 14px 0;
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(0,240,255,0.16);
+            background: rgba(8, 18, 34, 0.7);
+            color: #cfefff;
+            font-size: 13px;
+            font-weight: 800;
+            display: none;
+        }
+        .xtream-check-status.active {
+            display: block;
+        }
+        .xtream-check-status.ok {
+            border-color: rgba(62,207,142,0.45);
+            background: rgba(16, 48, 30, 0.72);
+            color: #baf5d3;
+            box-shadow: 0 0 12px rgba(62,207,142,0.12);
+        }
+        .xtream-check-status.error {
+            border-color: rgba(255,95,95,0.45);
+            background: rgba(52, 18, 18, 0.72);
+            color: #ffd0d0;
+            box-shadow: 0 0 12px rgba(255,95,95,0.10);
+        }
+        .xtream-check-status.info {
+            border-color: rgba(0,240,255,0.28);
+            background: rgba(8, 24, 40, 0.78);
+            color: #d9f7ff;
+        }
 
         .saved-list-actions {
             display: flex;
@@ -278,6 +309,7 @@
             </div>
             <input type="file" id="xtream_import_file" accept=".json,application/json" style="display:none" onchange="importXtreamLists(event)">
         </div>
+        <div id="xtream_check_status" class="xtream-check-status"></div>
         <label>Xtream Anzeigename</label>
         <input type="text" id="xc_name_display" placeholder="z.B. Mein Xtream Login">
         <label>Server URL</label>
@@ -396,6 +428,13 @@
         setXtreamPasswordVisibility(passwordInput.type === "password");
     }
 
+    function setXtreamCheckStatus(type, text) {
+        const box = document.getElementById('xtream_check_status');
+        if (!box) return;
+        box.className = 'xtream-check-status active ' + String(type || 'info');
+        box.textContent = String(text || '');
+    }
+
     async function fetchJsonWithCorsFallback(url) {
         const direct = await fetch(url, { cache: "no-store" });
         if (direct.ok) return direct.json();
@@ -414,6 +453,7 @@
 
         const base = /^https?:\/\//i.test(host) ? host : `http://${host}`;
         const url = `${base}/player_api.php?username=${encodeURIComponent(user)}&password=${encodeURIComponent(pass)}`;
+        setXtreamCheckStatus("info", "Xtream wird geprüft...");
 
         try {
             let json = null;
@@ -427,9 +467,9 @@
             if (auth === "0") throw new Error("Login nicht korrekt");
 
             const status = String(json?.user_info?.status || "aktiv");
-            alert(`Xtream antwortet.\nStatus: ${status}`);
+            setXtreamCheckStatus("ok", `Aktiv - Xtream antwortet (${status})`);
         } catch (e) {
-            alert("Xtream-Prüfung fehlgeschlagen: " + (e?.message || e));
+            setXtreamCheckStatus("error", "Prüfung fehlgeschlagen: " + (e?.message || e));
         }
     }
 
