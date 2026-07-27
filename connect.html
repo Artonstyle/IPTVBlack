@@ -143,6 +143,11 @@
             gap: 12px;
             margin-bottom: 10px;
         }
+        .xtream-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
 
         .sub-label {
             font-size: 11px;
@@ -152,15 +157,16 @@
         }
 
         .icon-btn {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            border: 1px solid var(--line);
-            background: rgba(0,240,255,0.08);
+            min-width: 28px;
+            height: 28px;
+            border: none;
+            background: transparent;
             color: var(--neon);
-            font-size: 24px;
+            font-size: 22px;
             line-height: 1;
             cursor: pointer;
+            padding: 0 2px;
+            box-shadow: none;
         }
 
         .saved-list-box {
@@ -175,6 +181,7 @@
             display: flex;
             gap: 10px;
             margin-top: 12px;
+            flex-wrap: wrap;
         }
 
         .saved-list-actions .main-btn {
@@ -250,10 +257,15 @@
         <button class="tab-btn" data-tab="m3uurl" onclick="openTab('m3uurl')">M3U URL</button>
     </div>
 
-    <div id="tab-xtream" class="tab-content active">
+        <div id="tab-xtream" class="tab-content active">
         <div class="xtream-header">
             <span class="sub-label">Xtream Listen lokal speichern</span>
-            <button class="icon-btn" type="button" onclick="createNewXtreamEntry()" title="Neue Xtream Liste">+</button>
+            <div class="xtream-header-actions">
+                <button class="icon-btn" type="button" onclick="exportXtreamLists()" title="Listen exportieren">💾</button>
+                <button class="icon-btn" type="button" onclick="document.getElementById('xtream_import_file').click()" title="Listen importieren">📂</button>
+                <button class="icon-btn" type="button" onclick="testCurrentXtreamEntry()" title="Xtream prüfen">✓</button>
+                <button class="icon-btn" type="button" onclick="createNewXtreamEntry()" title="Neue Xtream Liste">+</button>
+            </div>
         </div>
         <div class="saved-list-box">
             <label style="margin-top:0;">Gespeicherte Xtream Listen</label>
@@ -264,6 +276,7 @@
                 <button class="main-btn secondary-btn" type="button" onclick="saveCurrentXtreamEntry()">Lokal Speichern</button>
                 <button class="main-btn secondary-btn" type="button" onclick="deleteCurrentXtreamEntry()">Liste L&ouml;schen</button>
             </div>
+            <input type="file" id="xtream_import_file" accept=".json,application/json" style="display:none" onchange="importXtreamLists(event)">
         </div>
         <label>Xtream Anzeigename</label>
         <input type="text" id="xc_name_display" placeholder="z.B. Mein Xtream Login">
@@ -383,6 +396,33 @@
         setXtreamPasswordVisibility(passwordInput.type === "password");
     }
 
+    async function testCurrentXtreamEntry() {
+        const data = getXtreamFormData();
+        const host = String(data.host || "").trim().replace(/\/+$/, "");
+        const user = String(data.user || "").trim();
+        const pass = String(data.pass || "").trim();
+
+        if (!host || !user || !pass) {
+            return alert("Bitte Host, Username und Passwort eingeben!");
+        }
+
+        const base = /^https?:\/\//i.test(host) ? host : `http://${host}`;
+        const url = `${base}/player_api.php?username=${encodeURIComponent(user)}&password=${encodeURIComponent(pass)}`;
+
+        try {
+            const res = await fetch(url, { cache: "no-store" });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const json = await res.json();
+            const auth = String(json?.user_info?.auth ?? json?.auth ?? "1").trim();
+            if (auth === "0") throw new Error("Login nicht korrekt");
+
+            const status = String(json?.user_info?.status || "aktiv");
+            alert(`Xtream antwortet.\nStatus: ${status}`);
+        } catch (e) {
+            alert("Xtream-Prüfung fehlgeschlagen: " + (e?.message || e));
+        }
+    }
+
     function saveCurrentXtreamEntry() {
         const data = getXtreamFormData();
         if (!data.host || !data.user || !data.pass) {
@@ -415,6 +455,82 @@
         createNewXtreamEntry();
         renderXtreamSavedLists();
         alert("Xtream Liste lokal gel&ouml;scht.");
+    }
+
+    function exportXtreamLists() {
+        const lists = getStoredXtreamLists();
+        if (!lists.length) {
+            return alert("Keine gespeicherten Xtream Listen vorhanden.");
+        }
+
+        const payload = {
+            type: "iptv_black_xtream_export",
+            version: 1,
+            exported_at: new Date().toISOString(),
+            lists: lists
+        };
+
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        const stamp = new Date().toISOString().replace(/[:T]/g, "-").slice(0, 16);
+        a.href = url;
+        a.download = `iptv-black-xtream-lists-${stamp}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    async function importXtreamLists(event) {
+        const file = event?.target?.files?.[0];
+        if (!file) return;
+
+        try {
+            const text = await file.text();
+            const json = JSON.parse(text);
+            const incoming = Array.isArray(json?.lists) ? json.lists : (Array.isArray(json) ? json : []);
+            if (!incoming.length) throw new Error("Keine Listen gefunden");
+
+            const existing = getStoredXtreamLists();
+            const merged = existing.slice();
+
+            incoming.forEach((entry) => {
+                const host = String(entry?.host || "").trim();
+                const user = String(entry?.user || "").trim();
+                const pass = String(entry?.pass || "").trim();
+                const name = String(entry?.name || "").trim() || "Xtream Liste";
+                if (!host || !user || !pass) return;
+
+                const foundIdx = merged.findIndex((item) =>
+                    String(item?.host || "").trim() === host &&
+                    String(item?.user || "").trim() === user &&
+                    String(item?.pass || "").trim() === pass
+                );
+
+                const normalized = {
+                    id: String(entry?.id || `xtream_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`),
+                    name,
+                    host,
+                    user,
+                    pass
+                };
+
+                if (foundIdx >= 0) {
+                    merged[foundIdx] = { ...merged[foundIdx], ...normalized };
+                } else {
+                    merged.push(normalized);
+                }
+            });
+
+            saveStoredXtreamLists(merged);
+            renderXtreamSavedLists(currentXtreamEntryId);
+            alert(`${merged.length} Xtream Listen lokal verf&uuml;gbar.`);
+        } catch (e) {
+            alert("Import fehlgeschlagen: " + (e?.message || e));
+        } finally {
+            event.target.value = "";
+        }
     }
 
     window.onload = () => {
