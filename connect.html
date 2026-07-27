@@ -431,6 +431,33 @@
         document.querySelector(`.tab-btn[data-tab="${name}"]`).classList.add('active');
     }
 
+    async function cleanupRemotePlaylistRows(rows) {
+        if (!Array.isArray(rows) || !rows.length) return;
+        for (const row of rows) {
+            try {
+                let q = supabaseClient.from('playlists').delete().eq('mac', String(row.mac || '').trim().toUpperCase());
+                const sourceType = String(row.source_type || '').trim();
+                if (sourceType) q = q.eq('source_type', sourceType);
+                const playlistName = String(row.playlist_name || '').trim();
+                if (playlistName) q = q.eq('playlist_name', playlistName);
+                const m3uUrl = String(row.m3u_url || '').trim();
+                if (m3uUrl) q = q.eq('m3u_url', m3uUrl);
+                const xcHost = String(row.xc_host || '').trim();
+                const xcUser = String(row.xc_user || '').trim();
+                const xcPass = String(row.xc_pass || '').trim();
+                if (xcHost) q = q.eq('xc_host', xcHost);
+                if (xcUser) q = q.eq('xc_user', xcUser);
+                if (xcPass) q = q.eq('xc_pass', xcPass);
+                await q;
+            } catch (e) {}
+        }
+    }
+
+    function scheduleRemoteCleanup(rows) {
+        const payloads = Array.isArray(rows) ? rows : [rows];
+        setTimeout(() => { cleanupRemotePlaylistRows(payloads); }, 30000);
+    }
+
     async function saveData(mode) {
         const mac = document.getElementById('mac-field').value.trim().toUpperCase();
         if(!mac) return alert("MAC fehlt!");
@@ -488,6 +515,7 @@
                 const { error } = await supabaseClient.from('playlists').insert(xtreamPayloads);
                 if(error) throw error;
 
+                scheduleRemoteCleanup(xtreamPayloads);
                 alert(`${xtreamPayloads.length} Xtream Liste(n) erfolgreich gesendet.`);
                 return;
             }
@@ -495,6 +523,7 @@
             const { error } = await supabaseClient.from('playlists').insert(payload);
             if(error) throw error;
 
+            scheduleRemoteCleanup(payload);
             alert("Erfolgreich gesendet: " + payload.playlist_name);
         } catch (e) {
             alert("Fehler: " + e.message);
