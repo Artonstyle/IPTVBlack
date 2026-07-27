@@ -435,10 +435,52 @@
         box.textContent = String(text || '');
     }
 
+    async function fetchJsonText(url) {
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return await res.text();
+    }
+
+    function tryParseJson(text) {
+        try {
+            return JSON.parse(String(text || "").trim());
+        } catch (e) {
+            return null;
+        }
+    }
+
     async function fetchJsonWithCorsFallback(url) {
-        const direct = await fetch(url, { cache: "no-store" });
-        if (direct.ok) return direct.json();
-        throw new Error(`HTTP ${direct.status}`);
+        try {
+            const raw = await fetchJsonText(url);
+            const parsed = tryParseJson(raw);
+            if (!parsed) throw new Error("Keine JSON-Antwort");
+            return parsed;
+        } catch (directErr) {
+            const proxyUrls = [
+                `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+                `https://r.jina.ai/http://${String(url).replace(/^https?:\/\//i, "")}`
+            ];
+            let lastErr = directErr;
+            for (const proxyUrl of proxyUrls) {
+                try {
+                    const raw = await fetchJsonText(proxyUrl);
+                    const parsed = tryParseJson(raw);
+                    if (!parsed) throw new Error("Keine JSON-Antwort");
+                    return parsed;
+                } catch (proxyErr) {
+                    lastErr = proxyErr;
+                }
+            }
+            throw lastErr;
+        }
+    }
+
+    function buildXtreamApiUrl(base, user, pass, action = "") {
+        const root = String(base || "").replace(/\/+$/, "");
+        const qs = `username=${encodeURIComponent(user)}&password=${encodeURIComponent(pass)}`;
+        return action
+            ? `${root}/player_api.php?${qs}&action=${encodeURIComponent(action)}`
+            : `${root}/player_api.php?${qs}`;
     }
 
     async function testCurrentXtreamEntry() {
@@ -452,22 +494,41 @@
         }
 
         const base = /^https?:\/\//i.test(host) ? host : `http://${host}`;
-        const url = `${base}/player_api.php?username=${encodeURIComponent(user)}&password=${encodeURIComponent(pass)}`;
         setXtreamCheckStatus("info", "Xtream wird geprüft...");
 
         try {
-            let json = null;
-            try {
-                json = await fetchJsonWithCorsFallback(url);
-            } catch (directErr) {
-                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-                json = await fetchJsonWithCorsFallback(proxyUrl);
-            }
-            const auth = String(json?.user_info?.auth ?? json?.auth ?? "1").trim();
+            const baseInfo = await fetchJsonWithCorsFallback(buildXtreamApiUrl(base, user, pass));
+            const auth = String(baseInfo?.user_info?.auth ?? baseInfo?.auth ?? "1").trim();
             if (auth === "0") throw new Error("Login nicht korrekt");
 
-            const status = String(json?.user_info?.status || "aktiv");
-            setXtreamCheckStatus("ok", `Aktiv - Xtream antwortet (${status})`);
+            const checks = await Promise.allSettled([
+                fetchJsonWithCorsFallback(buildXtreamApiUrl(base, user, pass, "get_live_categories")),
+                fetchJsonWithCorsFallback(buildXtreamApiUrl(base, user, pass, "get_vod_categories")),
+                fetchJsonWithCorsFallback(buildXtreamApiUrl(base, user, pass, "get_series_categories"))
+            ]);
+
+            const parts = [];
+            let okCount = 0;
+
+            const labels = ["Live", "Filme", "Serien"];
+            for (let i = 0; i < checks.length; i++) {
+                const result = checks[i];
+                if (result.status === "fulfilled") {
+                    const arr = Array.isArray(result.value) ? result.value : [];
+                    parts.push(`${labels[i]} OK (${arr.length})`);
+                    okCount++;
+                } else {
+                    const msg = String(result.reason?.message || result.reason || "Fehler");
+                    parts.push(`${labels[i]} Fehler`);
+                }
+            }
+
+            const status = String(baseInfo?.user_info?.status || "aktiv");
+            if (okCount > 0) {
+                setXtreamCheckStatus("ok", `Aktiv - ${status} | ${parts.join(" | ")}`);
+            } else {
+                setXtreamCheckStatus("error", `Login ok, aber keine Xtream-Daten | ${parts.join(" | ")}`);
+            }
         } catch (e) {
             setXtreamCheckStatus("error", "Prüfung fehlgeschlagen: " + (e?.message || e));
         }
