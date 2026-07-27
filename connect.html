@@ -435,12 +435,6 @@
         box.textContent = String(text || '');
     }
 
-    async function fetchJsonText(url) {
-        const res = await fetch(url, { cache: "no-store" });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return await res.text();
-    }
-
     function tryParseJson(text) {
         try {
             return JSON.parse(String(text || "").trim());
@@ -449,21 +443,56 @@
         }
     }
 
+    function formatXtreamHttpError(status) {
+        const s = parseInt(status, 10) || 0;
+        if (!s) return "Xtream-Test fehlgeschlagen";
+        if (s === 401 || s === 403) return `Xtream TV Fehler (${s})`;
+        if (s === 404) return "Xtream-Test fehlgeschlagen";
+        if (s === 502 || s === 503 || s === 504) return `Xtream TV Fehler (${s})`;
+        return `Xtream TV Fehler (${s})`;
+    }
+
+    function xtreamTestErrorText(err) {
+        const s = parseInt(err && err.status, 10) || 0;
+        if (s) return formatXtreamHttpError(s);
+        const msg = String((err && err.message) || "").toLowerCase();
+        if (msg.includes("timeout") || msg.includes("abort")) return "Xtream-Test Timeout";
+        if (msg.includes("keine json-antwort")) return "Browser/Server blockiert API-Antwort";
+        return "Xtream-Test fehlgeschlagen";
+    }
+
+    async function fetchJsonText(url, timeoutMs = 5000) {
+        const ctrl = typeof AbortController === "function" ? new AbortController() : null;
+        const timer = ctrl ? setTimeout(() => { try { ctrl.abort(); } catch (e) {} }, timeoutMs) : null;
+        try {
+            const res = await fetch(url, { cache: "no-store", signal: ctrl ? ctrl.signal : undefined });
+            if (!res.ok) {
+                const err = new Error(`http ${res.status}`);
+                err.status = res.status;
+                throw err;
+            }
+            return await res.text();
+        } finally {
+            if (timer) clearTimeout(timer);
+        }
+    }
+
     async function fetchJsonWithCorsFallback(url) {
         try {
-            const raw = await fetchJsonText(url);
+            const raw = await fetchJsonText(url, 5000);
             const parsed = tryParseJson(raw);
             if (!parsed) throw new Error("Keine JSON-Antwort");
             return parsed;
         } catch (directErr) {
             const proxyUrls = [
                 `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-                `https://r.jina.ai/http://${String(url).replace(/^https?:\/\//i, "")}`
+                `https://r.jina.ai/http://${String(url).replace(/^https?:\/\//i, "")}`,
+                `https://corsproxy.io/?${encodeURIComponent(url)}`
             ];
             let lastErr = directErr;
             for (const proxyUrl of proxyUrls) {
                 try {
-                    const raw = await fetchJsonText(proxyUrl);
+                    const raw = await fetchJsonText(proxyUrl, 7000);
                     const parsed = tryParseJson(raw);
                     if (!parsed) throw new Error("Keine JSON-Antwort");
                     return parsed;
@@ -530,7 +559,7 @@
                 setXtreamCheckStatus("error", `Login ok, aber keine Xtream-Daten | ${parts.join(" | ")}`);
             }
         } catch (e) {
-            setXtreamCheckStatus("error", "Prüfung fehlgeschlagen: " + (e?.message || e));
+            setXtreamCheckStatus("error", xtreamTestErrorText(e));
         }
     }
 
