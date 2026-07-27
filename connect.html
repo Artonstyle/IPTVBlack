@@ -396,6 +396,12 @@
         setXtreamPasswordVisibility(passwordInput.type === "password");
     }
 
+    async function fetchJsonWithCorsFallback(url) {
+        const direct = await fetch(url, { cache: "no-store" });
+        if (direct.ok) return direct.json();
+        throw new Error(`HTTP ${direct.status}`);
+    }
+
     async function testCurrentXtreamEntry() {
         const data = getXtreamFormData();
         const host = String(data.host || "").trim().replace(/\/+$/, "");
@@ -410,9 +416,13 @@
         const url = `${base}/player_api.php?username=${encodeURIComponent(user)}&password=${encodeURIComponent(pass)}`;
 
         try {
-            const res = await fetch(url, { cache: "no-store" });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const json = await res.json();
+            let json = null;
+            try {
+                json = await fetchJsonWithCorsFallback(url);
+            } catch (directErr) {
+                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+                json = await fetchJsonWithCorsFallback(proxyUrl);
+            }
             const auth = String(json?.user_info?.auth ?? json?.auth ?? "1").trim();
             if (auth === "0") throw new Error("Login nicht korrekt");
 
