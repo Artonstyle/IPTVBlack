@@ -13,7 +13,7 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 const http = require("http");
 const { URL } = require("url");
 
-const PORT = Number(process.env.PORT || 8787);
+const PORT = Number(process.env.PORT || 10000);
 const BASE_URL = "https://filmpalast.to";
 const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
