@@ -548,6 +548,15 @@ async function resolveMovie(streamUrl) {
   let cleanUrl = normalizeUrl(streamUrl);
   if (!cleanUrl) return { ok: false, error: "streamUrl missing" };
 
+  // The Tizen app can already send a direct hoster URL. It is not a
+  // filmpalast stream page, so resolve it directly instead of parsing it again.
+  if (/^https?:\/\//i.test(cleanUrl) && !/filmpalast\.to\/stream\//i.test(cleanUrl)) {
+    const playableUrl = await resolveHosterUrl(cleanUrl);
+    return playableUrl
+      ? { ok: true, hosterUrl: cleanUrl, playableUrl }
+      : { ok: false, error: "No playable stream found", streamUrl: cleanUrl };
+  }
+
   // "/stream/evil-dead-burn" oder "evil-dead-burn" → vollständige URL
   if (!/^https?:\/\//i.test(cleanUrl)) {
     cleanUrl = `${BASE_URL}/stream/${cleanUrl}`;
