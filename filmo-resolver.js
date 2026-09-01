@@ -347,7 +347,7 @@ async function fetchItemById(id) {
       }
     ]
   };
-  return { ok: true, item, hosters: d.hosters };
+  return { ok: true, item, hosters: d.hosters, sources: d.hosters };
 }
 
 // ---------------------------------------------------------------------------
@@ -542,19 +542,75 @@ async function resolveHosterUrl(hosterUrl) {
 }
 
 // ---------------------------------------------------------------------------
+// Quellen-Auswahl & Validierung
+// ---------------------------------------------------------------------------
+// Nur direkte, vom Player unterstützte Video-URLs gelten als abspielbar.
+// Die App löst keine Captchas/Schutzmechanismen – ist keine direkte URL
+// vorhanden, wird ein verständlicher Fehler zurückgegeben.
+const SOURCE_UNAVAILABLE_MSG =
+  "Diese Videoquelle ist derzeit nicht verfügbar. Bitte wähle eine andere Quelle.";
+const SUPPORTED_VIDEO_RE = /\.(m3u8|mp4|webm|ogg|ogv|mkv|mov|avi|ts)(?:[?#]|$)/i;
+
+function isValidPlayableUrl(u) {
+  const s = String(u || "").trim();
+  if (!s) return false;
+  if (!/^https?:\/\//i.test(s)) return false;
+  return SUPPORTED_VIDEO_RE.test(s);
+}
+
+// Löst genau eine Quelle auf und prüft die direkte Video-URL.
+async function resolveSingleHoster(hosterUrl, sourceName) {
+  const url = normalizeUrl(hosterUrl);
+  const name = String(sourceName || "").trim();
+  if (!url) {
+    return { ok: false, sourceName: name, error: SOURCE_UNAVAILABLE_MSG, reason: "url missing" };
+  }
+  try {
+    const playableUrl = await resolveHosterUrl(url);
+    if (!isValidPlayableUrl(playableUrl)) {
+      return {
+        ok: false,
+        sourceName: name,
+        hosterUrl: url,
+        error: SOURCE_UNAVAILABLE_MSG,
+        reason: !playableUrl ? "no direct url" : "unsupported format"
+      };
+    }
+    return { ok: true, sourceName: name, hosterUrl: url, playableUrl };
+  } catch (error) {
+    return {
+      ok: false,
+      sourceName: name,
+      hosterUrl: url,
+      error: SOURCE_UNAVAILABLE_MSG,
+      reason: String(error && error.message ? error.message : error)
+    };
+  }
+}
+
+// ---------------------------------------------------------------------------
 // /resolve
 // ---------------------------------------------------------------------------
-async function resolveMovie(streamUrl) {
+// Aufrufvarianten:
+//   /resolve?streamUrl=<slug|stream-url>  -> liefert Quellen-Liste (needsSelection)
+//   /resolve?hosterUrl=<url>&sourceName=  -> löst genau diese Quelle auf + prüft
+async function resolveMovie(params) {
+  if (typeof params === "string") params = { streamUrl: params };
+  const streamUrl = params && params.streamUrl;
+  const hosterUrl = params && params.hosterUrl;
+  const sourceName = (params && params.sourceName) || "";
+
+  // (A) Eine konkrete Quelle wurde ausgewählt -> nur diese prüfen.
+  if (hosterUrl) {
+    return await resolveSingleHoster(hosterUrl, sourceName);
+  }
+
   let cleanUrl = normalizeUrl(streamUrl);
   if (!cleanUrl) return { ok: false, error: "streamUrl missing" };
 
-  // The Tizen app can already send a direct hoster URL. It is not a
-  // filmpalast stream page, so resolve it directly instead of parsing it again.
+  // Direkte Hoster-URL (keine filmpalast-Streamseite) -> direkt auflösen.
   if (/^https?:\/\//i.test(cleanUrl) && !/filmpalast\.to\/stream\//i.test(cleanUrl)) {
-    const playableUrl = await resolveHosterUrl(cleanUrl);
-    return playableUrl
-      ? { ok: true, hosterUrl: cleanUrl, playableUrl }
-      : { ok: false, error: "No playable stream found", streamUrl: cleanUrl };
+    return await resolveSingleHoster(cleanUrl, sourceName);
   }
 
   // "/stream/evil-dead-burn" oder "evil-dead-burn" → vollständige URL
@@ -565,29 +621,32 @@ async function resolveMovie(streamUrl) {
   const { text: pageHtml, response } = await fetchText(cleanUrl, { referer: BASE_URL + "/" });
   const finalPageUrl = response.url || cleanUrl;
 
-  const hosters = parseFilmpalastHostersFromHtml(pageHtml);
-  if (!hosters.length) {
-    return { ok: false, error: "No hosters found", streamUrl: finalPageUrl };
+  // Details (Cover/Titel/Jahr/Beschreibung) + Quellenliste für die Auswahl.
+  const details = parseStreamPageDetails(pageHtml, finalPageUrl);
+  const sources = (details.hosters || []).map((h) => ({ name: h.name, url: h.url }));
+
+  if (!sources.length) {
+    return {
+      ok: false,
+      error: SOURCE_UNAVAILABLE_MSG,
+      reason: "no sources",
+      streamUrl: finalPageUrl
+    };
   }
 
-  for (const hoster of hosters) {
-    try {
-      const playableUrl = await resolveHosterUrl(hoster.url);
-      if (playableUrl) {
-        return {
-          ok: true,
-          streamUrl: finalPageUrl,
-          hoster: hoster.name,
-          hosterUrl: hoster.url,
-          playableUrl
-        };
-      }
-    } catch (error) {
-      hoster.error = String(error && error.message ? error.message : error);
-    }
-  }
-
-  return { ok: false, error: "No playable stream found", streamUrl: finalPageUrl, hosters };
+  return {
+    ok: true,
+    needsSelection: true,
+    streamUrl: finalPageUrl,
+    item: {
+      id: details.id,
+      title: details.title,
+      year: details.year,
+      poster: details.poster,
+      description: details.description
+    },
+    sources
+  };
 }
 
 function errorToObject(error) {
@@ -672,7 +731,11 @@ const server = http.createServer(async (req, res) => {
 
   if (url.pathname === "/resolve") {
     try {
-      const result = await resolveMovie(url.searchParams.get("streamUrl"));
+      const result = await resolveMovie({
+        streamUrl: url.searchParams.get("streamUrl"),
+        hosterUrl: url.searchParams.get("hosterUrl"),
+        sourceName: url.searchParams.get("sourceName")
+      });
       sendJson(res, result.ok ? 200 : 502, result);
     } catch (error) {
       sendJson(res, 500, {
