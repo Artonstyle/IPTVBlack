@@ -1,14 +1,5 @@
 /* global require, process, Buffer, fetch */
-// filmpalast.to nutzt wechselnde Cloudflare-Zertifikate – in manchen Umgebungen
-// schlägt die TLS-Verifikation beim serverseitigen Abruf fehl. Für den Scraper
-// erlauben wir daher unsichere TLS-Verbindungen zum Ziel.
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-// filmpalast.to Resolver – HTTP-Server im Stil des AniWorld-Resolvers.
-// Endpunkte: /health, /catalog, /item?id=..., /importMeta?url=..., /resolve?streamUrl=...
-//
-// Starten:  node filmpalast-resolver.server.js   (PORT über process.env.PORT)
-// Hinweis:  Serverseitig ausgeführt (kein CORS). Die Hoster-Auflösung
-//           (VOE, Streamtape, Doodstream, generic) stammt vom AniWorld-Vorbild.
 
 const http = require("http");
 const { URL } = require("url");
@@ -17,7 +8,7 @@ const PORT = Number(process.env.PORT || 10000);
 const BASE_URL = "https://filmpalast.to";
 const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-  "(KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36";
+  "(KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
 
 function sendJson(res, status, data) {
   const body = JSON.stringify(data, null, 2);
@@ -64,7 +55,15 @@ async function fetchText(url, opts = {}) {
       redirect: opts.redirect || "follow",
       headers: {
         "user-agent": UA,
-        "accept-language": "de-DE,de;q=0.9,en;q=0.8",
+        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "accept-language": "de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7",
+        "sec-ch-ua": '"Chromium";v="122", "Not(A:Brand";v="24"',
+        "sec-ch-ua-mobile": "?0",
+        "sec-fetch-dest": "document",
+        "sec-fetch-mode": "navigate",
+        "sec-fetch-site": "none",
+        "sec-fetch-user": "?1",
+        "upgrade-insecure-requests": "1",
         referer: opts.referer || BASE_URL + "/"
       }
     });
@@ -79,18 +78,11 @@ async function fetchText(url, opts = {}) {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Katalog (Startseite: neueste Filme aus dem Slider)
-// ---------------------------------------------------------------------------
-// ---------------------------------------------------------------------------
-// Katalog-Parser (mehrere HTML-Strukturen)
-// ---------------------------------------------------------------------------
 function extractSlugFromStreamUrl(url) {
   const m = String(url || "").match(/\/stream\/([^?#]+)/i);
   return m ? m[1] : "";
 }
 
-// Liest ein Poster/Bild aus src, data-src, data-original, data-lazy-src, poster.
 function findCoverInChunk(chunk) {
   const m = String(chunk || "").match(
     /(?:src|data-src|data-original|data-lazy-src|poster)\s*=\s*"([^"]+\.(?:jpe?g|png|webp|gif)[^"]*)"/i
@@ -98,48 +90,20 @@ function findCoverInChunk(chunk) {
   return m ? normalizeUrl(m[1]) : "";
 }
 
-// Titelerkennung aus Überschrift, span.title, img alt, title-Attribut oder Linktext.
-function findTitleInChunk(chunk, fallback) {
-  let t = (String(chunk || "").match(/<h[1-6][^>]*>([\s\S]*?)<\/h[1-6]>/i) || [])[1];
-  if (t) return stripTags(t);
-  t = (String(chunk || "").match(/<span[^>]*class="[^"]*title[^"]*"[^>]*>([\s\S]*?)<\/span>/i) || [])[1];
-  if (t) return stripTags(t);
-  t = (String(chunk || "").match(/<img[^>]*\balt="([^"]+)"/i) || [])[1];
-  if (t && t.trim().length > 1) return stripTags(t);
-  t = (String(chunk || "").match(/\btitle="([^"]+)"/i) || [])[1];
-  if (t && t.trim().length > 1) return stripTags(t);
-  return stripTags(fallback || "");
-}
-
-// Erkennt Block-/Fehler-/Leerseiten, die keinen echten Katalog enthalten.
 function detectBlockedOrNonCatalogPage(text) {
   const t = String(text || "");
   if (!t.trim()) return "Leere Antwort";
   if (t.length < 500) return "Antwort zu kurz für eine Katalogseite";
-  // HTML-Entities dekodieren, damit "verf&uuml;gbar" -> "verfügbar" erkannt wird.
   const decoded = t
     .replace(/&auml;/g, "ä").replace(/&ouml;/g, "ö")
     .replace(/&uuml;/g, "ü").replace(/&szlig;/g, "ß")
     .replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;/g, "'");
   const lower = decoded.toLowerCase();
   const markers = [
-    "just a moment",
-    "cf-browser-verification",
-    "cf-challenge",
-    "captcha",
-    "access denied",
-    "attention required",
-    "checking your browser before accessing",
-    "enable javascript and cookies to continue",
-    "ddos protection",
-    "webseite nicht verfügbar",
-    "seite nicht verfügbar",
-    "seite kann nicht angezeigt werden",
-    "leider nicht verfügbar",
-    "404 not found",
-    "404 - nicht gefunden",
-    "internal server error",
-    "service unavailable"
+    "just a moment", "cf-browser-verification", "cf-challenge", "captcha",
+    "access denied", "attention required", "checking your browser before accessing",
+    "enable javascript and cookies to continue", "ddos protection",
+    "webseite nicht verfügbar", "seite nicht verfügbar", "404 not found"
   ];
   for (const mk of markers) {
     if (lower.includes(mk)) return `Blockseite/Fehler erkannt: "${mk}"`;
@@ -151,16 +115,6 @@ function parseFilmpalastCatalogFromHtml(html) {
   const source = String(html || "");
   const out = [];
   const seen = new Set();
-  const tested = ["slider-li", "generic /stream/ links", "container (article/div/li)"];
-
-  const add = (item) => {
-    const key = String(item.slug || "").toLowerCase();
-    if (!key || seen.has(key)) return;
-    seen.add(key);
-    out.push(item);
-  };
-
-  // --- Strategie 1: slider-li Blöcke (aktuelle Live-Struktur) ---
   const sliderRe = /<li[^>]*class="[^"]*slider-li[^"]*"[^>]*>([\s\S]*?)<\/li>/g;
   let sm;
   while ((sm = sliderRe.exec(source)) && out.length < 200) {
@@ -172,75 +126,20 @@ function parseFilmpalastCatalogFromHtml(html) {
     const slug = extractSlugFromStreamUrl(url);
     if (!slug) continue;
 
-    const title =
-      stripTags((block.match(/<span class="title rb">([\s\S]*?)<\/span>/i) || [])[1] || "") || slug;
-    const coverMatch = block.match(
-      /<img[^>]*src="((?:https?:\/\/filmpalast\.to)?\/files\/movies\/[^"]+)"/i
-    );
+    const title = stripTags((block.match(/<span class="title rb">([\s\S]*?)<\/span>/i) || [])[1] || "") || slug;
+    const coverMatch = block.match(/<img[^>]*src="((?:https?:\/\/filmpalast\.to)?\/files\/movies\/[^"]+)"/i);
     const cover = coverMatch ? normalizeUrl(coverMatch[1]) : findCoverInChunk(block);
     const yearMatch = block.match(/class="releasedate"[^>]*>Jahr:\s*<b>(\d{4})<\/b>/i);
     const year = yearMatch ? Number(yearMatch[1]) : null;
-    const descMatch = block.match(
-      /<div class="moviedescription">\s*<b>Beschreibung:<\/b>\s*([\s\S]*?)<\/div>/i
-    );
+    const descMatch = block.match(/<div class="moviedescription">\s*<b>Beschreibung:<\/b>\s*([\s\S]*?)<\/div>/i);
     const description = descMatch ? decodeBasicEntities(descMatch[1]) : "";
 
-    add({
-      title,
-      slug,
-      url: url || `${BASE_URL}/stream/${slug}`,
-      cover,
-      year,
-      description
-    });
-  }
-  if (out.length) return out;
-
-  // --- Strategie 2: generische Detail-Link-Suche (alle /stream/<slug> Links) ---
-  const linkRe = /<a\b[^>]*href="([^"]*filmpalast\.to\/stream\/[^"#?]+)"[^>]*>([\s\S]*?)<\/a>/gi;
-  let lm;
-  while ((lm = linkRe.exec(source)) && out.length < 200) {
-    const url = normalizeUrl(lm[1]);
-    const slug = extractSlugFromStreamUrl(url);
-    if (!slug) continue;
-    const inner = lm[2];
-    const cover = findCoverInChunk(inner);
-    const title = findTitleInChunk(inner, stripTags(inner)) || slug;
-    add({ title, slug, url, cover, year: null, description: "" });
-  }
-  if (out.length) return out;
-
-  // --- Strategie 3: container-basiert (article / div.movie / div.item / card / poster) ---
-  const containerRe = /<(?:article|div|li)[^>]*class="[^"]*(?:movie|item|card|poster)[^"]*"[^>]*>([\s\S]*?)<\/(?:article|div|li)>/gi;
-  let cm;
-  while ((cm = containerRe.exec(source)) && out.length < 200) {
-    const block = cm[1];
-    const linkMatch = block.match(/href="([^"]*filmpalast\.to\/stream\/[^"#?]+)"/i);
-    if (!linkMatch) continue;
-    const url = normalizeUrl(linkMatch[1]);
-    const slug = extractSlugFromStreamUrl(url);
-    if (!slug) continue;
-    const cover = findCoverInChunk(block);
-    const title = findTitleInChunk(block, slug) || slug;
-    add({ title, slug, url, cover, year: null, description: "" });
-  }
-
-  if (!out.length) {
-    console.warn("[filmpalast-catalog] 0 Treffer. Getestete Muster:", tested.join(", "));
+    const item = { title, slug, url: url || `${BASE_URL}/stream/${slug}`, cover, year, description };
+    if (!seen.has(slug)) { seen.add(slug); out.push(item); }
   }
   return out;
 }
 
-// ---------------------------------------------------------------------------
-// Katalog-URLs (Filme + Serien, paginiert)
-// ---------------------------------------------------------------------------
-// Quellen:
-//   type=movie  source=new|top  -> /movies/new | /movies/top  (+ /page/N)
-//   type=movie  source=alpha     -> /search/alpha/<letter>     (Einzel-Seite)
-//   type=movie  source=genre     -> /search/genre/<Name>       (Einzel-Seite)
-//   type=movie  source=search     -> /search?search=<query>     (Einzel-Seite)
-//   type=series                  -> /search/serien/alpha/<letter> (Episoden via /stream/)
-// Cover für Filme UND Serien-Episoden liegt unter /files/movies/240/<slug>.jpg
 function posterFromSlug(slug) {
   return `${BASE_URL}/files/movies/240/${encodeURIComponent(slug)}.jpg`;
 }
@@ -254,9 +153,7 @@ function buildCatalogUrl(params) {
   const query = encodeURIComponent(String(params.query || ""));
   const paged = page > 1 ? `/page/${page}` : "";
 
-  if (type === "series") {
-    return `${BASE_URL}/search/serien/alpha/${letter}`;
-  }
+  if (type === "series") return `${BASE_URL}/search/serien/alpha/${letter}`;
   if (source === "top") return `${BASE_URL}/movies/top${paged}`;
   if (source === "alpha") return `${BASE_URL}/search/alpha/${letter}`;
   if (source === "genre") return `${BASE_URL}/search/genre/${genre}`;
@@ -264,549 +161,140 @@ function buildCatalogUrl(params) {
   return `${BASE_URL}/movies/new${paged}`;
 }
 
-// <article class="liste ..."> mit <a href=".../stream/<slug>" title="..">Titel</a>
-function parseArticleItems(html) {
-  const source = String(html || "");
+async function fetchCatalog(params) {
+  const targetUrl = buildCatalogUrl(params);
+  const { response, text } = await fetchText(targetUrl, { referer: BASE_URL + "/" });
+  const blockReason = detectBlockedOrNonCatalogPage(text);
+  if (blockReason) {
+    return { ok: false, error: "Quelle blockiert", reason: blockReason };
+  }
+  const items = parseFilmpalastCatalogFromHtml(text).map((m) => ({
+    id: m.slug, slug: m.slug, title: m.title, type: "movie", category: "Film",
+    year: m.year ? String(m.year) : "", poster: m.cover || posterFromSlug(m.slug),
+    description: m.description || "", url: m.url
+  }));
+  return { ok: true, count: items.length, page: parseInt(params.page, 10) || 1, items };
+}
+
+function parseFilmpalastHostersFromHtml(html) {
   const out = [];
-  const seen = new Set();
-  const artRe = /<article[^>]*class="[^"]*liste[^"]*"[^>]*>([\s\S]*?)<\/article>/gi;
-  let am;
-  while ((am = artRe.exec(source))) {
-    const block = am[1];
-    const aM =
-      block.match(/<a[^>]*href="([^"]*\/stream\/[^"#?]+)"[^>]*>([\s\S]*?)<\/a>/i) ||
-      block.match(/<a[^>]*href="([^"]+)"[^>]*title="([^"]+)"/i);
-    if (!aM) continue;
-    const url = normalizeUrl(aM[1]);
-    const slug = extractSlugFromStreamUrl(url);
-    if (!slug || seen.has(slug)) continue;
-    seen.add(slug);
-    const title = stripTags(aM[2]) || (block.match(/title="([^"]+)"/i) || [])[1] || slug;
-    const yearM = title.match(/\((\d{4})\)/);
-    out.push({
-      title,
-      slug,
-      url: url || `${BASE_URL}/stream/${slug}`,
-      cover: findCoverInChunk(block) || posterFromSlug(slug),
-      year: yearM ? Number(yearM[1]) : null,
-      description: ""
-    });
+  const source = String(html || "").replace(/<!--[\s\S]*?-->/g, "");
+  const blockRe = /<ul class="currentStreamLinks">([\s\S]*?)<\/ul>/g;
+  let blockMatch;
+  while ((blockMatch = blockRe.exec(source))) {
+    const block = blockMatch[1];
+    const nameMatch = block.match(/<p class="hostName">([\s\S]*?)<\/p>/i);
+    const name = nameMatch ? stripTags(nameMatch[1]).replace(/\s+(HD|SD|4K)$/i, "") : "";
+    const dpMatch = block.match(/data-player-url="([^"]+)"/i);
+    const aMatch = block.match(/<a[^>]*href="(https?:\/\/[^"]+)"/i);
+    const raw = dpMatch ? dpMatch[1] : aMatch ? aMatch[1] : "";
+    if (raw) out.push({ name, url: normalizeUrl(raw) });
   }
   return out;
 }
 
-async function fetchCatalog(params) {
-  const targetUrl = buildCatalogUrl(params);
-  const { response, text } = await fetchText(targetUrl, { referer: BASE_URL + "/" });
-  const status = (response && response.status) || 0;
-  const htmlLen = String(text || "").length;
-  console.log(`[filmpalast-catalog] ${targetUrl} -> HTTP ${status} | ${htmlLen} Bytes`);
-
-  const blockReason = detectBlockedOrNonCatalogPage(text);
-  if (blockReason) {
-    return {
-      ok: false,
-      error: "Quelle blockiert oder keine Katalogseite",
-      reason: blockReason,
-      debug: { targetUrl, status, htmlLen, snippet: String(text || "").slice(0, 300) }
-    };
-  }
-
-  // Slider-Items (echte Cover) + Article-Items (konstruiertes Cover) mergen;
-  // Eintrag mit Cover gewinnt.
-  const bySlug = new Map();
-  for (const m of parseFilmpalastCatalogFromHtml(text)) bySlug.set(m.slug, m);
-  for (const m of parseArticleItems(text)) {
-    if (!bySlug.has(m.slug) || !bySlug.get(m.slug).cover) bySlug.set(m.slug, m);
-  }
-
-  const type = String(params.type || "movie").toLowerCase();
-  const source = String(params.source || "new").toLowerCase();
-  const isSeries = type === "series";
-  const items = [...bySlug.values()]
-    .map((m) => ({
-      id: m.slug,
-      slug: m.slug,
-      title: m.title,
-      type: isSeries ? "series" : "movie",
-      category: isSeries ? "Serie" : "Film",
-      year: m.year ? String(m.year) : "",
-      poster: m.cover || posterFromSlug(m.slug),
-      description: m.description || "",
-      url: m.url || `${BASE_URL}/stream/${m.slug}`
-    }));
-
-  if (!items.length) {
-    const hasStreamLinks = /\/stream\//i.test(text || "");
-    return {
-      ok: false,
-      error: "Keine Titel auf dieser Seite gefunden",
-      debug: { targetUrl, status, htmlLen, hasStreamLinks, snippet: String(text || "").slice(0, 500) }
-    };
-  }
-
-  const paginable = !isSeries && (source === "new" || source === "top");
-  return {
-    ok: true,
-    count: items.length,
-    page: parseInt(params.page, 10) || 1,
-    type,
-    source,
-    hasMore: paginable && items.length >= 30,
-    items
-  };
-}
-
-// ---------------------------------------------------------------------------
-// Stream-Seite: Details + Hoster
-// ---------------------------------------------------------------------------
 function parseStreamPageDetails(html, finalUrl) {
   const source = String(html || "");
   const slug = finalUrl ? (finalUrl.match(/\/stream\/([^?#]+)/) || [])[1] || "" : "";
-
-  let title = stripTags((source.match(/<span class="title rb">([\s\S]*?)<\/span>/i) || [])[1] || "");
-  if (!title) title = stripTags((source.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i) || [])[1] || "");
-  if (!title) {
-    const t = (source.match(/<title>([\s\S]*?)<\/title>/i) || [])[1] || "";
-    title = stripTags(t).replace(/\s*[-|]\s*Filmpalast.*$/i, "").replace(/\s*Stream.*$/i, "").trim();
-  }
-  title = title || slug;
-
-  const descMatch = source.match(
-    /<div class="moviedescription">\s*<b>Beschreibung:<\/b>\s*([\s\S]*?)<\/div>/i
-  );
+  let title = stripTags((source.match(/<span class="title rb">([\s\S]*?)<\/span>/i) || [])[1] || "") || slug;
+  const descMatch = source.match(/<div class="moviedescription">\s*<b>Beschreibung:<\/b>\s*([\s\S]*?)<\/div>/i);
   const description = descMatch ? decodeBasicEntities(descMatch[1]) : "";
-
   const ogImg = source.match(/<meta[^>]+property="og:image"[^>]+content="([^"]+)"/i);
-  const coverMatch = source.match(/<img[^>]*src="((?:https?:\/\/filmpalast\.to)?\/files\/movies\/[^"]+)"/i);
-  const poster = ogImg ? ogImg[1] : coverMatch ? normalizeUrl(coverMatch[1]) : "";
-
-  const yearMatch = source.match(/class="releasedate"[^>]*>Jahr:\s*<b>(\d{4})<\/b>/i);
-  const year = yearMatch ? yearMatch[1] : "";
-
+  const poster = ogImg ? ogImg[1] : "";
   const hosters = parseFilmpalastHostersFromHtml(source);
-
-  return {
-    id: slug,
-    slug,
-    title,
-    type: "movie",
-    category: "Film",
-    year,
-    poster,
-    description,
-    hosters,
-    url: finalUrl
-  };
+  return { id: slug, slug, title, type: "movie", category: "Film", poster, description, hosters, url: finalUrl };
 }
 
 async function fetchItemById(id) {
   if (!id) return { ok: false, error: "id missing" };
   const streamUrl = /^https?:\/\//i.test(id) ? id : `${BASE_URL}/stream/${id}`;
   const { text, response } = await fetchText(streamUrl, { referer: BASE_URL + "/" });
-  const finalUrl = response.url || streamUrl;
-  const d = parseStreamPageDetails(text, finalUrl);
-  const item = {
-    id: d.id,
-    title: d.title,
-    type: "movie",
-    category: d.category,
-    year: d.year,
-    poster: d.poster,
-    description: d.description,
-    seasons: [
-      {
-        key: "s1",
-        label: "Film",
-        number: 1,
-        episodes: [{ id: "e1", title: d.title, episode_num: 1, url: finalUrl }]
-      }
-    ]
-  };
-  return { ok: true, item, hosters: d.hosters, sources: d.hosters };
-}
-
-// ---------------------------------------------------------------------------
-// Hoster einer Stream-Seite
-// ---------------------------------------------------------------------------
-function parseFilmpalastHostersFromHtml(html) {
-  const out = [];
-  const seen = new Set();
-  // HTML-Kommentare entfernen, damit auskomkommentierte <a>-Links nicht erfasst werden.
-  const source = String(html || "").replace(/<!--[\s\S]*?-->/g, "");
-  const blockRe = /<ul class="currentStreamLinks">([\s\S]*?)<\/ul>/g;
-  let blockMatch;
-  while ((blockMatch = blockRe.exec(source))) {
-    const block = blockMatch[1];
-
-    const nameMatch = block.match(/<p class="hostName">([\s\S]*?)<\/p>/i);
-    const name = nameMatch ? stripTags(nameMatch[1]).replace(/\s+(HD|SD|4K)$/i, "") : "";
-
-    // data-player-url (Firestream/verystream) oder href (direkte Hoster-Links)
-    const dpMatch = block.match(/data-player-url="([^"]+)"/i);
-    const aMatch = block.match(/<a[^>]*href="(https?:\/\/[^"]+)"/i);
-    const raw = dpMatch ? dpMatch[1] : aMatch ? aMatch[1] : "";
-    if (!raw) continue;
-    const url = normalizeUrl(raw);
-    if (!url) continue;
-
-    const key = `${url}|${name}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-
-    out.push({ name, url });
-  }
-  return out;
-}
-
-// ---------------------------------------------------------------------------
-// Hoster-Auflösung (aus dem AniWorld-Vorbild)
-// ---------------------------------------------------------------------------
-function pickBestUrl(urls) {
-  const items = (urls || [])
-    .map((u) => String(u || "").replace(/\\\//g, "/").trim())
-    .filter(Boolean);
-  if (!items.length) return "";
-  items.sort((a, b) => scoreUrl(b) - scoreUrl(a));
-  return items[0];
-}
-
-function scoreUrl(url) {
-  const m = String(url).match(/(\d{3,4})p?/i);
-  return m ? Number(m[1]) : 360;
-}
-
-// VOE leitet per JS auf eine rotierende Domain weiter – dieser Redirect wird
-// hier verfolgt, bevor die eigentliche Quellen-Suche startet.
-async function followJsRedirect(text, baseUrl) {
-  const m = text.match(/window\.location\.href\s*=\s*['"]([^'"]+)['"]/i);
-  if (m && m[1] && !/^https?:\/\//i.test(m[1]) === false) {
-    try {
-      return new URL(m[1], baseUrl).toString();
-    } catch {
-      return baseUrl;
-    }
-  }
-  return baseUrl;
+  const d = parseStreamPageDetails(text, response.url || streamUrl);
+  return { ok: true, item: d, hosters: d.hosters };
 }
 
 async function resolveVoe(url) {
-  let current = url;
-  let { text } = await fetchText(current, { referer: "https://filmpalast.to/" });
-  const next = await followJsRedirect(text, current);
-  if (next && next !== current) {
-    current = next;
-    ({ text } = await fetchText(current, { referer: url }));
-  }
-
-  let m = text.match(/"src"\s*:\s*"(https?:[^"]+\.(?:mp4|m3u8)[^"]*)"/i);
-  if (m) return m[1].replace(/\\\//g, "/");
-
-  m = text.match(/json">\["([^"]+)"]<\/script>\s*<script\s*src="([^"]+)/i);
-  if (m) {
-    const scriptUrl = new URL(m[2], current).toString();
-    const { text: helperJs } = await fetchText(scriptUrl, { referer: current });
-    const repl = helperJs.match(/(\[(?:'\W{2}'[,\]]){1,9})/);
-    if (repl) {
-      const decoded = voeDecode(m[1], repl[1]);
-      const sources = [];
-      ["file", "source", "direct_access_url"].forEach((key) => {
-        if (decoded[key]) sources.push(decoded[key]);
-      });
-      const best = pickBestUrl(sources);
-      if (best) return best;
-    }
-  }
-
-  const mediaMatches = text.match(/https?:\/\/[^\s"'<>\\]+\.(?:m3u8|mp4)[^\s"'<>\\]*/gi) || [];
-  return pickBestUrl(mediaMatches);
-}
-
-function voeDecode(cipherText, lutText) {
-  const lut = lutText
-    .slice(2, -2)
-    .split("','")
-    .map((item) => item.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
-  let text = "";
-  for (const ch of cipherText) {
-    let code = ch.charCodeAt(0);
-    if (code > 64 && code < 91) code = ((code - 52) % 26) + 65;
-    else if (code > 96 && code < 123) code = ((code - 84) % 26) + 97;
-    text += String.fromCharCode(code);
-  }
-  for (const item of lut) {
-    text = text.replace(new RegExp(item, "g"), "");
-  }
-  const step1 = Buffer.from(text, "base64").toString("utf8");
-  const step2 = step1
-    .split("")
-    .map((ch) => String.fromCharCode(ch.charCodeAt(0) - 3))
-    .join("");
-  const step3 = Buffer.from(step2.split("").reverse().join(""), "base64").toString("utf8");
-  return JSON.parse(step3);
-}
-
-async function resolveDoodstream(url) {
-  const initial = await fetchText(url, { referer: "https://filmpalast.to/" });
-  let finalUrl = initial.response.url || url;
-  let html = initial.text;
-
-  const iframeMatch = html.match(/<iframe\s*src="([^"]+)/i);
-  if (iframeMatch) {
-    finalUrl = new URL(iframeMatch[1], finalUrl).toString();
-    const embedded = await fetchText(finalUrl, { referer: finalUrl });
-    html = embedded.text;
-  } else {
-    const altUrl = finalUrl.replace("/d/", "/e/");
-    const embedded = await fetchText(altUrl, { referer: finalUrl });
-    html = embedded.text;
-    finalUrl = altUrl;
-  }
-
-  const match = html.match(
-    /dsplayer\.hotkeys[^']+'([^']+).+?function\s*makePlay.+?return[^?]+([^"]+)/is
-  );
-  if (!match) return await resolveGeneric(finalUrl, html);
-
-  const token = match[2];
-  const passUrl = new URL(match[1], finalUrl).toString();
-  const { text: passResult } = await fetchText(passUrl, { referer: finalUrl });
-  if (passResult.includes("cloudflarestorage.")) return passResult.trim();
-  return doodDecode(passResult) + token + String(Date.now());
-}
-
-function doodDecode(data) {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let suffix = "";
-  for (let i = 0; i < 10; i++) {
-    suffix += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return String(data || "") + suffix;
-}
-
-async function resolveStreamtape(url) {
-  const { text } = await fetchText(url, { referer: url });
-  const direct = text.match(
-    /(https?:\/\/[a-z0-9.-]*streamtape[a-z.]*\/get_video[^"'\s]+)/i
-  );
-  if (direct) return direct[1];
-  return await resolveGeneric(url, text);
-}
-
-async function resolveGeneric(url, existingHtml = "", depth = 0) {
-  if (depth > 4) return "";
-  const text = existingHtml || (await fetchText(url, { referer: url })).text;
-  const matches = text.match(/https?:\/\/[^\s"'<>\\]+\.(?:mp4|m3u8|webm|ts)[^\s"'<>\\]*/gi) || [];
-  const best = pickBestUrl(matches);
-  if (best) return best;
-  const fileMatch = text.match(/(?:file|source|src)\s*[:=]\s*["'](https?:[^"']+)["']/i);
-  if (fileMatch && isValidPlayableUrl(fileMatch[1])) return fileMatch[1].replace(/\\\//g, "/");
-  const redirectMatch = text.match(/(?:window\.)?(?:location|location\.href)\s*=\s*["']([^"']+)["']/i);
-  if (redirectMatch) {
-    return await resolveGeneric(new URL(redirectMatch[1], url).toString(), "", depth + 1);
-  }
-  const iframe = text.match(/<iframe[^>]+src=["']([^"']+)["']/i);
-  if (iframe && iframe[1]) {
-    return await resolveGeneric(new URL(iframe[1], url).toString(), "", depth + 1);
+  const { text } = await fetchText(url);
+  let match = text.match(/'hls':\s*'([^']+)'/i) || text.match(/https?:\/\/[^\s"'<>\\]+\.m3u8[^\s"'<>\\]*/i);
+  if (match) return match[1] || match[0];
+  const b64Match = text.match(/prompt\(['"]([^'"]+)['"]\)/i) || text.match(/window\.location\.href\s*=\s*atob\(['"]([^'"]+)['"]\)/i);
+  if (b64Match) {
+    try {
+      const decoded = Buffer.from(b64Match[1], "base64").toString("utf-8");
+      if (decoded.startsWith("http")) return await resolveVoe(decoded);
+    } catch (e) {}
   }
   return "";
 }
 
-async function resolveFilemoon(url) {
-  const direct = await resolveGeneric(url);
-  if (direct) return direct;
-  const embedUrl = String(url || "").replace(/\/d\//i, "/e/");
-  return embedUrl !== url ? await resolveGeneric(embedUrl) : "";
+async function resolveDoodstream(url) {
+  const { text, response } = await fetchText(url);
+  const passMatch = text.match(/\/pass_md5\/[^\s"'`<>]+/i);
+  if (!passMatch) return "";
+  const passUrl = "https://" + new URL(response.url || url).host + passMatch[0];
+  const { text: token } = await fetchText(passUrl, { referer: response.url || url });
+  const randomChars = Math.random().toString(36).substring(2, 12);
+  return `${token}${randomChars}?token=${passMatch[0].split("/").pop()}&expiry=${Date.now()}`;
 }
 
-async function resolveHosterUrl(hosterUrl) {
+async function resolveGeneric(url) {
+  const { text } = await fetchText(url);
+  const matches = text.match(/https?:\/\/[^\s"'<>\\]+\.(?:mp4|m3u8)[^\s"'<>\\]*/gi) || [];
+  return matches[0] || "";
+}
+
+async function resolveHosterUrl(hosterUrl, sourceName = "") {
   const url = normalizeUrl(hosterUrl);
   if (!url) return "";
-  // VOE und seine vielen Spiegel-Domains
-  if (/voe|voeun|vidaraa|vidsonic|vixeo|filelion|lula|tracy|playmate/i.test(url)) {
-    return await resolveVoe(url);
-  }
-  if (/dood|playmogo|myvidplay/i.test(url)) return await resolveDoodstream(url);
-  if (/filemoon|moon|bysezejataos/i.test(url)) return await resolveFilemoon(url);
-  if (/streamtape|stape/i.test(url)) return await resolveStreamtape(url);
+  const name = sourceName.toLowerCase();
+  
+  if (name.includes("voe") || url.includes("voe.sx")) return await resolveVoe(url);
+  if (name.includes("dood") || url.includes("dood")) return await resolveDoodstream(url);
   return await resolveGeneric(url);
 }
 
-async function diagnoseHoster(hosterUrl) {
-  const input = normalizeUrl(hosterUrl);
-  if (!input) return { ok: false, error: "hosterUrl missing" };
-  const { response, text } = await fetchText(input, { referer: BASE_URL + "/" });
-  const html = String(text || "");
-  const lower = html.toLowerCase();
-  const markers = [];
-  [
-    ["iframe", /<iframe\b/i],
-    ["media-url", /https?:\/\/[^\s"'<>\\]+\.(?:m3u8|mp4|webm|ts)/i],
-    ["cloudflare", /cloudflare|cf-chl|just a moment/i],
-    ["captcha", /captcha|hcaptcha|turnstile/i],
-    ["javascript-player", /jwplayer|videojs|player\.|sources\s*[:=]/i]
-  ].forEach(([name, pattern]) => { if (pattern.test(html)) markers.push(name); });
-  return {
-    ok: true,
-    input,
-    finalUrl: response.url || input,
-    status: response.status || 0,
-    bytes: html.length,
-    markers
-  };
-}
-
-// ---------------------------------------------------------------------------
-// Quellen-Auswahl & Validierung
-// ---------------------------------------------------------------------------
-// Nur direkte, vom Player unterstützte Video-URLs gelten als abspielbar.
-// Die App löst keine Captchas/Schutzmechanismen – ist keine direkte URL
-// vorhanden, wird ein verständlicher Fehler zurückgegeben.
-const SOURCE_UNAVAILABLE_MSG =
-  "Diese Videoquelle ist derzeit nicht verfügbar. Bitte wähle eine andere Quelle.";
-const SUPPORTED_VIDEO_RE = /\.(m3u8|mp4|webm|ogg|ogv|mkv|mov|avi|ts)(?:[?#]|$)/i;
-
+const SUPPORTED_VIDEO_RE = /\.(m3u8|mp4|webm|ogg|mkv|ts)(?:[?#]|$)/i;
 function isValidPlayableUrl(u) {
-  const s = String(u || "").trim();
-  if (!s) return false;
-  if (!/^https?:\/\//i.test(s)) return false;
-  // Streamtape and similar hosts use signed media endpoints without extensions.
-  return SUPPORTED_VIDEO_RE.test(s) || /\/(?:get_video|download|stream|manifest|play)(?:[/?#]|$)/i.test(s);
+  return SUPPORTED_VIDEO_RE.test(String(u || "")) || /\/(?:get_video|stream)(?:[/?#]|$)/i.test(String(u || ""));
 }
 
-// Löst genau eine Quelle auf und prüft die direkte Video-URL.
 async function resolveSingleHoster(hosterUrl, sourceName) {
   const url = normalizeUrl(hosterUrl);
-  const name = String(sourceName || "").trim();
-  if (!url) {
-    return { ok: false, sourceName: name, error: SOURCE_UNAVAILABLE_MSG, reason: "url missing" };
-  }
   try {
-    const playableUrl = await resolveHosterUrl(url);
+    const playableUrl = await resolveHosterUrl(url, sourceName);
     if (!isValidPlayableUrl(playableUrl)) {
-      return {
-        ok: false,
-        sourceName: name,
-        hosterUrl: url,
-        error: SOURCE_UNAVAILABLE_MSG,
-        reason: !playableUrl ? "no direct url" : "unsupported format"
-      };
+      return { ok: false, sourceName, error: "Quelle nicht verfügbar", reason: "no direct url" };
     }
-    return { ok: true, sourceName: name, hosterUrl: url, playableUrl };
+    return { ok: true, sourceName, hosterUrl: url, playableUrl };
   } catch (error) {
-    return {
-      ok: false,
-      sourceName: name,
-      hosterUrl: url,
-      error: SOURCE_UNAVAILABLE_MSG,
-      reason: String(error && error.message ? error.message : error)
-    };
+    return { ok: false, sourceName, error: String(error) };
   }
 }
 
-// ---------------------------------------------------------------------------
-// /resolve
-// ---------------------------------------------------------------------------
-// Aufrufvarianten:
-//   /resolve?streamUrl=<slug|stream-url>  -> liefert Quellen-Liste (needsSelection)
-//   /resolve?hosterUrl=<url>&sourceName=  -> löst genau diese Quelle auf + prüft
 async function resolveMovie(params) {
-  if (typeof params === "string") params = { streamUrl: params };
   const streamUrl = params && params.streamUrl;
   const hosterUrl = params && params.hosterUrl;
-  const sourceName = (params && params.sourceName) || "";
+  const sourceName = params && params.sourceName || "";
 
-  // (A) Eine konkrete Quelle wurde ausgewählt -> nur diese prüfen.
   if (hosterUrl) {
     return await resolveSingleHoster(hosterUrl, sourceName);
   }
 
   let cleanUrl = normalizeUrl(streamUrl);
   if (!cleanUrl) return { ok: false, error: "streamUrl missing" };
-
-  // Direkte Hoster-URL (keine filmpalast-Streamseite) -> direkt auflösen.
-  if (/^https?:\/\//i.test(cleanUrl) && !/filmpalast\.to\/stream\//i.test(cleanUrl)) {
-    return await resolveSingleHoster(cleanUrl, sourceName);
-  }
-
-  // "/stream/evil-dead-burn" oder "evil-dead-burn" → vollständige URL
-  if (!/^https?:\/\//i.test(cleanUrl)) {
-    cleanUrl = `${BASE_URL}/stream/${cleanUrl}`;
-  }
+  if (!/^https?:\/\//i.test(cleanUrl)) cleanUrl = `${BASE_URL}/stream/${cleanUrl}`;
 
   const { text: pageHtml, response } = await fetchText(cleanUrl, { referer: BASE_URL + "/" });
-  const finalPageUrl = response.url || cleanUrl;
+  const details = parseStreamPageDetails(pageHtml, response.url || cleanUrl);
+  const sources = details.hosters || [];
 
-  // Details (Cover/Titel/Jahr/Beschreibung) + Quellenliste für die Auswahl.
-  const details = parseStreamPageDetails(pageHtml, finalPageUrl);
-  const sources = (details.hosters || []).map((h) => ({ name: h.name, url: h.url }));
-
-  if (!sources.length) {
-    return {
-      ok: false,
-      error: SOURCE_UNAVAILABLE_MSG,
-      reason: "no sources",
-      streamUrl: finalPageUrl
-    };
-  }
-
-  // Behaves like the Anime resolver: use the first hoster that yields a
-  // direct stream, while still returning the source list as a fallback.
-  const item = {
-    id: details.id,
-    title: details.title,
-    year: details.year,
-    poster: details.poster,
-    description: details.description
-  };
-  const attempts = [];
   for (const source of sources) {
     const result = await resolveSingleHoster(source.url, source.name);
-    attempts.push({ name: source.name, reason: result.reason || "ok" });
-    if (result.ok) {
-      return {
-        ok: true,
-        playableUrl: result.playableUrl,
-        sourceName: source.name,
-        streamUrl: finalPageUrl,
-        item,
-        sources,
-        attempts
-      };
-    }
+    if (result.ok) return { ok: true, playableUrl: result.playableUrl, sourceName: source.name, sources };
   }
-
-  return {
-    ok: true,
-    needsSelection: true,
-    streamUrl: finalPageUrl,
-    item,
-    sources,
-    attempts
-  };
+  return { ok: true, needsSelection: true, item: details, sources };
 }
 
-function errorToObject(error) {
-  if (!error) return { message: "unknown error" };
-  const cause = error.cause || null;
-  return {
-    message: String(error.message || error),
-    stack: error.stack || "",
-    cause: cause
-      ? {
-          message: String(cause.message || cause),
-          stack: cause.stack || "",
-          code: cause.code || "",
-          errno: cause.errno || "",
-          syscall: cause.syscall || ""
-        }
-      : null
-  };
-}
-
-// ---------------------------------------------------------------------------
-// Server
-// ---------------------------------------------------------------------------
 const server = http.createServer(async (req, res) => {
   if (req.method === "OPTIONS") {
     res.writeHead(204, {
@@ -825,83 +313,31 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (url.pathname === "/catalog") {
-    try {
-      const result = await fetchCatalog({
-        type: url.searchParams.get("type"),
-        source: url.searchParams.get("source"),
-        letter: url.searchParams.get("letter"),
-        genre: url.searchParams.get("genre"),
-        query: url.searchParams.get("query"),
-        page: url.searchParams.get("page")
-      });
-      sendJson(res, result.ok ? 200 : 502, result);
-    } catch (error) {
-      sendJson(res, 500, {
-        ok: false,
-        error: String(error && error.message ? error.message : error),
-        details: errorToObject(error)
-      });
-    }
+    const result = await fetchCatalog({
+      type: url.searchParams.get("type"),
+      source: url.searchParams.get("source"),
+      page: url.searchParams.get("page"),
+      letter: url.searchParams.get("letter"),
+      genre: url.searchParams.get("genre"),
+      query: url.searchParams.get("query")
+    });
+    sendJson(res, result.ok ? 200 : 502, result);
     return;
   }
 
-  if (url.pathname === "/item") {
-    try {
-      const result = await fetchItemById(url.searchParams.get("id"));
-      sendJson(res, result.ok ? 200 : 400, result);
-    } catch (error) {
-      sendJson(res, 500, {
-        ok: false,
-        error: String(error && error.message ? error.message : error),
-        details: errorToObject(error)
-      });
-    }
-    return;
-  }
-
-  if (url.pathname === "/importMeta") {
-    try {
-      const result = await fetchItemById(url.searchParams.get("url"));
-      sendJson(res, result.ok ? 200 : 502, result);
-    } catch (error) {
-      sendJson(res, 500, {
-        ok: false,
-        error: String(error && error.message ? error.message : error),
-        details: errorToObject(error)
-      });
-    }
+  if (url.pathname === "/item" || url.pathname === "/importMeta") {
+    const result = await fetchItemById(url.searchParams.get("id") || url.searchParams.get("url"));
+    sendJson(res, result.ok ? 200 : 400, result);
     return;
   }
 
   if (url.pathname === "/resolve") {
-    try {
-      const result = await resolveMovie({
-        streamUrl: url.searchParams.get("streamUrl"),
-        hosterUrl: url.searchParams.get("hosterUrl"),
-        sourceName: url.searchParams.get("sourceName")
-      });
-      sendJson(res, result.ok ? 200 : 502, result);
-    } catch (error) {
-      sendJson(res, 500, {
-        ok: false,
-        error: String(error && error.message ? error.message : error),
-        details: errorToObject(error)
-      });
-    }
-    return;
-  }
-
-  if (url.pathname === "/diagnose") {
-    try {
-      const result = await diagnoseHoster(url.searchParams.get("hosterUrl"));
-      sendJson(res, result.ok ? 200 : 400, result);
-    } catch (error) {
-      sendJson(res, 500, {
-        ok: false,
-        error: String(error && error.message ? error.message : error),
-        details: errorToObject(error)
-      });
-    }
+    const result = await resolveMovie({
+      streamUrl: url.searchParams.get("streamUrl"),
+      hosterUrl: url.searchParams.get("hosterUrl"),
+      sourceName: url.searchParams.get("sourceName")
+    });
+    sendJson(res, result.ok ? 200 : 502, result);
     return;
   }
 
