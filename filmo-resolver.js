@@ -623,8 +623,8 @@ const server = http.createServer(async (req, res) => {
   }
 
   const url = new URL(req.url, `http://${req.headers.host}`);
-  if (url.pathname === "/health") {
-    sendJson(res, 200, { ok: true, port: PORT });
+  if (url.pathname === "/health" || url.pathname === "/" || url.pathname === "/index.html") {
+    sendJson(res, 200, { ok: true, service: "filmpalast-resolver", port: PORT });
     return;
   }
 
