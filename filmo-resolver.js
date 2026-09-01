@@ -593,16 +593,30 @@ async function resolveStreamtape(url) {
   return await resolveGeneric(url, text);
 }
 
-async function resolveGeneric(url, existingHtml = "") {
+async function resolveGeneric(url, existingHtml = "", depth = 0) {
+  if (depth > 4) return "";
   const text = existingHtml || (await fetchText(url, { referer: url })).text;
-  const matches = text.match(/https?:\/\/[^\s"'<>\\]+\.(?:mp4|m3u8)[^\s"'<>\\]*/gi) || [];
+  const matches = text.match(/https?:\/\/[^\s"'<>\\]+\.(?:mp4|m3u8|webm|ts)[^\s"'<>\\]*/gi) || [];
   const best = pickBestUrl(matches);
   if (best) return best;
-  const iframe = text.match(/<iframe[^>]+src="(https?:\/\/[^"]+)"/i);
-  if (iframe) {
-    return await resolveGeneric(iframe[1]);
+  const fileMatch = text.match(/(?:file|source|src)\s*[:=]\s*["'](https?:[^"']+)["']/i);
+  if (fileMatch && isValidPlayableUrl(fileMatch[1])) return fileMatch[1].replace(/\\\//g, "/");
+  const redirectMatch = text.match(/(?:window\.)?(?:location|location\.href)\s*=\s*["']([^"']+)["']/i);
+  if (redirectMatch) {
+    return await resolveGeneric(new URL(redirectMatch[1], url).toString(), "", depth + 1);
+  }
+  const iframe = text.match(/<iframe[^>]+src=["']([^"']+)["']/i);
+  if (iframe && iframe[1]) {
+    return await resolveGeneric(new URL(iframe[1], url).toString(), "", depth + 1);
   }
   return "";
+}
+
+async function resolveFilemoon(url) {
+  const direct = await resolveGeneric(url);
+  if (direct) return direct;
+  const embedUrl = String(url || "").replace(/\/d\//i, "/e/");
+  return embedUrl !== url ? await resolveGeneric(embedUrl) : "";
 }
 
 async function resolveHosterUrl(hosterUrl) {
@@ -613,6 +627,7 @@ async function resolveHosterUrl(hosterUrl) {
     return await resolveVoe(url);
   }
   if (/dood|playmogo|myvidplay/i.test(url)) return await resolveDoodstream(url);
+  if (/filemoon|moon|bysezejataos/i.test(url)) return await resolveFilemoon(url);
   if (/streamtape|stape/i.test(url)) return await resolveStreamtape(url);
   return await resolveGeneric(url);
 }
@@ -631,7 +646,8 @@ function isValidPlayableUrl(u) {
   const s = String(u || "").trim();
   if (!s) return false;
   if (!/^https?:\/\//i.test(s)) return false;
-  return SUPPORTED_VIDEO_RE.test(s);
+  // Streamtape and similar hosts use signed media endpoints without extensions.
+  return SUPPORTED_VIDEO_RE.test(s) || /\/(?:get_video|download|stream|manifest|play)(?:[/?#]|$)/i.test(s);
 }
 
 // Löst genau eine Quelle auf und prüft die direkte Video-URL.
@@ -710,18 +726,39 @@ async function resolveMovie(params) {
     };
   }
 
+  // Behaves like the Anime resolver: use the first hoster that yields a
+  // direct stream, while still returning the source list as a fallback.
+  const item = {
+    id: details.id,
+    title: details.title,
+    year: details.year,
+    poster: details.poster,
+    description: details.description
+  };
+  const attempts = [];
+  for (const source of sources) {
+    const result = await resolveSingleHoster(source.url, source.name);
+    attempts.push({ name: source.name, reason: result.reason || "ok" });
+    if (result.ok) {
+      return {
+        ok: true,
+        playableUrl: result.playableUrl,
+        sourceName: source.name,
+        streamUrl: finalPageUrl,
+        item,
+        sources,
+        attempts
+      };
+    }
+  }
+
   return {
     ok: true,
     needsSelection: true,
     streamUrl: finalPageUrl,
-    item: {
-      id: details.id,
-      title: details.title,
-      year: details.year,
-      poster: details.poster,
-      description: details.description
-    },
-    sources
+    item,
+    sources,
+    attempts
   };
 }
 
