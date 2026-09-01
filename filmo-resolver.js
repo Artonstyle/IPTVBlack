@@ -632,6 +632,30 @@ async function resolveHosterUrl(hosterUrl) {
   return await resolveGeneric(url);
 }
 
+async function diagnoseHoster(hosterUrl) {
+  const input = normalizeUrl(hosterUrl);
+  if (!input) return { ok: false, error: "hosterUrl missing" };
+  const { response, text } = await fetchText(input, { referer: BASE_URL + "/" });
+  const html = String(text || "");
+  const lower = html.toLowerCase();
+  const markers = [];
+  [
+    ["iframe", /<iframe\b/i],
+    ["media-url", /https?:\/\/[^\s"'<>\\]+\.(?:m3u8|mp4|webm|ts)/i],
+    ["cloudflare", /cloudflare|cf-chl|just a moment/i],
+    ["captcha", /captcha|hcaptcha|turnstile/i],
+    ["javascript-player", /jwplayer|videojs|player\.|sources\s*[:=]/i]
+  ].forEach(([name, pattern]) => { if (pattern.test(html)) markers.push(name); });
+  return {
+    ok: true,
+    input,
+    finalUrl: response.url || input,
+    status: response.status || 0,
+    bytes: html.length,
+    markers
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Quellen-Auswahl & Validierung
 // ---------------------------------------------------------------------------
@@ -857,6 +881,20 @@ const server = http.createServer(async (req, res) => {
         sourceName: url.searchParams.get("sourceName")
       });
       sendJson(res, result.ok ? 200 : 502, result);
+    } catch (error) {
+      sendJson(res, 500, {
+        ok: false,
+        error: String(error && error.message ? error.message : error),
+        details: errorToObject(error)
+      });
+    }
+    return;
+  }
+
+  if (url.pathname === "/diagnose") {
+    try {
+      const result = await diagnoseHoster(url.searchParams.get("hosterUrl"));
+      sendJson(res, result.ok ? 200 : 400, result);
     } catch (error) {
       sendJson(res, 500, {
         ok: false,
