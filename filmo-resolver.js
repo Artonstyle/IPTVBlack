@@ -231,54 +231,130 @@ function parseFilmpalastCatalogFromHtml(html) {
   return out;
 }
 
-function catalogItemFromParsed(m) {
-  return {
-    id: m.slug,
-    title: m.title,
-    type: "movie",
-    category: "Film",
-    year: m.year ? String(m.year) : "",
-    poster: m.cover || "",
-    description: m.description || ""
-  };
+// ---------------------------------------------------------------------------
+// Katalog-URLs (Filme + Serien, paginiert)
+// ---------------------------------------------------------------------------
+// Quellen:
+//   type=movie  source=new|top  -> /movies/new | /movies/top  (+ /page/N)
+//   type=movie  source=alpha     -> /search/alpha/<letter>     (Einzel-Seite)
+//   type=movie  source=genre     -> /search/genre/<Name>       (Einzel-Seite)
+//   type=movie  source=search     -> /search?search=<query>     (Einzel-Seite)
+//   type=series                  -> /search/serien/alpha/<letter> (Episoden via /stream/)
+// Cover für Filme UND Serien-Episoden liegt unter /files/movies/240/<slug>.jpg
+function posterFromSlug(slug) {
+  return `${BASE_URL}/files/movies/240/${encodeURIComponent(slug)}.jpg`;
 }
 
-async function fetchMovieCatalog() {
-  const { response, text } = await fetchText(BASE_URL + "/", { referer: BASE_URL + "/" });
-  const status = response && response.status ? response.status : 0;
+function buildCatalogUrl(params) {
+  const type = String(params.type || "movie").toLowerCase();
+  const source = String(params.source || "new").toLowerCase();
+  const page = Math.max(parseInt(params.page, 10) || 1, 1);
+  const letter = encodeURIComponent(String(params.letter || "A"));
+  const genre = encodeURIComponent(String(params.genre || ""));
+  const query = encodeURIComponent(String(params.query || ""));
+  const paged = page > 1 ? `/page/${page}` : "";
+
+  if (type === "series") {
+    return `${BASE_URL}/search/serien/alpha/${letter}`;
+  }
+  if (source === "top") return `${BASE_URL}/movies/top${paged}`;
+  if (source === "alpha") return `${BASE_URL}/search/alpha/${letter}`;
+  if (source === "genre") return `${BASE_URL}/search/genre/${genre}`;
+  if (source === "search") return `${BASE_URL}/search?search=${query}`;
+  return `${BASE_URL}/movies/new${paged}`;
+}
+
+// <article class="liste ..."> mit <a href=".../stream/<slug>" title="..">Titel</a>
+function parseArticleItems(html) {
+  const source = String(html || "");
+  const out = [];
+  const seen = new Set();
+  const artRe = /<article[^>]*class="[^"]*liste[^"]*"[^>]*>([\s\S]*?)<\/article>/gi;
+  let am;
+  while ((am = artRe.exec(source))) {
+    const block = am[1];
+    const aM =
+      block.match(/<a[^>]*href="([^"]*\/stream\/[^"#?]+)"[^>]*>([\s\S]*?)<\/a>/i) ||
+      block.match(/<a[^>]*href="([^"]+)"[^>]*title="([^"]+)"/i);
+    if (!aM) continue;
+    const url = normalizeUrl(aM[1]);
+    const slug = extractSlugFromStreamUrl(url);
+    if (!slug || seen.has(slug)) continue;
+    seen.add(slug);
+    const title = stripTags(aM[2]) || (block.match(/title="([^"]+)"/i) || [])[1] || slug;
+    const yearM = title.match(/\((\d{4})\)/);
+    out.push({
+      title,
+      slug,
+      url: url || `${BASE_URL}/stream/${slug}`,
+      cover: findCoverInChunk(block) || posterFromSlug(slug),
+      year: yearM ? Number(yearM[1]) : null,
+      description: ""
+    });
+  }
+  return out;
+}
+
+async function fetchCatalog(params) {
+  const targetUrl = buildCatalogUrl(params);
+  const { response, text } = await fetchText(targetUrl, { referer: BASE_URL + "/" });
+  const status = (response && response.status) || 0;
   const htmlLen = String(text || "").length;
-  console.log(`[filmpalast-catalog] HTTP ${status} | ${htmlLen} Bytes HTML`);
+  console.log(`[filmpalast-catalog] ${targetUrl} -> HTTP ${status} | ${htmlLen} Bytes`);
 
   const blockReason = detectBlockedOrNonCatalogPage(text);
   if (blockReason) {
-    console.warn("[filmpalast-catalog] Kein Katalog geladen:", blockReason);
     return {
       ok: false,
-      error: "Source page is blocked or not a catalog page",
+      error: "Quelle blockiert oder keine Katalogseite",
       reason: blockReason,
-      debug: { status, htmlLen, snippet: String(text || "").slice(0, 300) }
+      debug: { targetUrl, status, htmlLen, snippet: String(text || "").slice(0, 300) }
     };
   }
 
-  const parsed = parseFilmpalastCatalogFromHtml(text);
-  const items = parsed.map(catalogItemFromParsed);
+  // Slider-Items (echte Cover) + Article-Items (konstruiertes Cover) mergen;
+  // Eintrag mit Cover gewinnt.
+  const bySlug = new Map();
+  for (const m of parseFilmpalastCatalogFromHtml(text)) bySlug.set(m.slug, m);
+  for (const m of parseArticleItems(text)) {
+    if (!bySlug.has(m.slug) || !bySlug.get(m.slug).cover) bySlug.set(m.slug, m);
+  }
+
+  const type = String(params.type || "movie").toLowerCase();
+  const source = String(params.source || "new").toLowerCase();
+  const isSeries = type === "series";
+  const items = [...bySlug.values()]
+    .map((m) => ({
+      id: m.slug,
+      slug: m.slug,
+      title: m.title,
+      type: isSeries ? "series" : "movie",
+      category: isSeries ? "Serie" : "Film",
+      year: m.year ? String(m.year) : "",
+      poster: m.cover || posterFromSlug(m.slug),
+      description: m.description || "",
+      url: m.url || `${BASE_URL}/stream/${m.slug}`
+    }));
+
   if (!items.length) {
-    const hasStreamLinks = /\/stream\/[a-z0-9-]/i.test(text || "");
-    console.warn(
-      `[filmpalast-catalog] 0 Treffer trotz ${htmlLen} Bytes. Stream-Links vorhanden? ${hasStreamLinks}`
-    );
+    const hasStreamLinks = /\/stream\//i.test(text || "");
     return {
       ok: false,
-      error: "No catalog items parsed",
-      debug: {
-        status,
-        htmlLen,
-        hasStreamLinks,
-        snippet: String(text || "").slice(0, 500)
-      }
+      error: "Keine Titel auf dieser Seite gefunden",
+      debug: { targetUrl, status, htmlLen, hasStreamLinks, snippet: String(text || "").slice(0, 500) }
     };
   }
-  return { ok: true, count: items.length, items };
+
+  const paginable = !isSeries && (source === "new" || source === "top");
+  return {
+    ok: true,
+    count: items.length,
+    page: parseInt(params.page, 10) || 1,
+    type,
+    source,
+    hasMore: paginable && items.length >= 30,
+    items
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -689,7 +765,14 @@ const server = http.createServer(async (req, res) => {
 
   if (url.pathname === "/catalog") {
     try {
-      const result = await fetchMovieCatalog();
+      const result = await fetchCatalog({
+        type: url.searchParams.get("type"),
+        source: url.searchParams.get("source"),
+        letter: url.searchParams.get("letter"),
+        genre: url.searchParams.get("genre"),
+        query: url.searchParams.get("query"),
+        page: url.searchParams.get("page")
+      });
       sendJson(res, result.ok ? 200 : 502, result);
     } catch (error) {
       sendJson(res, 500, {
