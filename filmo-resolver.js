@@ -1,8 +1,4 @@
 /* global require, process, Buffer, fetch */
-// filmpalast.to nutzt wechselnde Cloudflare-Zertifikate – in manchen Umgebungen
-// schlägt die TLS-Verifikation beim serverseitigen Abruf fehl. Für den Scraper
-// erlauben wir daher unsichere TLS-Verbindungen zum Ziel.
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 // filmpalast.to Resolver – HTTP-Server im Stil des AniWorld-Resolvers.
 // Endpunkte: /health, /catalog, /item?id=..., /importMeta?url=..., /resolve?streamUrl=...
 //
@@ -12,7 +8,6 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 const http = require("http");
 const { URL } = require("url");
-const sb = require("./filmpalast-supabase");
 
 const PORT = Number(process.env.PORT || 10000);
 const BASE_URL = "https://filmpalast.to";
@@ -868,18 +863,6 @@ const server = http.createServer(async (req, res) => {
 
   if (url.pathname === "/catalog") {
     try {
-      if (sb.enabled()) {
-        const result = await sb.fetchCatalog({
-          type: url.searchParams.get("type"),
-          source: url.searchParams.get("source"),
-          letter: url.searchParams.get("letter"),
-          genre: url.searchParams.get("genre"),
-          query: url.searchParams.get("query"),
-          page: url.searchParams.get("page")
-        });
-        sendJson(res, result.ok ? 200 : 502, result);
-        return;
-      }
       const result = await fetchCatalog({
         type: url.searchParams.get("type"),
         source: url.searchParams.get("source"),
@@ -929,26 +912,11 @@ const server = http.createServer(async (req, res) => {
 
   if (url.pathname === "/resolve") {
     try {
-      if (sb.enabled() && !url.searchParams.get("hosterUrl")) {
-        const result = await sb.resolveFromSupabase({
-          streamUrl: url.searchParams.get("streamUrl")
-        });
-        sendJson(res, result.ok ? 200 : 502, result);
-        return;
-      }
       const result = await resolveMovie({
         streamUrl: url.searchParams.get("streamUrl"),
         hosterUrl: url.searchParams.get("hosterUrl"),
         sourceName: url.searchParams.get("sourceName")
       });
-      // HLS-Quellen (m3u8) über den eigenen Proxy ausliefern: die Tokens der
-      // Hoster sind an die IP des Auflösers gebunden – der Player muss also
-      // über den Resolver streamen, nicht direkt gegen die CDN-URL.
-      if (result.ok && result.playableUrl && /\.m3u8/i.test(result.playableUrl)) {
-        const base = `${req.headers["x-forwarded-proto"] || "http"}://${req.headers.host}`;
-        result.directUrl = result.playableUrl;
-        result.playableUrl = `${base}/proxy?u=${encodeURIComponent(result.playableUrl)}`;
-      }
       sendJson(res, result.ok ? 200 : 502, result);
     } catch (error) {
       sendJson(res, 500, {
@@ -957,6 +925,12 @@ const server = http.createServer(async (req, res) => {
         details: errorToObject(error)
       });
     }
+    return;
+  }
+
+  // This parser does not proxy third-party streams.
+  if (url.pathname === "/proxy") {
+    sendJson(res, 404, { ok: false, error: "Proxy endpoint disabled" });
     return;
   }
 
