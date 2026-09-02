@@ -30,6 +30,14 @@ const sb = (() => {
     return response.json();
   }
 
+  function cacheKey(options) {
+    const type = asText(options && options.type).toLowerCase() === "series" ? "series" : "movie";
+    const source = asText(options && options.source).toLowerCase() || "new";
+    const letter = asText(options && options.letter).toUpperCase() || "A";
+    const page = Number.parseInt(options && options.page, 10) || 1;
+    return `filmo:${type}:${source}:${letter}:${page}`;
+  }
+
   async function fetchCatalog(options) {
     if (!enabled()) return { ok: false, error: "SUPABASE_URL oder SUPABASE_KEY fehlt auf Render." };
     const pageSize = 30;
@@ -45,6 +53,7 @@ const sb = (() => {
     const letter = asText(options && options.letter).trim();
     const search = asText(options && options.query).trim().replace(/[*,()]/g, " ");
     if (type === "movie" || type === "series") params.type = `eq.${type}`;
+    params.source = `eq.${cacheKey(options)}`;
     if (letter && /^[a-z0-9]$/i.test(letter)) params.title = `ilike.${letter}*`;
     if (search) params.title = `ilike.*${search}*`;
     const rows = await request("movies", params);
@@ -60,6 +69,23 @@ const sb = (() => {
         url: asText(row.url), source: asText(row.source)
       }))
     };
+  }
+
+  async function cacheCatalog(items, options) {
+    if (!enabled() || !Array.isArray(items) || !items.length) return;
+    const source = cacheKey(options);
+    const rows = items.filter((item) => item && item.id && item.title).map((item) => ({
+      id: asText(item.id), title: asText(item.title),
+      type: asText(item.type).toLowerCase() === "series" ? "series" : "movie",
+      year: asText(item.year), poster: asText(item.poster),
+      description: asText(item.description), url: asText(item.url), source,
+      updated_at: new Date().toISOString()
+    }));
+    if (!rows.length) return;
+    await supabaseRequest("movies?on_conflict=id", {
+      method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+      body: JSON.stringify(rows)
+    });
   }
 
   async function resolveFromSupabase(options) {
@@ -91,7 +117,16 @@ const sb = (() => {
     };
   }
 
-  return { enabled, fetchCatalog, resolveFromSupabase };
+  async function supabaseRequest(path, options) {
+    const response = await fetch(`${baseUrl}/rest/v1/${path}`, {
+      ...options,
+      headers: { apikey: apiKey, Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json", ...(options.headers || {}) }
+    });
+    if (!response.ok) throw new Error(`Supabase HTTP ${response.status}: ${await response.text()}`);
+    return response.headers.get("content-type")?.includes("application/json") ? response.json() : null;
+  }
+
+  return { enabled, fetchCatalog, cacheCatalog, resolveFromSupabase };
 })();
 
 const PORT = Number(process.env.PORT || 10000);
@@ -896,6 +931,16 @@ const server = http.createServer(async (req, res) => {
         query: url.searchParams.get("query"),
         page: url.searchParams.get("page")
       });
+      if (result.ok && sb.enabled()) {
+        try {
+          await sb.cacheCatalog(result.items, {
+            type: url.searchParams.get("type"), source: url.searchParams.get("source"),
+            letter: url.searchParams.get("letter"), page: url.searchParams.get("page")
+          });
+        } catch (cacheError) {
+          console.warn("[supabase] catalog cache skipped:", cacheError.message || cacheError);
+        }
+      }
       sendJson(res, result.ok ? 200 : 502, result);
     } catch (error) {
       sendJson(res, 500, {
@@ -938,11 +983,13 @@ const server = http.createServer(async (req, res) => {
   if (url.pathname === "/resolve") {
     try {
       if (sb.enabled() && !url.searchParams.get("hosterUrl")) {
-        const result = await sb.resolveFromSupabase({
+        const cachedResult = await sb.resolveFromSupabase({
           streamUrl: url.searchParams.get("streamUrl")
         });
-        sendJson(res, result.ok ? 200 : 502, result);
-        return;
+        if (cachedResult.ok) {
+          sendJson(res, 200, cachedResult);
+          return;
+        }
       }
       const result = await resolveMovie({
         streamUrl: url.searchParams.get("streamUrl"),
