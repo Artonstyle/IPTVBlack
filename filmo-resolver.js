@@ -12,7 +12,87 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 const http = require("http");
 const { URL } = require("url");
-const sb = require("./filmpalast-supabase");
+// Supabase-Katalog direkt eingebaut: keine zweite JavaScript-Datei nötig.
+const sb = (() => {
+  const baseUrl = String(process.env.SUPABASE_URL || "").replace(/\/+$/, "");
+  const apiKey = String(process.env.SUPABASE_KEY || "").trim();
+  const asText = (value) => (value == null ? "" : String(value));
+  const enabled = () => Boolean(baseUrl && apiKey);
+
+  async function request(table, params) {
+    const query = new URLSearchParams(params);
+    const response = await fetch(`${baseUrl}/rest/v1/${table}?${query.toString()}`, {
+      headers: { apikey: apiKey, Authorization: `Bearer ${apiKey}` }
+    });
+    if (!response.ok) {
+      throw new Error(`Supabase ${table}: HTTP ${response.status} - ${await response.text()}`);
+    }
+    return response.json();
+  }
+
+  async function fetchCatalog(options) {
+    if (!enabled()) return { ok: false, error: "SUPABASE_URL oder SUPABASE_KEY fehlt auf Render." };
+    const pageSize = 30;
+    const rawPage = Number.parseInt(options && options.page, 10);
+    const page = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1;
+    const params = {
+      select: "id,title,type,year,poster,description,url,source",
+      order: "updated_at.desc,title.asc",
+      limit: String(pageSize + 1),
+      offset: String((page - 1) * pageSize)
+    };
+    const type = asText(options && options.type).toLowerCase();
+    const letter = asText(options && options.letter).trim();
+    const search = asText(options && options.query).trim().replace(/[*,()]/g, " ");
+    if (type === "movie" || type === "series") params.type = `eq.${type}`;
+    if (letter && /^[a-z0-9]$/i.test(letter)) params.title = `ilike.${letter}*`;
+    if (search) params.title = `ilike.*${search}*`;
+    const rows = await request("movies", params);
+    const hasMore = rows.length > pageSize;
+    return {
+      ok: true,
+      page,
+      hasMore,
+      items: rows.slice(0, pageSize).map((row) => ({
+        id: asText(row.id), slug: asText(row.id), title: asText(row.title),
+        type: asText(row.type || "movie"), year: asText(row.year),
+        poster: asText(row.poster), description: asText(row.description),
+        url: asText(row.url), source: asText(row.source)
+      }))
+    };
+  }
+
+  async function resolveFromSupabase(options) {
+    if (!enabled()) return { ok: false, error: "SUPABASE_URL oder SUPABASE_KEY fehlt auf Render." };
+    const raw = asText(options && options.streamUrl).trim();
+    const match = raw.match(/\/stream\/([^?#/]+)/i);
+    const id = decodeURIComponent(match ? match[1] : raw.replace(/^\/+|\/+$/g, ""));
+    if (!id) return { ok: false, error: "streamUrl missing" };
+    const movies = await request("movies", {
+      select: "id,title,type,year,poster,description,url", id: `eq.${id}`, limit: "1"
+    });
+    const movie = movies[0];
+    if (!movie) return { ok: false, error: "Titel nicht im Supabase-Katalog gefunden." };
+    const hosters = await request("hosters", {
+      select: "name,url", movie_slug: `eq.${movie.id}`, order: "id.asc"
+    });
+    const sources = hosters.filter((hoster) => hoster && hoster.url)
+      .map((hoster) => ({ name: asText(hoster.name || "Hoster"), url: asText(hoster.url) }));
+    if (!sources.length) return { ok: false, error: "Für diesen Titel sind keine Quellen gespeichert." };
+    return {
+      ok: true,
+      needsSelection: true,
+      streamUrl: asText(movie.url || raw),
+      item: {
+        id: asText(movie.id), title: asText(movie.title), year: asText(movie.year),
+        poster: asText(movie.poster), description: asText(movie.description)
+      },
+      sources
+    };
+  }
+
+  return { enabled, fetchCatalog, resolveFromSupabase };
+})();
 
 const PORT = Number(process.env.PORT || 10000);
 const BASE_URL = "https://filmpalast.to";
