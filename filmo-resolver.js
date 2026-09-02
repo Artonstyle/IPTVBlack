@@ -874,7 +874,7 @@ const server = http.createServer(async (req, res) => {
   if (url.pathname === "/catalog") {
     try {
       if (sb.enabled()) {
-        const result = await sb.fetchCatalog({
+        const cachedResult = await sb.fetchCatalog({
           type: url.searchParams.get("type"),
           source: url.searchParams.get("source"),
           letter: url.searchParams.get("letter"),
@@ -882,8 +882,11 @@ const server = http.createServer(async (req, res) => {
           query: url.searchParams.get("query"),
           page: url.searchParams.get("page")
         });
-        sendJson(res, result.ok ? 200 : 502, result);
-        return;
+        // An empty cache must not hide the existing catalog fallback.
+        if (cachedResult.ok && cachedResult.items && cachedResult.items.length) {
+          sendJson(res, 200, cachedResult);
+          return;
+        }
       }
       const result = await fetchCatalog({
         type: url.searchParams.get("type"),
