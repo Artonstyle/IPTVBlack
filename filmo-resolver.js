@@ -668,12 +668,49 @@ async function resolveGeneric(url, existingHtml = "") {
   if (iframe) {
     return await resolveGeneric(iframe[1]);
   }
+  // Vidara-artige Player (jwplayer + POST /api/stream): JSON-API probieren
+  if (/\/api\/stream/.test(text)) {
+    const viaApi = await resolveVidaraApi(url);
+    if (viaApi) return viaApi;
+  }
   return "";
+}
+
+// Vidara & Klone: Der Player holt die Video-URL per POST /api/stream
+// ({filecode, device:"web"} -> JSON mit streaming_url, meist HLS + IP-Token).
+async function resolveVidaraApi(hosterUrl) {
+  try {
+    const u = new URL(normalizeUrl(hosterUrl));
+    const filecode = u.pathname.split("/").filter(Boolean).pop();
+    if (!filecode) return "";
+    const r = await fetch(u.origin + "/api/stream", {
+      method: "POST",
+      headers: {
+        "user-agent": UA,
+        "content-type": "application/json",
+        "accept": "application/json",
+        "origin": u.origin,
+        "referer": u.toString()
+      },
+      body: JSON.stringify({ filecode, device: "web" })
+    });
+    const data = await r.json();
+    const su = data && data.streaming_url;
+    if (isValidPlayableUrl(su)) return su;
+    return "";
+  } catch {
+    return "";
+  }
 }
 
 async function resolveHosterUrl(hosterUrl) {
   const url = normalizeUrl(hosterUrl);
   if (!url) return "";
+  // Vidara & Klone: Video-URL kommt direkt aus der JSON-API des Players
+  if (/vidara/i.test(url)) {
+    const viaApi = await resolveVidaraApi(url);
+    if (viaApi) return viaApi;
+  }
   // VOE und seine vielen Spiegel-Domains
   if (/voe|voeun|vidaraa|vidsonic|vixeo|filelion|lula|tracy|playmate/i.test(url)) {
     return await resolveVoe(url);
@@ -904,6 +941,14 @@ const server = http.createServer(async (req, res) => {
         hosterUrl: url.searchParams.get("hosterUrl"),
         sourceName: url.searchParams.get("sourceName")
       });
+      // HLS-Quellen (m3u8) über den eigenen Proxy ausliefern: die Tokens der
+      // Hoster sind an die IP des Auflösers gebunden – der Player muss also
+      // über den Resolver streamen, nicht direkt gegen die CDN-URL.
+      if (result.ok && result.playableUrl && /\.m3u8/i.test(result.playableUrl)) {
+        const base = `${req.headers["x-forwarded-proto"] || "http"}://${req.headers.host}`;
+        result.directUrl = result.playableUrl;
+        result.playableUrl = `${base}/proxy?u=${encodeURIComponent(result.playableUrl)}`;
+      }
       sendJson(res, result.ok ? 200 : 502, result);
     } catch (error) {
       sendJson(res, 500, {
@@ -913,6 +958,72 @@ const server = http.createServer(async (req, res) => {
       });
     }
     return;
+  }
+
+  // Streaming-Proxy: löst das Problem der IP-gebundenen HLS-Tokens.
+  // Der TV spielt die m3u8 über den Resolver (/proxy?u=...); Manifeste werden
+  // umgeschrieben, Segmente werden durchgereicht. Dadurch stimmt die IP des
+  // Tokens (Resolver-IP) für jede Anfrage.
+  if (url.pathname === "/proxy") {
+    try {
+      const target = url.searchParams.get("u");
+      if (!target || !/^https?:\/\//i.test(target)) {
+        sendJson(res, 400, { ok: false, error: "u missing" });
+        return;
+      }
+      const targetUrl = new URL(target);
+      const upstreamHeaders = {
+        "user-agent": UA,
+        "accept": "*/*",
+        referer: targetUrl.origin + "/"
+      };
+      if (req.headers.range) upstreamHeaders.range = req.headers.range;
+      const upstream = await fetch(target, { headers: upstreamHeaders });
+      const ct = upstream.headers.get("content-type") || "";
+      const isManifest = /mpegurl/i.test(ct) || /\.m3u8/i.test(target);
+
+      if (isManifest) {
+        const manifest = await upstream.text();
+        const base = `${req.headers["x-forwarded-proto"] || "http"}://${req.headers.host}`;
+        const rewritten = manifest
+          .split("\n")
+          .map((line) => {
+            const t = line.trim();
+            if (!t || t.startsWith("#")) return line;
+            try {
+              const abs = new URL(t, targetUrl).toString();
+              return `${base}/proxy?u=${encodeURIComponent(abs)}`;
+            } catch {
+              return line;
+            }
+          })
+          .join("\n");
+        res.writeHead(200, {
+          "Content-Type": "application/vnd.apple.mpegurl",
+          "Access-Control-Allow-Origin": "*"
+        });
+        res.end(rewritten);
+        return;
+      }
+
+      const headers = {
+        "Content-Type": ct || "application/octet-stream",
+        "Access-Control-Allow-Origin": "*"
+      };
+      for (const h of ["content-length", "content-range", "accept-ranges"]) {
+        const v = upstream.headers.get(h);
+        if (v) headers[h.replace(/(^\w)/, (c) => c.toUpperCase())] = v;
+      }
+      res.writeHead(upstream.status, headers);
+      res.end(Buffer.from(await upstream.arrayBuffer()));
+      return;
+    } catch (error) {
+      sendJson(res, 502, {
+        ok: false,
+        error: String(error && error.message ? error.message : error)
+      });
+      return;
+    }
   }
 
   sendJson(res, 404, { ok: false, error: "Not found" });
