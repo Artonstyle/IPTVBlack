@@ -153,10 +153,16 @@ function extractSlugFromStreamUrl(url) {
 
 // Liest ein Poster/Bild aus src, data-src, data-original, data-lazy-src, poster.
 function findCoverInChunk(chunk) {
-  const m = String(chunk || "").match(
-    /(?:src|data-src|data-original|data-lazy-src|poster)\s*=\s*"([^"]+\.(?:jpe?g|png|webp|gif)[^"]*)"/i
-  );
-  return m ? normalizeUrl(m[1]) : "";
+  const imageRe = /(?:src|data-src|data-original|data-lazy-src|poster)\s*=\s*"([^"]+\.(?:jpe?g|png|webp|gif)[^"]*)"/gi;
+  let match;
+  while ((match = imageRe.exec(String(chunk || "")))) {
+    const imageUrl = normalizeUrl(match[1]);
+    // Rating stars and interface icons are not movie posters.
+    if (!/(?:star_(?:on|off)|rating|icon|sprite|logo)\.(?:png|jpe?g|webp|gif)(?:[?#]|$)/i.test(imageUrl)) {
+      return imageUrl;
+    }
+  }
+  return "";
 }
 
 // Titelerkennung aus Überschrift, span.title, img alt, title-Attribut oder Linktext.
@@ -235,10 +241,7 @@ function parseFilmpalastCatalogFromHtml(html) {
 
     const title =
       stripTags((block.match(/<span class="title rb">([\s\S]*?)<\/span>/i) || [])[1] || "") || slug;
-    const coverMatch = block.match(
-      /<img[^>]*src="((?:https?:\/\/filmpalast\.to)?\/files\/movies\/[^"]+)"/i
-    );
-    const cover = coverMatch ? normalizeUrl(coverMatch[1]) : findCoverInChunk(block);
+    const cover = posterFromSlug(slug);
     const yearMatch = block.match(/class="releasedate"[^>]*>Jahr:\s*<b>(\d{4})<\/b>/i);
     const year = yearMatch ? Number(yearMatch[1]) : null;
     const descMatch = block.match(
@@ -265,7 +268,7 @@ function parseFilmpalastCatalogFromHtml(html) {
     const slug = extractSlugFromStreamUrl(url);
     if (!slug) continue;
     const inner = lm[2];
-    const cover = findCoverInChunk(inner);
+    const cover = posterFromSlug(slug);
     const title = findTitleInChunk(inner, stripTags(inner)) || slug;
     add({ title, slug, url, cover, year: null, description: "" });
   }
@@ -281,7 +284,7 @@ function parseFilmpalastCatalogFromHtml(html) {
     const url = normalizeUrl(linkMatch[1]);
     const slug = extractSlugFromStreamUrl(url);
     if (!slug) continue;
-    const cover = findCoverInChunk(block);
+    const cover = posterFromSlug(slug);
     const title = findTitleInChunk(block, slug) || slug;
     add({ title, slug, url, cover, year: null, description: "" });
   }
@@ -348,7 +351,7 @@ function parseArticleItems(html) {
       title,
       slug,
       url: url || `${BASE_URL}/stream/${slug}`,
-      cover: findCoverInChunk(block) || posterFromSlug(slug),
+      cover: posterFromSlug(slug),
       year: yearM ? Number(yearM[1]) : null,
       description: ""
     });
