@@ -12,127 +12,12 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 const http = require("http");
 const { URL } = require("url");
-// Supabase-Katalog direkt eingebaut: keine zweite JavaScript-Datei nötig.
-const sb = (() => {
-  const baseUrl = String(process.env.SUPABASE_URL || "").replace(/\/+$/, "");
-  const apiKey = String(process.env.SUPABASE_KEY || "").trim();
-  const asText = (value) => (value == null ? "" : String(value));
-  const enabled = () => Boolean(baseUrl && apiKey);
-
-  async function request(table, params) {
-    const query = new URLSearchParams(params);
-    const response = await fetch(`${baseUrl}/rest/v1/${table}?${query.toString()}`, {
-      headers: { apikey: apiKey, Authorization: `Bearer ${apiKey}` }
-    });
-    if (!response.ok) {
-      throw new Error(`Supabase ${table}: HTTP ${response.status} - ${await response.text()}`);
-    }
-    return response.json();
-  }
-
-  function cacheKey(options) {
-    const type = asText(options && options.type).toLowerCase() === "series" ? "series" : "movie";
-    const source = asText(options && options.source).toLowerCase() || "new";
-    const letter = asText(options && options.letter).toUpperCase() || "A";
-    const page = Number.parseInt(options && options.page, 10) || 1;
-    return `filmo:${type}:${source}:${letter}:${page}`;
-  }
-
-  async function fetchCatalog(options) {
-    if (!enabled()) return { ok: false, error: "SUPABASE_URL oder SUPABASE_KEY fehlt auf Render." };
-    const pageSize = 30;
-    const rawPage = Number.parseInt(options && options.page, 10);
-    const page = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1;
-    const params = {
-      select: "id,title,type,year,poster,description,url,source",
-      order: "updated_at.desc,title.asc",
-      limit: String(pageSize + 1),
-      offset: String((page - 1) * pageSize)
-    };
-    const type = asText(options && options.type).toLowerCase();
-    const letter = asText(options && options.letter).trim();
-    const search = asText(options && options.query).trim().replace(/[*,()]/g, " ");
-    if (type === "movie" || type === "series") params.type = `eq.${type}`;
-    params.source = `eq.${cacheKey(options)}`;
-    if (letter && /^[a-z0-9]$/i.test(letter)) params.title = `ilike.${letter}*`;
-    if (search) params.title = `ilike.*${search}*`;
-    const rows = await request("movies", params);
-    const hasMore = rows.length > pageSize;
-    return {
-      ok: true,
-      page,
-      hasMore,
-      items: rows.slice(0, pageSize).map((row) => ({
-        id: asText(row.id), slug: asText(row.id), title: asText(row.title),
-        type: asText(row.type || "movie"), year: asText(row.year),
-        poster: asText(row.poster), description: asText(row.description),
-        url: asText(row.url), source: asText(row.source)
-      }))
-    };
-  }
-
-  async function cacheCatalog(items, options) {
-    if (!enabled() || !Array.isArray(items) || !items.length) return;
-    const source = cacheKey(options);
-    const rows = items.filter((item) => item && item.id && item.title).map((item) => ({
-      id: asText(item.id), title: asText(item.title),
-      type: asText(item.type).toLowerCase() === "series" ? "series" : "movie",
-      year: asText(item.year), poster: asText(item.poster),
-      description: asText(item.description), url: asText(item.url), source,
-      updated_at: new Date().toISOString()
-    }));
-    if (!rows.length) return;
-    await supabaseRequest("movies?on_conflict=id", {
-      method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
-      body: JSON.stringify(rows)
-    });
-  }
-
-  async function resolveFromSupabase(options) {
-    if (!enabled()) return { ok: false, error: "SUPABASE_URL oder SUPABASE_KEY fehlt auf Render." };
-    const raw = asText(options && options.streamUrl).trim();
-    const match = raw.match(/\/stream\/([^?#/]+)/i);
-    const id = decodeURIComponent(match ? match[1] : raw.replace(/^\/+|\/+$/g, ""));
-    if (!id) return { ok: false, error: "streamUrl missing" };
-    const movies = await request("movies", {
-      select: "id,title,type,year,poster,description,url", id: `eq.${id}`, limit: "1"
-    });
-    const movie = movies[0];
-    if (!movie) return { ok: false, error: "Titel nicht im Supabase-Katalog gefunden." };
-    const hosters = await request("hosters", {
-      select: "name,url", movie_slug: `eq.${movie.id}`, order: "id.asc"
-    });
-    const sources = hosters.filter((hoster) => hoster && hoster.url)
-      .map((hoster) => ({ name: asText(hoster.name || "Hoster"), url: asText(hoster.url) }));
-    if (!sources.length) return { ok: false, error: "Für diesen Titel sind keine Quellen gespeichert." };
-    return {
-      ok: true,
-      needsSelection: true,
-      streamUrl: asText(movie.url || raw),
-      item: {
-        id: asText(movie.id), title: asText(movie.title), year: asText(movie.year),
-        poster: asText(movie.poster), description: asText(movie.description)
-      },
-      sources
-    };
-  }
-
-  async function supabaseRequest(path, options) {
-    const response = await fetch(`${baseUrl}/rest/v1/${path}`, {
-      ...options,
-      headers: { apikey: apiKey, Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json", ...(options.headers || {}) }
-    });
-    if (!response.ok) throw new Error(`Supabase HTTP ${response.status}: ${await response.text()}`);
-    return response.headers.get("content-type")?.includes("application/json") ? response.json() : null;
-  }
-
-  return { enabled, fetchCatalog, cacheCatalog, resolveFromSupabase };
-})();
+const sb = require("./filmpalast-supabase");
 
 const PORT = Number(process.env.PORT || 10000);
 const BASE_URL = "https://filmpalast.to";
 const UA =
-"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
   "(KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36";
 
 function sendJson(res, status, data) {
@@ -193,6 +78,40 @@ function buildUpstreamUrl(targetUrl) {
   return "";
 }
 
+// FlareSolverr-Fallback: Blockierte Seiten (Cloudflare-Challenge, 403/503)
+// werden automatisch über einen selbst gehosteten Headless-Browser geholt.
+// Env: FLARESOLVERR_URL=https://<flaresolverr-host>   (leer = deaktiviert)
+function isProtectedPage(status, text) {
+  if (status === 403 || status === 429 || status === 503) return true;
+  return /just a moment|cf-challenge|cf-browser-verification|checking your browser|ddos protection|enable javascript and cookies/i.test(
+    String(text || "").slice(0, 4000)
+  );
+}
+
+async function fetchTextViaFlareSolverr(targetUrl) {
+  const ep = String(process.env.FLARESOLVERR_URL || "").replace(/\/+$/, "");
+  if (!ep) return null;
+  try {
+    const r = await fetch(ep + "/v1", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ cmd: "request.get", url: targetUrl, maxTimeout: 60000 })
+    });
+    const data = await r.json();
+    if (data && data.status === "ok" && data.solution && data.solution.response) {
+      console.log(`[flaresolverr] Challenge gelöst für ${targetUrl}`);
+      return {
+        response: { status: 200, url: data.solution.url || targetUrl },
+        text: data.solution.response
+      };
+    }
+    console.warn(`[flaresolverr] keine Lösung für ${targetUrl}:`, data && data.message);
+  } catch (error) {
+    console.warn(`[flaresolverr] Fehler für ${targetUrl}:`, String(error && error.message));
+  }
+  return null;
+}
+
 async function fetchText(url, opts = {}) {
   const upstream = /filmpalast\.to/i.test(url) ? buildUpstreamUrl(url) : "";
   const finalUrl = upstream || url;
@@ -212,6 +131,10 @@ async function fetchText(url, opts = {}) {
           }
     });
     const text = await response.text();
+    if (isProtectedPage(response.status, text)) {
+      const solved = await fetchTextViaFlareSolverr(url);
+      if (solved) return solved;
+    }
     return { response, text };
   } catch (error) {
     const err = new Error(
@@ -909,7 +832,7 @@ const server = http.createServer(async (req, res) => {
   if (url.pathname === "/catalog") {
     try {
       if (sb.enabled()) {
-        const cachedResult = await sb.fetchCatalog({
+        const result = await sb.fetchCatalog({
           type: url.searchParams.get("type"),
           source: url.searchParams.get("source"),
           letter: url.searchParams.get("letter"),
@@ -917,11 +840,8 @@ const server = http.createServer(async (req, res) => {
           query: url.searchParams.get("query"),
           page: url.searchParams.get("page")
         });
-        // An empty cache must not hide the existing catalog fallback.
-        if (cachedResult.ok && cachedResult.items && cachedResult.items.length) {
-          sendJson(res, 200, cachedResult);
-          return;
-        }
+        sendJson(res, result.ok ? 200 : 502, result);
+        return;
       }
       const result = await fetchCatalog({
         type: url.searchParams.get("type"),
@@ -931,16 +851,6 @@ const server = http.createServer(async (req, res) => {
         query: url.searchParams.get("query"),
         page: url.searchParams.get("page")
       });
-      if (result.ok && sb.enabled()) {
-        try {
-          await sb.cacheCatalog(result.items, {
-            type: url.searchParams.get("type"), source: url.searchParams.get("source"),
-            letter: url.searchParams.get("letter"), page: url.searchParams.get("page")
-          });
-        } catch (cacheError) {
-          console.warn("[supabase] catalog cache skipped:", cacheError.message || cacheError);
-        }
-      }
       sendJson(res, result.ok ? 200 : 502, result);
     } catch (error) {
       sendJson(res, 500, {
@@ -983,13 +893,11 @@ const server = http.createServer(async (req, res) => {
   if (url.pathname === "/resolve") {
     try {
       if (sb.enabled() && !url.searchParams.get("hosterUrl")) {
-        const cachedResult = await sb.resolveFromSupabase({
+        const result = await sb.resolveFromSupabase({
           streamUrl: url.searchParams.get("streamUrl")
         });
-        if (cachedResult.ok) {
-          sendJson(res, 200, cachedResult);
-          return;
-        }
+        sendJson(res, result.ok ? 200 : 502, result);
+        return;
       }
       const result = await resolveMovie({
         streamUrl: url.searchParams.get("streamUrl"),
