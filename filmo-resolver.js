@@ -16,7 +16,7 @@ const { URL } = require("url");
 const PORT = Number(process.env.PORT || 10000);
 const BASE_URL = "https://filmpalast.to";
 const UA =
-  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
   "(KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36";
 
 function sendJson(res, status, data) {
@@ -58,21 +58,48 @@ function stripTags(value) {
     .trim();
 }
 
+// Optionaler Cloudflare-Unblocker (gehostet, kein lokaler Laptop nötig).
+// Env:
+//   UNBLOCKER=scraperapi|custom   UNBLOCKER_KEY=...   UNBLOCKER_ENDPOINT=...
+// scraperapi:  https://api.scraperapi.com?api_key=KEY&url=ENC&render=true&country_code=de
+// custom:      UNBLOCKER_ENDPOINT mit Platzhaltern {url} und {key}
+// Greift nur für filmpalast.to – Hoster (VOE/Streamtape/…) bleiben direkt.
+function buildUpstreamUrl(targetUrl) {
+  const mode = (process.env.UNBLOCKER || "").toLowerCase();
+  const key = process.env.UNBLOCKER_KEY || "";
+  const ep = process.env.UNBLOCKER_ENDPOINT || "";
+  if (!mode) return "";
+  const enc = encodeURIComponent(targetUrl);
+  if (mode === "scraperapi")
+    return `https://api.scraperapi.com?api_key=${encodeURIComponent(key)}&url=${enc}&render=true&country_code=de`;
+  if (mode === "custom" && ep)
+    return ep.replace("{url}", enc).replace("{key}", encodeURIComponent(key));
+  return "";
+}
+
 async function fetchText(url, opts = {}) {
+  const upstream = /filmpalast\.to/i.test(url) ? buildUpstreamUrl(url) : "";
+  const finalUrl = upstream || url;
   try {
-    const response = await fetch(url, {
+    const response = await fetch(finalUrl, {
       redirect: opts.redirect || "follow",
-      headers: {
-        "user-agent": UA,
-        "accept-language": "de-DE,de;q=0.9,en;q=0.8",
-        referer: opts.referer || BASE_URL + "/"
-      }
+      headers: upstream
+        ? {
+            "user-agent": UA,
+            accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "accept-language": "de-DE,de;q=0.9,en;q=0.8"
+          }
+        : {
+            "user-agent": UA,
+            "accept-language": "de-DE,de;q=0.9,en;q=0.8",
+            referer: opts.referer || BASE_URL + "/"
+          }
     });
     const text = await response.text();
     return { response, text };
   } catch (error) {
     const err = new Error(
-      `fetch failed for ${url}: ${String(error && error.message ? error.message : error)}`
+      `fetch failed for ${finalUrl}: ${String(error && error.message ? error.message : error)}`
     );
     err.cause = error;
     throw err;
@@ -593,30 +620,16 @@ async function resolveStreamtape(url) {
   return await resolveGeneric(url, text);
 }
 
-async function resolveGeneric(url, existingHtml = "", depth = 0) {
-  if (depth > 4) return "";
+async function resolveGeneric(url, existingHtml = "") {
   const text = existingHtml || (await fetchText(url, { referer: url })).text;
-  const matches = text.match(/https?:\/\/[^\s"'<>\\]+\.(?:mp4|m3u8|webm|ts)[^\s"'<>\\]*/gi) || [];
+  const matches = text.match(/https?:\/\/[^\s"'<>\\]+\.(?:mp4|m3u8)[^\s"'<>\\]*/gi) || [];
   const best = pickBestUrl(matches);
   if (best) return best;
-  const fileMatch = text.match(/(?:file|source|src)\s*[:=]\s*["'](https?:[^"']+)["']/i);
-  if (fileMatch && isValidPlayableUrl(fileMatch[1])) return fileMatch[1].replace(/\\\//g, "/");
-  const redirectMatch = text.match(/(?:window\.)?(?:location|location\.href)\s*=\s*["']([^"']+)["']/i);
-  if (redirectMatch) {
-    return await resolveGeneric(new URL(redirectMatch[1], url).toString(), "", depth + 1);
-  }
-  const iframe = text.match(/<iframe[^>]+src=["']([^"']+)["']/i);
-  if (iframe && iframe[1]) {
-    return await resolveGeneric(new URL(iframe[1], url).toString(), "", depth + 1);
+  const iframe = text.match(/<iframe[^>]+src="(https?:\/\/[^"]+)"/i);
+  if (iframe) {
+    return await resolveGeneric(iframe[1]);
   }
   return "";
-}
-
-async function resolveFilemoon(url) {
-  const direct = await resolveGeneric(url);
-  if (direct) return direct;
-  const embedUrl = String(url || "").replace(/\/d\//i, "/e/");
-  return embedUrl !== url ? await resolveGeneric(embedUrl) : "";
 }
 
 async function resolveHosterUrl(hosterUrl) {
@@ -627,33 +640,8 @@ async function resolveHosterUrl(hosterUrl) {
     return await resolveVoe(url);
   }
   if (/dood|playmogo|myvidplay/i.test(url)) return await resolveDoodstream(url);
-  if (/filemoon|moon|bysezejataos/i.test(url)) return await resolveFilemoon(url);
   if (/streamtape|stape/i.test(url)) return await resolveStreamtape(url);
   return await resolveGeneric(url);
-}
-
-async function diagnoseHoster(hosterUrl) {
-  const input = normalizeUrl(hosterUrl);
-  if (!input) return { ok: false, error: "hosterUrl missing" };
-  const { response, text } = await fetchText(input, { referer: BASE_URL + "/" });
-  const html = String(text || "");
-  const lower = html.toLowerCase();
-  const markers = [];
-  [
-    ["iframe", /<iframe\b/i],
-    ["media-url", /https?:\/\/[^\s"'<>\\]+\.(?:m3u8|mp4|webm|ts)/i],
-    ["cloudflare", /cloudflare|cf-chl|just a moment/i],
-    ["captcha", /captcha|hcaptcha|turnstile/i],
-    ["javascript-player", /jwplayer|videojs|player\.|sources\s*[:=]/i]
-  ].forEach(([name, pattern]) => { if (pattern.test(html)) markers.push(name); });
-  return {
-    ok: true,
-    input,
-    finalUrl: response.url || input,
-    status: response.status || 0,
-    bytes: html.length,
-    markers
-  };
 }
 
 // ---------------------------------------------------------------------------
@@ -670,8 +658,7 @@ function isValidPlayableUrl(u) {
   const s = String(u || "").trim();
   if (!s) return false;
   if (!/^https?:\/\//i.test(s)) return false;
-  // Streamtape and similar hosts use signed media endpoints without extensions.
-  return SUPPORTED_VIDEO_RE.test(s) || /\/(?:get_video|download|stream|manifest|play)(?:[/?#]|$)/i.test(s);
+  return SUPPORTED_VIDEO_RE.test(s);
 }
 
 // Löst genau eine Quelle auf und prüft die direkte Video-URL.
@@ -750,39 +737,18 @@ async function resolveMovie(params) {
     };
   }
 
-  // Behaves like the Anime resolver: use the first hoster that yields a
-  // direct stream, while still returning the source list as a fallback.
-  const item = {
-    id: details.id,
-    title: details.title,
-    year: details.year,
-    poster: details.poster,
-    description: details.description
-  };
-  const attempts = [];
-  for (const source of sources) {
-    const result = await resolveSingleHoster(source.url, source.name);
-    attempts.push({ name: source.name, reason: result.reason || "ok" });
-    if (result.ok) {
-      return {
-        ok: true,
-        playableUrl: result.playableUrl,
-        sourceName: source.name,
-        streamUrl: finalPageUrl,
-        item,
-        sources,
-        attempts
-      };
-    }
-  }
-
   return {
     ok: true,
     needsSelection: true,
     streamUrl: finalPageUrl,
-    item,
-    sources,
-    attempts
+    item: {
+      id: details.id,
+      title: details.title,
+      year: details.year,
+      poster: details.poster,
+      description: details.description
+    },
+    sources
   };
 }
 
@@ -826,6 +792,18 @@ const server = http.createServer(async (req, res) => {
 
   if (url.pathname === "/catalog") {
     try {
+      if (sb.enabled()) {
+        const result = await sb.fetchCatalog({
+          type: url.searchParams.get("type"),
+          source: url.searchParams.get("source"),
+          letter: url.searchParams.get("letter"),
+          genre: url.searchParams.get("genre"),
+          query: url.searchParams.get("query"),
+          page: url.searchParams.get("page")
+        });
+        sendJson(res, result.ok ? 200 : 502, result);
+        return;
+      }
       const result = await fetchCatalog({
         type: url.searchParams.get("type"),
         source: url.searchParams.get("source"),
@@ -875,26 +853,19 @@ const server = http.createServer(async (req, res) => {
 
   if (url.pathname === "/resolve") {
     try {
+      if (sb.enabled() && !url.searchParams.get("hosterUrl")) {
+        const result = await sb.resolveFromSupabase({
+          streamUrl: url.searchParams.get("streamUrl")
+        });
+        sendJson(res, result.ok ? 200 : 502, result);
+        return;
+      }
       const result = await resolveMovie({
         streamUrl: url.searchParams.get("streamUrl"),
         hosterUrl: url.searchParams.get("hosterUrl"),
         sourceName: url.searchParams.get("sourceName")
       });
       sendJson(res, result.ok ? 200 : 502, result);
-    } catch (error) {
-      sendJson(res, 500, {
-        ok: false,
-        error: String(error && error.message ? error.message : error),
-        details: errorToObject(error)
-      });
-    }
-    return;
-  }
-
-  if (url.pathname === "/diagnose") {
-    try {
-      const result = await diagnoseHoster(url.searchParams.get("hosterUrl"));
-      sendJson(res, result.ok ? 200 : 400, result);
     } catch (error) {
       sendJson(res, 500, {
         ok: false,
