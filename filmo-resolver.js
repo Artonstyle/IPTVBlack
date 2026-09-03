@@ -300,7 +300,7 @@ function parseFilmpalastCatalogFromHtml(html) {
 // ---------------------------------------------------------------------------
 // Quellen:
 //   type=movie  source=new|top  -> /movies/new | /movies/top  (+ /page/N)
-//   type=movie  source=alpha     -> /search/alpha/<letter>     (+ /page/N)
+//   type=movie  source=alpha     -> /search/alpha/<letter>     (+ /N)
 //   type=movie  source=genre     -> /search/genre/<Name>       (Einzel-Seite)
 //   type=movie  source=search     -> /search?search=<query>     (Einzel-Seite)
 //   type=series                  -> /search/serien/alpha/<letter> (Episoden via /stream/)
@@ -317,12 +317,13 @@ function buildCatalogUrl(params) {
   const genre = encodeURIComponent(String(params.genre || ""));
   const query = encodeURIComponent(String(params.query || ""));
   const paged = page > 1 ? `/page/${page}` : "";
+  const alphaPaged = page > 1 ? `/${page}` : "";
 
   if (type === "series") {
     return `${BASE_URL}/search/serien/alpha/${letter}`;
   }
   if (source === "top") return `${BASE_URL}/movies/top${paged}`;
-  if (source === "alpha") return `${BASE_URL}/search/alpha/${letter}${paged}`;
+  if (source === "alpha") return `${BASE_URL}/search/alpha/${letter}${alphaPaged}`;
   if (source === "genre") return `${BASE_URL}/search/genre/${genre}`;
   if (source === "search") return `${BASE_URL}/search?search=${query}`;
   return `${BASE_URL}/movies/new${paged}`;
