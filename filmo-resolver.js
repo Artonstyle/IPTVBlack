@@ -589,19 +589,32 @@ async function resolveVoe(url) {
   let m = text.match(/"src"\s*:\s*"(https?:[^"]+\.(?:mp4|m3u8)[^"]*)"/i);
   if (m) return m[1].replace(/\\\//g, "/");
 
-  m = text.match(/json">\["([^"]+)"]<\/script>\s*<script\s*src="([^"]+)/i);
-  if (m) {
-    const scriptUrl = new URL(m[2], current).toString();
-    const { text: helperJs } = await fetchText(scriptUrl, { referer: current });
-    const repl = helperJs.match(/(\[(?:'\W{2}'[,\]]){1,9})/);
-    if (repl) {
-      const decoded = voeDecode(m[1], repl[1]);
-      const sources = [];
-      ["file", "source", "direct_access_url"].forEach((key) => {
-        if (decoded[key]) sources.push(decoded[key]);
-      });
-      const best = pickBestUrl(sources);
-      if (best) return best;
+  // VOE changed its player markup: the encrypted payload is now a plain
+  // application/json script, while the replacement tokens stay in the player.
+  const payloadMatch = text.match(/<script[^>]*type=["']application\/json["'][^>]*>\s*(\[[\s\S]*?\])\s*<\/script>/i);
+  if (payloadMatch) {
+    try {
+      const payload = JSON.parse(payloadMatch[1]);
+      const cipherText = Array.isArray(payload) ? payload[0] : "";
+      if (typeof cipherText === "string" && cipherText) {
+        const helperMatch = text.match(/<script[^>]*src=["']([^"']*loader[^"']*\.js[^"']*)/i);
+        let lutText = "";
+        if (helperMatch) {
+          const scriptUrl = new URL(helperMatch[1], current).toString();
+          const { text: helperJs } = await fetchText(scriptUrl, { referer: current });
+          const repl = helperJs.match(/(\[(?:'\W{2}'[,\]]){1,9})/);
+          lutText = repl ? repl[1] : "";
+        }
+        const decoded = voeDecode(cipherText, lutText);
+        const sources = [];
+        ["file", "source", "direct_access_url"].forEach((key) => {
+          if (decoded[key]) sources.push(decoded[key]);
+        });
+        const best = pickBestUrl(sources);
+        if (best) return best;
+      }
+    } catch {
+      // Fall through to the generic media URL scan below.
     }
   }
 
@@ -611,9 +624,11 @@ async function resolveVoe(url) {
 
 function voeDecode(cipherText, lutText) {
   const lut = lutText
-    .slice(2, -2)
-    .split("','")
-    .map((item) => item.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+    ? lutText
+        .slice(2, -2)
+        .split("','")
+        .map((item) => item.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+    : ["\\*~", "!!", "#&", "@\\$", "%\\?", "\\^\\^", "~@"];
   let text = "";
   for (const ch of cipherText) {
     let code = ch.charCodeAt(0);
