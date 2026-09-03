@@ -431,7 +431,10 @@ function parseStreamPageDetails(html, finalUrl) {
   const source = String(html || "");
   const slug = finalUrl ? (finalUrl.match(/\/stream\/([^?#]+)/) || [])[1] || "" : "";
 
-  let title = stripTags((source.match(/<span class="title rb">([\s\S]*?)<\/span>/i) || [])[1] || "");
+  // The detail header identifies the current film. Generic title elements can
+  // occur earlier in recommendation cards and would otherwise return another film.
+  let title = stripTags((source.match(/<span[^>]*class="[^\"]*value-title[^\"]*"[^>]*title="([^"]+)"/i) || [])[1] || "");
+  if (!title) title = stripTags((source.match(/<span class="title rb">([\s\S]*?)<\/span>/i) || [])[1] || "");
   if (!title) title = stripTags((source.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i) || [])[1] || "");
   if (!title) {
     const t = (source.match(/<title>([\s\S]*?)<\/title>/i) || [])[1] || "";
@@ -439,10 +442,15 @@ function parseStreamPageDetails(html, finalUrl) {
   }
   title = title || slug;
 
+  const detailDescMatch = source.match(/<span[^>]*class="[^\"]*\bhidden\b[^\"]*"[^>]*>([\s\S]*?)<\/span>/i);
   const descMatch = source.match(
     /<div class="moviedescription">\s*<b>Beschreibung:<\/b>\s*([\s\S]*?)<\/div>/i
   );
-  const description = descMatch ? decodeBasicEntities(descMatch[1]) : "";
+  const description = detailDescMatch
+    ? stripTags(detailDescMatch[1])
+    : descMatch
+      ? decodeBasicEntities(descMatch[1])
+      : "";
 
   const ogImg = source.match(/<meta[^>]+property="og:image"[^>]+content="([^"]+)"/i);
   const coverMatch = source.match(/<img[^>]*src="((?:https?:\/\/filmpalast\.to)?\/files\/movies\/[^"]+)"/i);
