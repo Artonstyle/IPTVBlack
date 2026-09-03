@@ -300,7 +300,7 @@ function parseFilmpalastCatalogFromHtml(html) {
 // ---------------------------------------------------------------------------
 // Quellen:
 //   type=movie  source=new|top  -> /movies/new | /movies/top  (+ /page/N)
-//   type=movie  source=alpha     -> /search/alpha/<letter>     (Einzel-Seite)
+//   type=movie  source=alpha     -> /search/alpha/<letter>     (+ /page/N)
 //   type=movie  source=genre     -> /search/genre/<Name>       (Einzel-Seite)
 //   type=movie  source=search     -> /search?search=<query>     (Einzel-Seite)
 //   type=series                  -> /search/serien/alpha/<letter> (Episoden via /stream/)
@@ -322,7 +322,7 @@ function buildCatalogUrl(params) {
     return `${BASE_URL}/search/serien/alpha/${letter}`;
   }
   if (source === "top") return `${BASE_URL}/movies/top${paged}`;
-  if (source === "alpha") return `${BASE_URL}/search/alpha/${letter}`;
+  if (source === "alpha") return `${BASE_URL}/search/alpha/${letter}${paged}`;
   if (source === "genre") return `${BASE_URL}/search/genre/${genre}`;
   if (source === "search") return `${BASE_URL}/search?search=${query}`;
   return `${BASE_URL}/movies/new${paged}`;
@@ -409,7 +409,9 @@ async function fetchCatalog(params) {
     };
   }
 
-  const paginable = !isSeries && (source === "new" || source === "top");
+  // The alphabetical movie listing is paginated as well. Returning hasMore
+  // lets the Tizen client fetch the next page at the end of the poster grid.
+  const paginable = !isSeries && (source === "new" || source === "top" || source === "alpha");
   return {
     ok: true,
     count: items.length,
