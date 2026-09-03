@@ -597,15 +597,9 @@ async function resolveVoe(url) {
       const payload = JSON.parse(payloadMatch[1]);
       const cipherText = Array.isArray(payload) ? payload[0] : "";
       if (typeof cipherText === "string" && cipherText) {
-        const helperMatch = text.match(/<script[^>]*src=["']([^"']*loader[^"']*\.js[^"']*)/i);
-        let lutText = "";
-        if (helperMatch) {
-          const scriptUrl = new URL(helperMatch[1], current).toString();
-          const { text: helperJs } = await fetchText(scriptUrl, { referer: current });
-          const repl = helperJs.match(/(\[(?:'\W{2}'[,\]]){1,9})/);
-          lutText = repl ? repl[1] : "";
-        }
-        const decoded = voeDecode(cipherText, lutText);
+        // The current VOE loader is obfuscated and can contain unrelated
+        // character arrays. Its fixed transport markers are more reliable.
+        const decoded = voeDecode(cipherText);
         const sources = [];
         ["file", "source", "direct_access_url"].forEach((key) => {
           if (decoded[key]) sources.push(decoded[key]);
