@@ -458,6 +458,16 @@ function parseStreamPageDetails(html, finalUrl) {
 
   const yearMatch = source.match(/class="releasedate"[^>]*>Jahr:\s*<b>(\d{4})<\/b>/i);
   const year = yearMatch ? yearMatch[1] : "";
+  const genreBlock = source.match(/<li[^>]*>\s*<p>\s*Kategorien,\s*Genre\s*<\/p>\s*<span>([\s\S]*?)<\/span>/i);
+  const genres = [];
+  if (genreBlock) {
+    const genreRe = /<a[^>]*>([\s\S]*?)<\/a>/gi;
+    let genreMatch;
+    while ((genreMatch = genreRe.exec(genreBlock[1]))) {
+      const genre = stripTags(genreMatch[1]);
+      if (genre && !genres.includes(genre)) genres.push(genre);
+    }
+  }
 
   const hosters = parseFilmpalastHostersFromHtml(source);
 
@@ -468,6 +478,7 @@ function parseStreamPageDetails(html, finalUrl) {
     type: "movie",
     category: "Film",
     year,
+    genre: genres.join(", "),
     poster,
     description,
     hosters,
@@ -487,6 +498,7 @@ async function fetchItemById(id) {
     type: "movie",
     category: d.category,
     year: d.year,
+    genre: d.genre,
     poster: d.poster,
     description: d.description,
     seasons: [
@@ -830,6 +842,7 @@ async function resolveMovie(params) {
       id: details.id,
       title: details.title,
       year: details.year,
+      genre: details.genre,
       poster: details.poster,
       description: details.description
     },
