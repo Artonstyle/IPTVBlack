@@ -115,11 +115,11 @@ sendJson(res, 200, { ok: true, service: "voe-extractor", port: PORT });
 return;
 }
 if (url.pathname === "/resolve") {
-const target = url.searchParams.get("url");
-if (!target || !/^https?:\/\//i.test(target)) {
-  sendJson(res, 400, { ok: false, error: "url missing" });
-  return;
-}
+  const target = url.searchParams.get("url");
+  if (!target || !/^https?:\/\//i.test(target)) {
+    sendJson(res, 400, { ok: false, error: "url missing" });
+    return;
+  }
 try {
 const result = await extractFromUrl(target);
 sendJson(res, result.ok ? 200 : 404, result);
