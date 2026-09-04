@@ -613,7 +613,28 @@ async function resolveVoe(url) {
   }
 
   const mediaMatches = text.match(/https?:\/\/[^\s"'<>\\]+\.(?:m3u8|mp4)[^\s"'<>\\]*/gi) || [];
-  return pickBestUrl(mediaMatches);
+  const directMatch = pickBestUrl(mediaMatches);
+  if (directMatch) return directMatch;
+
+  // Neues VOE-Format (2025/26): Die Spiegel-Domain liefert nur noch ein
+  // vollständig verschlüsseltes Laufzeit-Skript – im HTML steht weder ein
+  // Video-Tag noch eine URL. Nur ein Headless-Browser (FlareSolverr) kann
+  // die Seite rendern; das erzeugte <video>-Element enthält dann die
+  // echte Stream-URL. Env: FLARESOLVERR_URL (leer = Fallback deaktiviert).
+  if (process.env.FLARESOLVERR_URL) {
+    const rendered = await fetchTextViaFlareSolverr(current);
+    if (rendered) {
+      const dom = String(rendered.text || "");
+      const videoTag = dom.match(/<video[^>]+src="(https?:\/\/[^"]+)"/i);
+      if (videoTag && isValidPlayableUrl(videoTag[1])) return videoTag[1];
+      const sourceTag = dom.match(/<source[^>]+src="(https?:\/\/[^"]+)"/i);
+      if (sourceTag && isValidPlayableUrl(sourceTag[1])) return sourceTag[1];
+      const domUrls = dom.match(/https?:\/\/[^\s"'<>\\]+\.(?:m3u8|mp4)[^\s"'<>\\]*/gi) || [];
+      const viaDom = pickBestUrl(domUrls);
+      if (viaDom) return viaDom;
+    }
+  }
+  return "";
 }
 
 function voeDecode(cipherText, lutText) {
@@ -961,12 +982,6 @@ const server = http.createServer(async (req, res) => {
         details: errorToObject(error)
       });
     }
-    return;
-  }
-
-  // This parser does not proxy third-party streams.
-  if (url.pathname === "/proxy") {
-    sendJson(res, 404, { ok: false, error: "Proxy endpoint disabled" });
     return;
   }
 
