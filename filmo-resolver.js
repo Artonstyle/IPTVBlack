@@ -2259,6 +2259,15 @@ const server =
                 )
             });
 
+          // Fertige Proxy-Adresse für den Client: Die Hoster-URLs sind an die
+          // Resolver-IP gebunden -> Wiedergabe nur über /proxy möglich.
+          if (result && result.ok && result.playableUrl) {
+            const proto = req.headers["x-forwarded-proto"] || "https";
+            result.proxyUrl =
+              `${proto}://${req.headers.host}/proxy?u=` +
+              encodeURIComponent(result.playableUrl);
+          }
+
           sendJson(
             res,
             result.ok
