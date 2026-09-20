@@ -1,8 +1,6 @@
-/* global require, process, console */
-// VOE-Extractor – Headless-Browser-Dienst (Playwright) für die neuen
-// VOE-Spiegel-Seiten: Die Video-URL steht nicht im HTML, sondern wird erst
-// zur Laufzeit vom verschlüsselten Player-Skript erzeugt. Dieser Dienst
-// liest die Quelle direkt aus der JW-Player-API aus, ohne Play-Klick.
+/* global require, process, console, Buffer */
+// VOE-Extractor: dekodiert strukturierte Player-Daten zuerst.
+// Playwright/JW-Player und Netzwerkanfragen bleiben als Fallback erhalten.
 //
 // Endpunkte:  GET /health
 //             GET /resolve?url=<mirror-url>  ->  { ok, videoUrl, sources }
@@ -33,6 +31,160 @@ function sendJson(res, status, data) {
   res.end(body);
 }
 
+function voeDecode(
+  cipherText,
+  lutText
+) {
+  const lut = lutText
+    ? lutText
+        .slice(2, -2)
+        .split("','")
+        .map((item) =>
+          item.replace(
+            /[.*+?^${}()|[\]\\]/g,
+            "\\async function extractFromUrl(targetUrl) {"
+          )
+        )
+    : [
+        "\\*~",
+        "!!",
+        "#&",
+        "@\\$",
+        "%\\?",
+        "\\^\\^",
+        "~@"
+      ];
+
+  let text = "";
+
+  for (const ch of cipherText) {
+    let code =
+      ch.charCodeAt(0);
+
+    if (
+      code > 64 &&
+      code < 91
+    ) {
+      code =
+        ((code - 52) % 26) +
+        65;
+    } else if (
+      code > 96 &&
+      code < 123
+    ) {
+      code =
+        ((code - 84) % 26) +
+        97;
+    }
+
+    text +=
+      String.fromCharCode(
+        code
+      );
+  }
+
+  for (const item of lut) {
+    text = text.replace(
+      new RegExp(
+        item,
+        "g"
+      ),
+      ""
+    );
+  }
+
+  const step1 =
+    Buffer.from(
+      text,
+      "base64"
+    ).toString(
+      "utf8"
+    );
+
+  const step2 =
+    step1
+      .split("")
+      .map((ch) =>
+        String.fromCharCode(
+          ch.charCodeAt(0) -
+            3
+        )
+      )
+      .join("");
+
+  const step3 =
+    Buffer.from(
+      step2
+        .split("")
+        .reverse()
+        .join(""),
+      "base64"
+    ).toString(
+      "utf8"
+    );
+
+  return JSON.parse(
+    step3
+  );
+}
+
+function isPlayableUrl(value) {
+  return typeof value === "string" && /^https?:\/\//i.test(value) &&
+    SUPPORTED_VIDEO_RE.test(value);
+}
+
+function buildResult(values) {
+  const all = [...new Set(values.filter(isPlayableUrl))];
+  const best = all.find(u => /\.m3u8(?:[?#]|$)/i.test(u)) ||
+    all.find(u => /\.mp4(?:[?#]|$)/i.test(u)) || all[0] || "";
+  return { ok: !!best, videoUrl: best, sources: all.slice(0, 6) };
+}
+
+// Nur strukturierte Player-Daten lesen; keine beliebigen Video-Links
+// aus dem HTML übernehmen (dort können Test- oder Werbevideos stehen).
+function extractEncodedSources(html) {
+  const sources = [];
+  const scripts = html.matchAll(/<script\b[^>]*\btype\s*=\s*["']application\/json["'][^>]*>([\s\S]*?)<\/script\s*>/gi);
+  for (const match of scripts) {
+    try {
+      const payload = JSON.parse(match[1]);
+      if (!Array.isArray(payload) || typeof payload[0] !== "string") continue;
+      const decoded = voeDecode(payload[0]);
+      for (const key of ["file", "source", "direct_access_url"]) {
+        if (isPlayableUrl(decoded[key])) sources.push(decoded[key]);
+      }
+    } catch {
+      // Andere JSON-Blöcke oder unbekannte Kodierung: Browser-Fallback.
+    }
+  }
+  return sources;
+}
+
+async function resolveEncodedPage(context, targetUrl) {
+  let current = targetUrl;
+  const visited = new Set();
+  for (let hop = 0; hop < 5 && !visited.has(current); hop++) {
+    visited.add(current);
+    const response = await context.request.get(current, { timeout: 20000 });
+    try {
+      if (response.status() === 429) throw new Error("VOE HTTP 429: Bitte später erneut versuchen.");
+      if (!response.ok()) return { url: current, sources: [] };
+      current = response.url();
+      const html = await response.text();
+      const sources = extractEncodedSources(html);
+      if (sources.length) return { url: current, sources };
+      const redirect = html.match(/window\.location\.href\s*=\s*["']([^"']+)["']/i);
+      if (!redirect) break;
+      const next = new URL(redirect[1], current);
+      if (!/^https?:$/.test(next.protocol)) break;
+      current = next.href;
+    } finally {
+      await response.dispose();
+    }
+  }
+  return { url: current, sources: [] };
+}
+
 async function extractFromUrl(targetUrl) {
   const browser = await chromium.launch({
     args: [
@@ -54,6 +206,17 @@ async function extractFromUrl(targetUrl) {
       }
     });
 
+    // HTTP-Auslese und Browser verwenden denselben Kontext und Server.
+    let resolved;
+    try {
+      resolved = await resolveEncodedPage(context, targetUrl);
+    } catch (error) {
+      if (String(error.message).includes("HTTP 429")) throw error;
+      console.warn("[voe-extractor] HTTP-Auslese fehlgeschlagen:", error.message);
+      resolved = { url: targetUrl, sources: [] };
+    }
+    if (resolved.sources.length) return buildResult(resolved.sources);
+    targetUrl = resolved.url;
     const page = await context.newPage();
 
     // Netzwerk-Capture als Fallback:
@@ -80,6 +243,9 @@ async function extractFromUrl(targetUrl) {
       .catch(() => {});
 
     await page.waitForTimeout(3000);
+
+    const decodedSources = extractEncodedSources(await page.content());
+    if (decodedSources.length) return buildResult(decodedSources);
 
     // JW-Player-API:
     // Die Playlist enthält die direkte Quelle.
@@ -144,7 +310,7 @@ async function extractFromUrl(targetUrl) {
 
     // Falls die API nichts geliefert hat:
     // Play drücken und Netzwerk-Requests abfangen.
-    if (!sources.length && !mediaUrls.length) {
+    if (!buildResult([...sources, ...mediaUrls]).ok) {
       await page
         .click(
           ".jw-display-icon-playback, .jw-icon-playback, video",
@@ -155,28 +321,11 @@ async function extractFromUrl(targetUrl) {
       await page.waitForTimeout(6000);
     }
 
-    const all = [
-      ...new Set([
-        ...sources,
-        ...mediaUrls
-      ])
-    ].filter(
-      (u) =>
-        SUPPORTED_VIDEO_RE.test(u) &&
-        !/^blob:/i.test(u)
-    );
-
-    const best =
-      all.find((u) => /\.m3u8/i.test(u)) ||
-      all.find((u) => /\.mp4/i.test(u)) ||
-      all.find((u) => /\.webm/i.test(u)) ||
-      "";
-
-    return {
-      ok: !!best,
-      videoUrl: best,
-      sources: all.slice(0, 6)
-    };
+    return buildResult([
+      ...extractEncodedSources(await page.content()),
+      ...sources,
+      ...mediaUrls
+    ]);
 
   } finally {
     await browser.close();
