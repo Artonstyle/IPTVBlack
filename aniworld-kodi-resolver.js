@@ -1,7 +1,7 @@
 const http = require("http");
 const { URL } = require("url");
 
-const PORT = Number(process.env.PORT || 8788);
+const PORT = Number(process.env.PORT || 10000);
 const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
   "(KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36";
