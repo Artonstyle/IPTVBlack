@@ -30,6 +30,7 @@ async function fetchText(url, opts = {}) {
   try {
     const response = await fetch(url, {
       redirect: opts.redirect || "follow",
+      signal: AbortSignal.timeout(20000),
       headers: {
         "user-agent": UA,
         "accept-language": "de-DE,de;q=0.9,en;q=0.8",
@@ -37,6 +38,10 @@ async function fetchText(url, opts = {}) {
       }
     });
     const text = await response.text();
+    if (response.status >= 400) {
+      const title = stripTags((text.match(/<title[^>]*>([\s\S]*?)<\/title>/i) || [])[1] || "");
+      throw new Error("Upstream HTTP " + response.status + " at " + response.url + (title ? " (" + title.slice(0, 160) + ")" : ""));
+    }
     return { response, text };
   } catch (error) {
     const err = new Error(
@@ -162,8 +167,24 @@ async function fetchAnimeCatalog() {
 
   genreCatalogPromise = (async () => {
     const homeUrl = "https://aniworld.to/";
-    const { text: homeHtml } = await fetchText(homeUrl, { referer: homeUrl });
+    const { text: homeHtml, response: homeResponse } = await fetchText(homeUrl, { referer: homeUrl });
     const genres = parseGenreDirectory(homeHtml);
+    const diagnostics = {
+      upstreamStatus: homeResponse.status,
+      finalUrl: homeResponse.url || homeUrl,
+      contentType: homeResponse.headers.get("content-type") || "",
+      htmlBytes: Buffer.byteLength(homeHtml, "utf8"),
+      pageTitle: stripTags((homeHtml.match(/<title[^>]*>([\s\S]*?)<\/title>/i) || [])[1] || "").slice(0, 160),
+      genreLinkCount: (homeHtml.match(/\/genre\//gi) || []).length,
+      animeLinkCount: (homeHtml.match(/\/anime\/stream\//gi) || []).length
+    };
+    if (!genres.length) {
+      return {
+        ok: false,
+        error: "Keine Genres auf der abgerufenen Startseite erkannt. Antwort und Parser muessen anhand der Diagnose geprueft werden.",
+        sourceUrl: homeUrl, count: 0, genreCount: 0, genreCounts: {}, items: [], diagnostics
+      };
+    }
     const animeMap = new Map();
     const genreCounts = {};
 
@@ -209,15 +230,18 @@ async function fetchAnimeCatalog() {
       ])
       .sort((a, b) => String(a[0] || "").localeCompare(String(b[0] || ""), "de"));
 
-    genreCatalogCache = {
+    const result = {
       ok: items.length > 0,
       sourceUrl: homeUrl,
       count: items.length,
       genreCount: genres.length,
       genreCounts,
+      diagnostics,
+      error: items.length ? "" : "Genres erkannt, aber keine Anime-Eintraege gefunden.",
       items
     };
-    return genreCatalogCache;
+    if (result.ok) genreCatalogCache = result;
+    return result;
   })().finally(() => {
     genreCatalogPromise = null;
   });
