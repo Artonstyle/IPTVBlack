@@ -26,6 +26,40 @@ function normalizeUrl(url) {
   return u;
 }
 
+function isAniworldProtectedResponse(status, html) {
+  return status === 403 || status === 503 ||
+    /<title[^>]*>[^<]*(?:DDoS-Guard|Just a moment|Checking your browser)/i.test(html);
+}
+
+async function fetchAniworldViaFlareSolverr(targetUrl) {
+  const endpoint = String(process.env.FLARESOLVERR_URL || "").trim().replace(/\/+$/, "");
+  if (!endpoint) throw new Error("AniWorld blockiert den Abruf. FLARESOLVERR_URL ist im Anime-Dienst nicht gesetzt.");
+  const result = await fetch(endpoint + "/v1", {
+    method: "POST",
+    redirect: "error",
+    signal: AbortSignal.timeout(65000),
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({cmd: "request.get", url: targetUrl, maxTimeout: 60000})
+  });
+  if (!result.ok) throw new Error("FlareSolverr HTTP " + result.status);
+  const data = await result.json();
+  const solution = data && data.solution;
+  if (data.status !== "ok" || !solution || typeof solution.response !== "string") {
+    throw new Error("FlareSolverr konnte die AniWorld-Seite nicht laden.");
+  }
+  const status = Number(solution.status);
+  const landed = new URL(solution.url || targetUrl);
+  if (landed.protocol !== "https:" || landed.hostname !== "aniworld.to" || landed.port || landed.username || landed.password) {
+    throw new Error("FlareSolverr lieferte eine unerwartete Zieladresse.");
+  }
+  if (!Number.isFinite(status) || status < 200 || status >= 300 || isAniworldProtectedResponse(status, solution.response)) {
+    throw new Error("AniWorld bleibt auch ueber FlareSolverr blockiert (HTTP " + status + ").");
+  }
+  return {
+    response: {ok: true, status, url: landed.href, headers: new Headers(solution.headers || {})},
+    text: solution.response
+  };
+}
 async function fetchText(url, opts = {}) {
   try {
     const response = await fetch(url, {
@@ -38,6 +72,10 @@ async function fetchText(url, opts = {}) {
       }
     });
     const text = await response.text();
+    const target = new URL(url);
+    if (target.protocol === "https:" && target.hostname === "aniworld.to" && isAniworldProtectedResponse(response.status, text)) {
+      return await fetchAniworldViaFlareSolverr(url);
+    }
     if (response.status >= 400) {
       const title = stripTags((text.match(/<title[^>]*>([\s\S]*?)<\/title>/i) || [])[1] || "");
       throw new Error("Upstream HTTP " + response.status + " at " + response.url + (title ? " (" + title.slice(0, 160) + ")" : ""));
@@ -611,11 +649,8 @@ const server = http.createServer(async (req, res) => {
           sendJson(res, 400, { ok: false, error: "Only https://aniworld.to pages are allowed" });
           return;
         }
-        const response = await fetch(target, {
-          redirect: "manual",
-          signal: AbortSignal.timeout(20000),
-          headers: { "user-agent": UA, "accept-language": "de-DE,de;q=0.9", referer: "https://aniworld.to/" }
-        });
+        const pageResult = await fetchText(target.href, {redirect: "manual"});
+        const response = pageResult.response;
         if ([301, 302, 303, 307, 308].includes(response.status)) {
           const location = response.headers.get("location");
           if (!location) throw new Error("Redirect without location");
@@ -628,7 +663,7 @@ const server = http.createServer(async (req, res) => {
           sendJson(res, 502, { ok: false, error: "AniWorld HTTP " + response.status });
           return;
         }
-        const html = await response.text();
+        const html = pageResult.text;
         res.writeHead(200, {
           "Content-Type": "text/plain; charset=utf-8",
           "Access-Control-Allow-Origin": "*",
