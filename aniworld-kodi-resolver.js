@@ -577,6 +577,49 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // Only AniWorld pages are accepted; validate every redirect before fetching.
+  if (url.pathname === "/page") {
+    try {
+      let target = new URL(url.searchParams.get("url") || "");
+      for (let hop = 0; hop < 6; hop++) {
+        if (target.protocol !== "https:" || target.hostname !== "aniworld.to" ||
+            target.port || target.username || target.password) {
+          sendJson(res, 400, { ok: false, error: "Only https://aniworld.to pages are allowed" });
+          return;
+        }
+        const response = await fetch(target, {
+          redirect: "manual",
+          signal: AbortSignal.timeout(20000),
+          headers: { "user-agent": UA, "accept-language": "de-DE,de;q=0.9", referer: "https://aniworld.to/" }
+        });
+        if ([301, 302, 303, 307, 308].includes(response.status)) {
+          const location = response.headers.get("location");
+          if (!location) throw new Error("Redirect without location");
+          if (response.body) await response.body.cancel();
+          target = new URL(location, target);
+          continue;
+        }
+        if (!response.ok) {
+          if (response.body) await response.body.cancel();
+          sendJson(res, 502, { ok: false, error: "AniWorld HTTP " + response.status });
+          return;
+        }
+        const html = await response.text();
+        res.writeHead(200, {
+          "Content-Type": "text/plain; charset=utf-8",
+          "Access-Control-Allow-Origin": "*",
+          "Cache-Control": "no-store",
+          "X-Content-Type-Options": "nosniff"
+        });
+        res.end(html);
+        return;
+      }
+      throw new Error("Too many redirects");
+    } catch (error) {
+      sendJson(res, 502, { ok: false, error: String(error.message || error) });
+    }
+    return;
+  }
   if (url.pathname === "/resolve") {
     try {
       const result = await resolveEpisode(url.searchParams.get("episodeUrl"));
